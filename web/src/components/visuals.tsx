@@ -98,7 +98,7 @@ function verdictMeta(verdict: Verdict): VerdictMeta {
 			return {
 				color: "var(--block)",
 				bg: "var(--block-bg)",
-				title: "Very likely not possible as specified",
+				title: "Not possible as specified",
 			};
 		case "NonDefault":
 			return {
@@ -146,7 +146,7 @@ export function VerdictBanner({
 	const m = verdictMeta(verdict);
 	const subtitle =
 		verdict === "Blocking"
-			? `${blocking} blocking conflict${blocking === 1 ? "" : "s"} — something must change. Everything is still recorded below.`
+			? `${blocking} blocking conflict${blocking === 1 ? "" : "s"} — something must change.`
 			: verdict === "NonDefault"
 				? `${offDefault} choice${offDefault === 1 ? "" : "s"} off the default path. This will be harder to support.`
 				: "No off-default choices recorded.";

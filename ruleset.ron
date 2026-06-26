@@ -184,9 +184,8 @@
             kind: Single,
             label: "What does BES retain?",
             options: [
-                (id: "full", label: "Full retention", note: Some("Default, fully integrated.")),
-                (id: "low", label: "Low-retention (process-only)", note: Some("Just enough for Tupaia + clone upgrades.")),
-                (id: "none", label: "None (self-managed)", note: Some("Client runs their own backups.")),
+                (id: "full", label: "Full retention", note: Some("Default — keeps the latest backup, a week of daily backups, a month of weekly, and six monthly.")),
+                (id: "low", label: "Low retention", note: Some("Kept a few days — long enough to process into Tupaia and run clone-upgrade tests.")),
             ],
             visible_if: Equals("backup_capability", "yes"),
         ),
@@ -447,38 +446,6 @@
             ),
         ),
         (
-            id: "block-retention-analytics",
-            source: "backups",
-            when: All([
-                Equals("backup_capability", "yes"),
-                Equals("retention", "none"),
-                Equals("analytics", "yes"),
-            ]),
-            consequence: (
-                severity: Blocking,
-                status: Requirement,
-                audience: Record,
-                types: [Capability],
-                title: "Zero retention, but Tupaia requested",
-                detail: "Tupaia needs at least low-retention backups. Set retention to low-retention (process-only), or drop Tupaia.",
-            ),
-        ),
-        (
-            id: "self-managed",
-            source: "backups",
-            when: All([
-                Equals("backup_capability", "yes"),
-                Equals("retention", "none"),
-            ]),
-            consequence: (
-                severity: NonDefault,
-                status: Requirement,
-                audience: Client,
-                title: "Self-managed backups",
-                detail: "BES retains nothing; the client must run and assure their own backups. BES can still take one-off backups for clone-upgrade testing.",
-            ),
-        ),
-        (
             id: "low-retention",
             source: "backups",
             when: All([
@@ -488,8 +455,8 @@
             consequence: (
                 status: Advisory,
                 audience: Bes,
-                title: "Low-retention (process-only) backups",
-                detail: "Backups are kept only as long as needed to process data into Tupaia. Enough to unlock Tupaia and clone-upgrade testing at minimum data cost.",
+                title: "Low retention — kept a few days",
+                detail: "Backups are kept just a few days — long enough to process data into Tupaia and run clone-upgrade tests, at minimum data cost.",
             ),
         ),
 

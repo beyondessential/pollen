@@ -138,6 +138,16 @@ fn default_path_is_clear() {
 }
 
 #[test]
+fn non_fhir_integration_adds_cost_without_blocking() {
+	let eval = evaluate(&v1(), &answers(json!({ "integrations": ["other_nonfhir"] })));
+	let ids = fired_ids(&eval);
+	assert!(ids.contains(&"int-nonfhir-cost"));
+	assert!(ids.contains(&"int-capacity"));
+	// A cost, not a blocker.
+	assert_eq!(eval.verdict, Verdict::NonDefault);
+}
+
+#[test]
 fn analytics_guidance_shows_at_backups() {
 	let eval = evaluate(&v1(), &answers(json!({ "analytics": "yes" })));
 	assert!(

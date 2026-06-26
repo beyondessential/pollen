@@ -44,6 +44,9 @@
             options: [
                 (id: "lims", label: "LIMS — laboratories (Senaite or other)"),
                 (id: "msupply", label: "Pharmacy & warehousing (mSupply or other)"),
+                (id: "rispacs", label: "RISPACS / Imaging"),
+                (id: "other_fhir", label: "Other FHIR-based integration"),
+                (id: "other_nonfhir", label: "Other non-FHIR integration"),
                 (id: "none", label: "None for now"),
             ],
         ),
@@ -60,6 +63,9 @@
             visible_if: Any([
                 Includes("integrations", "lims"),
                 Includes("integrations", "msupply"),
+                Includes("integrations", "rispacs"),
+                Includes("integrations", "other_fhir"),
+                Includes("integrations", "other_nonfhir"),
             ]),
         ),
 
@@ -271,6 +277,9 @@
             when: Any([
                 Includes("integrations", "lims"),
                 Includes("integrations", "msupply"),
+                Includes("integrations", "rispacs"),
+                Includes("integrations", "other_fhir"),
+                Includes("integrations", "other_nonfhir"),
             ]),
             consequence: (
                 status: Advisory,
@@ -289,6 +298,20 @@
                 audience: Record,
                 title: "BES-hosted integration — separate conversation",
                 detail: "Hosting an integration on BES infrastructure is possible but is scoped in a dedicated technical conversation. This record only flags the intent.",
+            ),
+        ),
+        (
+            id: "int-nonfhir-cost",
+            source: "intent",
+            when: Includes("integrations", "other_nonfhir"),
+            consequence: (
+                severity: NonDefault,
+                status: Advisory,
+                audience: Bes,
+                types: [Cost],
+                cost: Some((tier: "Significant one-off development cost")),
+                title: "Non-FHIR integration needs custom development",
+                detail: "A non-FHIR integration has no standard interface, so connecting it requires bespoke development. It is supported with no other blockers, but adds significant one-off development cost. Sales confirms the figure.",
             ),
         ),
 

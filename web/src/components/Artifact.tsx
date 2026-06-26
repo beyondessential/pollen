@@ -56,6 +56,14 @@ export default function Artifact({ view }: { view: AppView }) {
 		}
 	}
 
+	function downloadPdf() {
+		// Print the complete, audience-sectioned artifact regardless of the
+		// current toggle/search; let React re-render before the print dialog.
+		setGrouping("audience");
+		setQuery("");
+		setTimeout(() => window.print(), 50);
+	}
+
 	function copyLink() {
 		navigator.clipboard?.writeText(window.location.href).then(
 			() => {
@@ -121,6 +129,9 @@ export default function Artifact({ view }: { view: AppView }) {
 				<div className="sheet-control-actions">
 					<button type="button" className="btn ghost" onClick={copyLink}>
 						{copied ? "Link copied" : "Copy link"}
+					</button>
+					<button type="button" className="btn ghost" onClick={downloadPdf}>
+						Download PDF
 					</button>
 					<button type="button" className="btn ghost" disabled={busy} onClick={makeNewVersion}>
 						Make changes

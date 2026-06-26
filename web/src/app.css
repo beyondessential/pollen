@@ -604,3 +604,31 @@ body {
 		}
 	}
 }
+
+/* ── Print: a clean PDF of the artifact ──────────────────────────────── */
+@media print {
+	.topbar,
+	.sheet-controls {
+		display: none;
+	}
+	body {
+		background: #fff;
+	}
+	.sheet {
+		max-width: none;
+		margin: 0;
+		border: none;
+		border-radius: 0;
+		box-shadow: none;
+	}
+	.sheet-section,
+	.cons,
+	.card,
+	.record {
+		break-inside: avoid;
+	}
+	a {
+		color: inherit;
+		text-decoration: none;
+	}
+}

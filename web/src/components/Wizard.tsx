@@ -48,10 +48,10 @@ export default function Wizard({
 		}
 	}
 
-	async function finalize() {
+	async function finalise() {
 		setBusy(true);
 		try {
-			setView(await callApi("applications", "finalize", { id: view.id }));
+			setView(await callApi("applications", "finalise", { id: view.id }));
 		} finally {
 			setBusy(false);
 		}
@@ -113,7 +113,7 @@ export default function Wizard({
 						type="button"
 						className="btn primary"
 						disabled={busy || !allAnswered}
-						onClick={finalize}
+						onClick={finalise}
 					>
 						Finalise
 					</button>

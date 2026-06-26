@@ -24,11 +24,11 @@ use crate::error::{AppError, Result};
 #[serde(rename_all = "snake_case")]
 pub enum ApplicationStatus {
 	Draft,
-	Finalized,
+	Finalised,
 }
 
 /// An application: a user's answers plus the ruleset hash they are bound to,
-/// its draft/finalized status, and lineage back to the version it was forked
+/// its draft/finalised status, and lineage back to the version it was forked
 /// from.
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Selectable, Identifiable)]
 #[diesel(table_name = crate::db::schema::applications)]
@@ -42,7 +42,7 @@ pub struct Application {
 	#[diesel(deserialize_as = jiff_diesel::Timestamp)]
 	pub created_at: Timestamp,
 	#[diesel(deserialize_as = jiff_diesel::NullableTimestamp)]
-	pub finalized_at: Option<Timestamp>,
+	pub finalised_at: Option<Timestamp>,
 }
 
 impl Application {
@@ -94,14 +94,14 @@ impl Application {
 			.map_err(AppError::from)
 	}
 
-	/// Freeze a draft: mark it finalized and stamp the time. Callers enforce
+	/// Freeze a draft: mark it finalised and stamp the time. Callers enforce
 	/// that the application is a draft before calling.
-	pub async fn finalize(db: &mut AsyncPgConnection, id: Uuid) -> Result<Self> {
+	pub async fn finalise(db: &mut AsyncPgConnection, id: Uuid) -> Result<Self> {
 		use crate::db::schema::applications::dsl;
 		diesel::update(dsl::applications.find(id))
 			.set((
-				dsl::status.eq(ApplicationStatus::Finalized),
-				dsl::finalized_at.eq(jiff_diesel::NullableTimestamp::from(Some(Timestamp::now()))),
+				dsl::status.eq(ApplicationStatus::Finalised),
+				dsl::finalised_at.eq(jiff_diesel::NullableTimestamp::from(Some(Timestamp::now()))),
 			))
 			.returning(Self::as_returning())
 			.get_result(db)

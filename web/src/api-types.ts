@@ -21,7 +21,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/applications/finalize": {
+    "/api/applications/finalise": {
         parameters: {
             query?: never;
             header?: never;
@@ -31,10 +31,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Finalize a draft, freezing it against its bound ruleset. Always produces an
+         * Finalise a draft, freezing it against its bound ruleset. Always produces an
          *     artifact; the verdict (including a blocking one) is recorded, not enforced.
          */
-        post: operations["applications_finalize"];
+        post: operations["applications_finalise"];
         delete?: never;
         options?: never;
         head?: never;
@@ -88,7 +88,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Replace a draft's answers. Rejected (409) once finalized. */
+        /** Replace a draft's answers. Rejected (409) once finalised. */
         post: operations["applications_patch"];
         delete?: never;
         options?: never;
@@ -129,7 +129,7 @@ export interface components {
             created_at: string;
             evaluation: components["schemas"]["Evaluation"];
             /** Format: date-time */
-            finalized_at?: string | null;
+            finalised_at?: string | null;
             /** Format: uuid */
             id: string;
             migration?: null | components["schemas"]["MigrationView"];
@@ -142,7 +142,7 @@ export interface components {
          * @description Whether an artifact is still being edited or has been frozen.
          * @enum {string}
          */
-        ApplicationStatus: "draft" | "finalized";
+        ApplicationStatus: "draft" | "finalised";
         /**
          * @description Which reader a consequence is grouped under in the by-audience view.
          * @enum {string}
@@ -186,7 +186,7 @@ export interface components {
              */
             visible_questions: string[];
         };
-        FinalizeArgs: {
+        FinaliseArgs: {
             /** Format: uuid */
             id: string;
         };
@@ -315,7 +315,7 @@ export interface operations {
             };
         };
     };
-    applications_finalize: {
+    applications_finalise: {
         parameters: {
             query?: never;
             header?: never;
@@ -324,7 +324,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["FinalizeArgs"];
+                "application/json": components["schemas"]["FinaliseArgs"];
             };
         };
         responses: {

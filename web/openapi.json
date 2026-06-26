@@ -44,18 +44,18 @@
         }
       }
     },
-    "/api/applications/finalize": {
+    "/api/applications/finalise": {
       "post": {
         "tags": [
           "applications"
         ],
-        "summary": "Finalize a draft, freezing it against its bound ruleset. Always produces an\nartifact; the verdict (including a blocking one) is recorded, not enforced.",
-        "operationId": "applications_finalize",
+        "summary": "Finalise a draft, freezing it against its bound ruleset. Always produces an\nartifact; the verdict (including a blocking one) is recorded, not enforced.",
+        "operationId": "applications_finalise",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/FinalizeArgs"
+                "$ref": "#/components/schemas/FinaliseArgs"
               }
             }
           },
@@ -162,7 +162,7 @@
         "tags": [
           "applications"
         ],
-        "summary": "Replace a draft's answers. Rejected (409) once finalized.",
+        "summary": "Replace a draft's answers. Rejected (409) once finalised.",
         "operationId": "applications_patch",
         "requestBody": {
           "content": {
@@ -246,7 +246,7 @@
           "evaluation": {
             "$ref": "#/components/schemas/Evaluation"
           },
-          "finalized_at": {
+          "finalised_at": {
             "type": [
               "string",
               "null"
@@ -290,7 +290,7 @@
         "description": "Whether an artifact is still being edited or has been frozen.",
         "enum": [
           "draft",
-          "finalized"
+          "finalised"
         ]
       },
       "Audience": {
@@ -429,7 +429,7 @@
           }
         }
       },
-      "FinalizeArgs": {
+      "FinaliseArgs": {
         "type": "object",
         "required": [
           "id"
@@ -688,7 +688,7 @@
   "tags": [
     {
       "name": "applications",
-      "description": "Onboarding artifacts: create, read, edit, finalize, fork."
+      "description": "Onboarding artifacts: create, read, edit, finalise, fork."
     },
     {
       "name": "meta",

@@ -25,7 +25,7 @@ async fn config_store_and_application_roundtrip() {
 		assert_eq!(draft.config_hash, hash);
 		assert_eq!(draft.answers, json!({}));
 		assert!(draft.parent_id.is_none());
-		assert!(draft.finalized_at.is_none());
+		assert!(draft.finalised_at.is_none());
 
 		// Round-trips by id.
 		let fetched = Application::get(&mut conn, draft.id).await.unwrap();

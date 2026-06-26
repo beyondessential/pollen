@@ -81,8 +81,8 @@ Commit incrementally (jj). Each phase is independently reviewable.
 - `config_store(config_hash PK, content jsonb, created_at)` — content-addressed
   ruleset store; identical content dedupes to one row.
 - `applications(id uuid PK, answers jsonb, config_hash FK→config_store,
-  status enum{draft,finalized}, parent_id nullable FK→applications,
-  created_at, finalized_at nullable)`.
+  status enum{draft,finalised}, parent_id nullable FK→applications,
+  created_at, finalised_at nullable)`.
 - Diesel models + the connection pool in `AppState`; `migrate` bin.
 - Exit: migrations run on the ramdisk DB; round-trip a row in a db test.
 
@@ -149,25 +149,25 @@ Commit incrementally (jj). Each phase is independently reviewable.
   - create draft (optional `?config` branch) → returns app id; URL collapses to id.
   - get application (ruleset + answers + evaluation + verdict + lineage).
   - patch answers (draft only).
-  - finalize (runs the consistency check; freezes the bound hash; immutable after).
+  - finalise (runs the consistency check; freezes the bound hash; immutable after).
   - update/fork against a new ruleset hash → new draft with lineage; predecessor
-    untouched; lands as draft even from a finalized parent.
+    untouched; lands as draft even from a finalised parent.
 - `just gen-openapi` regenerates `web/src/api-types.ts`.
-- Exit: HTTP tests cover create→patch→finalize→fork and the draft/finalized
-  mutability rules (finalized rejects edits).
+- Exit: HTTP tests cover create→patch→finalise→fork and the draft/finalised
+  mutability rules (finalised rejects edits).
 
 ### Phase 5 — Wizard frontend
 - Step flow rendered from the ruleset: question kinds, visibility/hide rules,
   forward-guidance callouts (analytics→backups), derived-size display.
 - Live consequences rail + running verdict, updating as answers change.
 - Persists answers to the draft; resumable by URL.
-- Exit: the flow drives a full draft to finalize against the v1 ruleset.
+- Exit: the flow drives a full draft to finalise against the v1 ruleset.
 
-### Phase 6 — Finalized web view
+### Phase 6 — Finalised web view
 - Canonical artifact page: by-audience / by-topic toggle, search,
   expand/collapse, section deep-links, and the non-identifying recognition
   header (size, topology shape, region, version, date — no name).
-- Exit: a finalized artifact renders both groupings; deep-links work.
+- Exit: a finalised artifact renders both groupings; deep-links work.
 
 ### Phase 7 — PDF export
 - Print stylesheet over the artifact, sectioned by audience in the spec's order;
@@ -176,7 +176,7 @@ Commit incrementally (jj). Each phase is independently reviewable.
 
 ### Phase 8 — e2e & polish
 - Playwright: a full BES-driven run (load → answer → see consequences →
-  finalize → view artifact → print), plus a blocking-combination run and a
+  finalise → view artifact → print), plus a blocking-combination run and a
   preview/`?config` run. Fixture spawns its own server + Vite against a
   freshly-migrated throwaway DB (port canopy's e2e fixture pattern).
 - Visual polish; reduced-motion respect; responsive.
@@ -205,5 +205,5 @@ ships, but don't block the engine:
 - No seedling/legacy jargon in naming or copy.
 - Version/verdict indicators always render a state (incl. "unknown"), never hide.
 - The default ruleset is bundled and content-hashed; the GitHub-ref preview is
-  for previewing unmerged rule changes, and finalize always binds the resolved
+  for previewing unmerged rule changes, and finalise always binds the resolved
   content hash, never a branch name.

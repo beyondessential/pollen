@@ -17,7 +17,7 @@ Contracting and sales may reference it downstream, but the tool does not enforce
 
 In its first form the BES side drives the tool, working through it with or on behalf of a prospective client.
 
-The tool is public-facing, reachable over the open internet at its own hostname, with no authentication on either drafts or finalized artifacts.
+The tool is public-facing, reachable over the open internet at its own hostname, with no authentication on either drafts or finalised artifacts.
 An artifact is addressed by an unguessable identifier in its URL, and that identifier is the only thing protecting it.
 Nothing stored is sensitive: no health data, no personal data, and no client or deployment name (see [Data and confidentiality](#data-and-confidentiality)).
 
@@ -50,7 +50,7 @@ Every captured item and every consequence carries up to three independent tags.
 
 The tool always produces an artifact, even for contradictory input.
 A conflict short-circuits the *verdict* — a prominent callout that the configuration is very likely not possible as specified — not the *recording*: the full picture is still captured below the verdict.
-The engine evaluates conditions across fields, both as forward guidance during the flow and as a final consistency check when the artifact is finalized.
+The engine evaluates conditions across fields, both as forward guidance during the flow and as a final consistency check when the artifact is finalised.
 
 ### Consequence type
 
@@ -84,22 +84,22 @@ The artifact renders the union of every triggered block, grouped for the reader.
 
 The engine shows a question only when its precondition holds, and hides it otherwise; a precondition is a presence-of-class flag or a cross-field condition.
 When an earlier answer will constrain a later question, the engine warns forward at the point the constraint is set, before the later question is reached.
-At finalize, the engine re-checks every cross-field condition as a final consistency pass, so a conflict reached by pushing past a warning is still caught.
+At finalise, the engine re-checks every cross-field condition as a final consistency pass, so a conflict reached by pushing past a warning is still caught.
 
 ## Artifact lifecycle
 
-An artifact is either a **draft** or a **finalized** version, and a finalized version is immutable.
+An artifact is either a **draft** or a **finalised** version, and a finalised version is immutable.
 
 - **Draft.**
   A draft is resumable at a URL carrying an unguessable identifier, and is editable.
   It is persisted, so the same URL reopens the same in-progress artifact.
-- **Finalize.**
-  Finalizing produces a permanent, immutable artifact at its own identifier URL.
+- **Finalise.**
+  Finalising produces a permanent, immutable artifact at its own identifier URL.
   This is the canonical artifact.
-  A finalized artifact is frozen against the exact ruleset it was finalized under (see [Content-addressed binding](#content-addressed-binding)) and always renders against that frozen ruleset, so a later change to the rules never alters an already-finalized verdict.
+  A finalised artifact is frozen against the exact ruleset it was finalised under (see [Content-addressed binding](#content-addressed-binding)) and always renders against that frozen ruleset, so a later change to the rules never alters an already-finalised verdict.
 - **Versioning.**
-  A finalized artifact cannot be edited in place.
-  Making changes spawns a new finalized version at a new URL, carrying lineage back to its predecessor.
+  A finalised artifact cannot be edited in place.
+  Making changes spawns a new finalised version at a new URL, carrying lineage back to its predecessor.
   This prevents an artifact shifting under someone who already holds the link — both BES and the client may be holding it.
 
 ## The ruleset
@@ -113,7 +113,7 @@ The identity of a ruleset is the hash of its normalized content.
 A ruleset is stored once and referenced by that hash; two identical rulesets share one stored copy, and any change yields a new hash.
 
 An artifact records the user's answers together with the hash of the ruleset it is bound to.
-Finalizing freezes that binding forever: the artifact always evaluates against the exact ruleset content identified by the bound hash, never against whatever the current rules happen to be.
+Finalising freezes that binding forever: the artifact always evaluates against the exact ruleset content identified by the bound hash, never against whatever the current rules happen to be.
 
 ### Preview against repository refs
 
@@ -125,7 +125,7 @@ The tool is public and its links are forwarded to clients, so a ruleset fetched 
 Resolving a *branch name* against the configured repository's own references prevents this: a branch is scoped to that repository's namespace, so a fork's branch cannot be named through the upstream repository's references.
 A check that inspects whether a supplied URL "looks like" it points at the repository is insufficient, because content URLs can be crafted to appear in-repository while resolving to a fork's commit.
 
-A branch is mutable; naming a branch is therefore preview-only, and finalizing binds the resolved content hash, not the branch name.
+A branch is mutable; naming a branch is therefore preview-only, and finalising binds the resolved content hash, not the branch name.
 The binding chain strips mutability at each step: a branch resolves to content (verified to come from the configured repository), which hashes to an immutable identity, which is stored once and referenced by artifacts.
 
 Resolving a branch against the source repository is rate-limited, and a resolved result is briefly cached, so repeated or abusive preview requests do not exhaust the repository host's request quota.
@@ -138,11 +138,11 @@ Binding the already-stored default ruleset — the common path, with no branch n
   Any named branch is resolved and its hash bound into the new draft, and the URL then collapses to the draft's own identifier — the ruleset is recorded against the draft, not carried in the URL.
 - **Update is a fork, never a mutation.**
   Naming a ruleset branch again on an existing artifact's URL surfaces a "new version available" affordance.
-  Accepting it spawns a new draft bound to the new ruleset hash, with lineage back to the predecessor, and leaves the predecessor — draft or finalized — untouched.
-  This works mid-draft and on a long-finalized artifact alike.
-- **A migrated artifact lands as a new draft, never auto-finalized.**
-  If moving to a new ruleset dropped an answer or surfaced a newly-required question, auto-finalizing would freeze an unreviewed guess.
-  Landing as a draft flags the gaps for a human; a clean migration is then one extra step to re-finalize.
+  Accepting it spawns a new draft bound to the new ruleset hash, with lineage back to the predecessor, and leaves the predecessor — draft or finalised — untouched.
+  This works mid-draft and on a long-finalised artifact alike.
+- **A migrated artifact lands as a new draft, never auto-finalised.**
+  If moving to a new ruleset dropped an answer or surfaced a newly-required question, auto-finalising would freeze an unreviewed guess.
+  Landing as a draft flags the gaps for a human; a clean migration is then one extra step to re-finalise.
 
 ### Stable-id migration
 
@@ -158,7 +158,7 @@ This comparison is the "what changed" summary the user sees on update: newly-req
 
 ## Outputs
 
-### Finalized web view
+### Finalised web view
 
 The canonical artifact is a live page that renders the same underlying data in more than one way.
 It can be presented grouped by audience or grouped by topic, and supports searching, expanding and collapsing, and deep-linking to a section.
@@ -172,7 +172,7 @@ The PDF is something a reader can save and attach to correspondence.
 Its sections, in order:
 
 1. **Viability verdict** — any blocking conflicts, at the top.
-2. **Client IT team — required actions** — ports, outbound endpoints, DNS, remote access, time synchronization, region.
+2. **Client IT team — required actions** — ports, outbound endpoints, DNS, remote access, time synchronisation, region.
 3. **BES technical team — setup decisions** — sizing and staging, topology, platform, server specifications, backup and retention, the integrations capacity note.
 4. **Non-default acknowledgments** — what the client is opting into, with consequences grouped by type.
 5. **Advisory and planning** — non-binding recommendations and captured planning data.

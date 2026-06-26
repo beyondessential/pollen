@@ -22,7 +22,7 @@ export default function ApplicationPage() {
 
 function Loaded({ initial }: { initial: AppView }) {
 	const [view, setView] = useState(initial);
-	return view.status === "finalized" ? (
+	return view.status === "finalised" ? (
 		<Artifact view={view} />
 	) : (
 		<Wizard view={view} setView={setView} />

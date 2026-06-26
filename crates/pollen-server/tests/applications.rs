@@ -1,4 +1,4 @@
-//! HTTP lifecycle: create → patch → finalize → fork, plus the draft/finalized
+//! HTTP lifecycle: create → patch → finalise → fork, plus the draft/finalised
 //! mutability rules and preview-not-configured handling.
 
 mod common;
@@ -8,7 +8,7 @@ use common::run_server;
 use serde_json::{Value, json};
 
 #[tokio::test(flavor = "multi_thread")]
-async fn create_patch_finalize_fork_lifecycle() {
+async fn create_patch_finalise_fork_lifecycle() {
 	run_server(|server, _conn| async move {
 		// Create a draft (binds the bundled default; no answers yet).
 		let created: Value = server
@@ -54,23 +54,23 @@ async fn create_patch_finalize_fork_lifecycle() {
 			.json();
 		assert_eq!(fetched["evaluation"]["verdict"], "Blocking");
 
-		// Finalize freezes it (the blocking verdict is recorded, not enforced).
-		let finalized: Value = server
-			.post("/api/applications/finalize")
+		// Finalise freezes it (the blocking verdict is recorded, not enforced).
+		let finalised: Value = server
+			.post("/api/applications/finalise")
 			.json(&json!({ "id": id }))
 			.await
 			.json();
-		assert_eq!(finalized["status"], "finalized");
-		assert!(finalized["finalized_at"].is_string());
+		assert_eq!(finalised["status"], "finalised");
+		assert!(finalised["finalised_at"].is_string());
 
-		// A finalized artifact is immutable: patch and finalize both 409.
+		// A finalised artifact is immutable: patch and finalise both 409.
 		server
 			.post("/api/applications/patch")
 			.json(&json!({ "id": id, "answers": {} }))
 			.await
 			.assert_status(StatusCode::CONFLICT);
 		server
-			.post("/api/applications/finalize")
+			.post("/api/applications/finalise")
 			.json(&json!({ "id": id }))
 			.await
 			.assert_status(StatusCode::CONFLICT);
@@ -96,7 +96,7 @@ async fn create_patch_finalize_fork_lifecycle() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn finalize_requires_all_questions_answered() {
+async fn finalise_requires_all_questions_answered() {
 	run_server(|server, _conn| async move {
 		let created: Value = server
 			.post("/api/applications/create")
@@ -114,7 +114,7 @@ async fn finalize_requires_all_questions_answered() {
 
 		// Finalising an incomplete plan is rejected.
 		server
-			.post("/api/applications/finalize")
+			.post("/api/applications/finalise")
 			.json(&json!({ "id": id }))
 			.await
 			.assert_status(StatusCode::BAD_REQUEST);

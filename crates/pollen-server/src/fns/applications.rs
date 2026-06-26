@@ -1,5 +1,5 @@
 //! Application lifecycle: create a draft (optionally previewing a ruleset
-//! branch), read it with its evaluation, edit a draft's answers, finalize it,
+//! branch), read it with its evaluation, edit a draft's answers, finalise it,
 //! and fork a new version (spec WIZ, Artifact lifecycle).
 
 use axum::Json;
@@ -27,7 +27,7 @@ pub struct AppView {
 	pub status: ApplicationStatus,
 	pub parent_id: Option<Uuid>,
 	pub created_at: Timestamp,
-	pub finalized_at: Option<Timestamp>,
+	pub finalised_at: Option<Timestamp>,
 	pub config_hash: String,
 	pub questions: Vec<QuestionView>,
 	pub answers: Value,
@@ -85,7 +85,7 @@ pub struct PatchArgs {
 }
 
 #[derive(Debug, Deserialize, ToSchema)]
-pub struct FinalizeArgs {
+pub struct FinaliseArgs {
 	pub id: Uuid,
 }
 
@@ -131,7 +131,7 @@ pub async fn get(
 	Ok(Json(build_view(app, &ruleset, None)?))
 }
 
-/// Replace a draft's answers. Rejected (409) once finalized.
+/// Replace a draft's answers. Rejected (409) once finalised.
 #[utoipa::path(
     post, path = "/patch", operation_id = "applications_patch", tag = "applications",
     request_body = PatchArgs,
@@ -154,16 +154,16 @@ pub async fn patch(
 	Ok(Json(build_view(app, &ruleset, None)?))
 }
 
-/// Finalize a draft, freezing it against its bound ruleset. Always produces an
+/// Finalise a draft, freezing it against its bound ruleset. Always produces an
 /// artifact; the verdict (including a blocking one) is recorded, not enforced.
 #[utoipa::path(
-    post, path = "/finalize", operation_id = "applications_finalize", tag = "applications",
-    request_body = FinalizeArgs,
+    post, path = "/finalise", operation_id = "applications_finalise", tag = "applications",
+    request_body = FinaliseArgs,
     responses((status = 200, body = AppView), (status = 409, body = crate::error::ProblemDetailsSchema)),
 )]
-pub async fn finalize(
+pub async fn finalise(
 	State(state): State<AppState>,
-	Json(args): Json<FinalizeArgs>,
+	Json(args): Json<FinaliseArgs>,
 ) -> Result<Json<AppView>> {
 	let mut conn = state.db.get().await?;
 	let app = Application::get(&mut conn, args.id).await?;
@@ -186,7 +186,7 @@ pub async fn finalize(
 			"answer every question before finalising".into(),
 		));
 	}
-	let app = Application::finalize(&mut conn, args.id).await?;
+	let app = Application::finalise(&mut conn, args.id).await?;
 	Ok(Json(build_view(app, &ruleset, None)?))
 }
 
@@ -240,7 +240,7 @@ pub fn routes() -> OpenApiRouter<AppState> {
 		.routes(routes!(create))
 		.routes(routes!(get))
 		.routes(routes!(patch))
-		.routes(routes!(finalize))
+		.routes(routes!(finalise))
 		.routes(routes!(fork))
 }
 
@@ -287,7 +287,7 @@ fn build_view(
 		status: app.status,
 		parent_id: app.parent_id,
 		created_at: app.created_at,
-		finalized_at: app.finalized_at,
+		finalised_at: app.finalised_at,
 		config_hash: app.config_hash,
 		questions: ruleset.questions.iter().map(QuestionView::from).collect(),
 		answers: app.answers,

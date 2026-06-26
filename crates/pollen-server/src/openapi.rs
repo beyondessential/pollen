@@ -13,7 +13,7 @@ use utoipa::OpenApi;
         license(name = "GPL-3.0-or-later"),
     ),
     tags(
-        (name = "applications", description = "Onboarding artifacts: create, read, edit, finalize, fork."),
+        (name = "applications", description = "Onboarding artifacts: create, read, edit, finalise, fork."),
         (name = "meta", description = "Service metadata."),
     ),
 )]

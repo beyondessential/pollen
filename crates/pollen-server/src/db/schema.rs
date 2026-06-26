@@ -17,7 +17,7 @@ diesel::table! {
 		status -> ApplicationStatus,
 		parent_id -> Nullable<Uuid>,
 		created_at -> Timestamptz,
-		finalized_at -> Nullable<Timestamptz>,
+		finalised_at -> Nullable<Timestamptz>,
 	}
 }
 

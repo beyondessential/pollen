@@ -151,6 +151,13 @@ fn non_fhir_integration_adds_cost_without_blocking() {
 }
 
 #[test]
+fn no_dns_is_an_off_default_risk() {
+	let eval = evaluate(&v1(), &answers(json!({ "dns": "local" })));
+	assert!(fired_ids(&eval).contains(&"dns-local"));
+	assert_eq!(eval.verdict, Verdict::NonDefault);
+}
+
+#[test]
 fn analytics_guidance_shows_at_backups() {
 	let eval = evaluate(&v1(), &answers(json!({ "analytics": "yes" })));
 	assert!(

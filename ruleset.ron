@@ -42,7 +42,7 @@
             label: "Which integrations are wanted?",
             help: Some("Integrations themselves are usually light on the system, so this is recorded for planning. Any present means Central is sized up a little."),
             options: [
-                (id: "lims", label: "LIMS — laboratories (Senaite or other)"),
+                (id: "lims", label: "LIMS — laboratories (SENAITE or other)"),
                 (id: "msupply", label: "Pharmacy & warehousing (mSupply or other)"),
                 (id: "rispacs", label: "RISPACS / Imaging"),
                 (id: "other_fhir", label: "Other FHIR-based integration"),
@@ -209,10 +209,11 @@
             id: "dns",
             kind: Single,
             label: "DNS authority",
-            help: Some("BES must be able to manage DNS for the deployment."),
+            help: Some("How the deployment's DNS is handled."),
             options: [
                 (id: "bes", label: "BES controls DNS", note: Some("BES domain, provisioned domain, or SOA delegation.")),
-                (id: "client", label: "Client controls DNS", note: Some("Then ACME automation + a wildcard are required.")),
+                (id: "client", label: "Client controls DNS", note: Some("Then ACME automation is required, and all domains must share a common stem.")),
+                (id: "local", label: "No DNS — all local", note: Some("All servers talk over HTTP.")),
             ],
         ),
         (
@@ -229,8 +230,8 @@
             kind: Single,
             label: "Time synchronisation",
             options: [
+                (id: "outbound", label: "Public NTP", note: Some("Allow outbound traffic to pool.ntp.org.")),
                 (id: "internal", label: "Internal time server", note: Some("Provide the IP.")),
-                (id: "outbound", label: "Allow outbound NTP", note: Some("To public pools.")),
             ],
         ),
     ],
@@ -488,7 +489,20 @@
                 status: Requirement,
                 audience: Client,
                 title: "Client-controlled DNS",
-                detail: "If BES does not control DNS, the client must support automatic ACME certificate issuance and provide a wildcard at the domain level (central.<name>.<tld>, facility.<name>.<tld>).",
+                detail: "If BES does not control DNS, the client must support automatic ACME certificate issuance, and keep every deployment domain under a common stem (e.g. central.<name>.<tld> and facility.<name>.<tld> — not central.foo.tld alongside facility.bar.tld).",
+            ),
+        ),
+        (
+            id: "dns-local",
+            source: "network",
+            when: Equals("dns", "local"),
+            consequence: (
+                severity: NonDefault,
+                status: Requirement,
+                audience: Client,
+                types: [Operational],
+                title: "No DNS — all-local, plain HTTP",
+                detail: "With no DNS, servers reach each other over plain HTTP on the local network: no certificates, no TLS, no name-based routing. Supported, but an operational and security risk — traffic is unencrypted. Weigh the tradeoffs.",
             ),
         ),
         (

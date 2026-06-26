@@ -5,6 +5,9 @@
 # web/dist/ for release builds. Release re-enables it (see build-release).
 export SKIP_FRONTEND_BUILD := "1"
 
+# Local dev database (its own DB; nothing fleet-related). Override via the env.
+export DATABASE_URL := env('DATABASE_URL', 'postgres://localhost/pollen')
+
 # ...for development links
 export PUBLIC_BASE_URL := "http://localhost:8090"
 
@@ -35,6 +38,25 @@ gen-openapi:
 # references-only, so a bare `tsc --noEmit` checks nothing.
 typecheck:
     cd web && npx tsc -b
+
+# Run pending migrations against DATABASE_URL, then regenerate schema.rs.
+migrate:
+    diesel migration run
+    cargo fmt
+
+# Create a new migration (writes up.sql/down.sql; never hand-create these)
+migration name:
+    diesel migration generate {{ name }}
+
+# Revert the last migration, then regenerate schema.rs
+migrate-revert:
+    diesel migration revert
+    cargo fmt
+
+# Redo the last migration (down then up)
+migrate-redo:
+    diesel migration redo
+    cargo fmt
 
 # Run all tests against a throwaway RAM-backed Postgres (see scripts/ramdisk-pg.sh).
 # Args pass straight to nextest.

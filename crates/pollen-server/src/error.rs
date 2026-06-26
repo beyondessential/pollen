@@ -1,6 +1,7 @@
 use std::str::FromStr as _;
 
 use axum::response::{IntoResponse, Response};
+use diesel_async::pooled_connection::PoolError;
 use http::{StatusCode, Uri};
 use problem_details::ProblemDetails;
 use serde::{Deserialize, Serialize};
@@ -37,6 +38,12 @@ pub enum AppError {
 
 	#[error("io: {0}")]
 	Io(String),
+
+	#[error("database pool: {0}")]
+	DatabasePool(#[from] mobc::Error<PoolError>),
+
+	#[error("database: {0}")]
+	DatabaseQuery(#[from] diesel::result::Error),
 
 	#[error("invalid request: {0}")]
 	BadRequest(String),
@@ -79,6 +86,7 @@ impl AppError {
 			Self::NotFound(_) => StatusCode::NOT_FOUND,
 			Self::Conflict(_) => StatusCode::CONFLICT,
 			Self::Upstream(_) => StatusCode::BAD_GATEWAY,
+			Self::DatabaseQuery(diesel::result::Error::NotFound) => StatusCode::NOT_FOUND,
 			Self::Problem(p) => p
 				.status
 				.and_then(|s| StatusCode::from_u16(s.as_u16()).ok())
@@ -102,6 +110,10 @@ impl AppError {
 					slug = match self {
 						Self::Custom(_) => "other",
 						Self::Io(_) => "io",
+						Self::DatabasePool(_) => "database",
+						Self::DatabaseQuery(diesel::result::Error::NotFound) =>
+							"resource-not-found",
+						Self::DatabaseQuery(_) => "database",
 						Self::BadRequest(_) => "bad-request",
 						Self::NotFound(_) => "not-found",
 						Self::Conflict(_) => "conflict",

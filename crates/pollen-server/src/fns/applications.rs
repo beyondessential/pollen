@@ -147,7 +147,7 @@ pub async fn patch(
 	let mut conn = state.db.get().await?;
 	let app = Application::get(&mut conn, args.id).await?;
 	if app.status != ApplicationStatus::Draft {
-		return Err(AppError::Conflict("application is finalized".into()));
+		return Err(AppError::Conflict("application is finalised".into()));
 	}
 	let app = Application::set_answers(&mut conn, args.id, &args.answers).await?;
 	let ruleset = load_ruleset(&mut conn, &app.config_hash).await?;
@@ -169,11 +169,24 @@ pub async fn finalize(
 	let app = Application::get(&mut conn, args.id).await?;
 	if app.status != ApplicationStatus::Draft {
 		return Err(AppError::Conflict(
-			"application is already finalized".into(),
+			"application is already finalised".into(),
+		));
+	}
+	let ruleset = load_ruleset(&mut conn, &app.config_hash).await?;
+	let answers: Answers = serde_json::from_value(app.answers.clone()).map_err(AppError::custom)?;
+	let evaluation = evaluate(&ruleset, &answers);
+	// Every visible question must be answered; answering can reveal more, so
+	// "all visible answered" means the form is complete.
+	if evaluation
+		.visible_questions
+		.iter()
+		.any(|qid| !answers.answered(qid))
+	{
+		return Err(AppError::BadRequest(
+			"answer every question before finalising".into(),
 		));
 	}
 	let app = Application::finalize(&mut conn, args.id).await?;
-	let ruleset = load_ruleset(&mut conn, &app.config_hash).await?;
 	Ok(Json(build_view(app, &ruleset, None)?))
 }
 

@@ -18,6 +18,11 @@ export default function Wizard({
 	const started = Object.values(answers).some((v) =>
 		Array.isArray(v) ? v.length > 0 : v != null && v !== "",
 	);
+	// Every visible question must be answered before finalising.
+	const allAnswered = ev.visible_questions.every((qid) => {
+		const v = answers[qid];
+		return Array.isArray(v) ? v.length > 0 : v != null && v !== "";
+	});
 	const byId = new Map(view.questions.map((q) => [q.id, q]));
 	const offDefault = ev.consequences.filter(
 		(c) => c.consequence.severity === "NonDefault",
@@ -101,8 +106,16 @@ export default function Wizard({
 					) : null;
 				})}
 				<div className="actions">
-					<button type="button" className="btn primary" disabled={busy} onClick={finalize}>
-						Finalize
+					{!allAnswered && (
+						<span className="actions-hint">Answer every question to finalise.</span>
+					)}
+					<button
+						type="button"
+						className="btn primary"
+						disabled={busy || !allAnswered}
+						onClick={finalize}
+					>
+						Finalise
 					</button>
 				</div>
 			</main>

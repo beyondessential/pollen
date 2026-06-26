@@ -20,12 +20,27 @@ async fn create_patch_finalize_fork_lifecycle() {
 		assert_eq!(created["evaluation"]["verdict"], "Clear");
 		let id = created["id"].as_str().unwrap().to_owned();
 
-		// Patch in a blocking combination: analytics on, backups disabled.
+		// A complete, blocking configuration: analytics on but backups disabled.
+		// Every visible question is answered (so finalise is allowed); platform,
+		// retention, and hosted-integration stay hidden here.
+		let answers = json!({
+			"analytics": "yes",
+			"integrations": ["none"],
+			"catchment": "c0",
+			"facilities": "f0",
+			"mobile": "m0",
+			"central": "bescloud",
+			"facility_mix": ["bescloud"],
+			"region": "sydney",
+			"backup_capability": "no",
+			"cadence": "release",
+			"dns": "bes",
+			"remote": "tailscale",
+			"timesync": "internal",
+		});
 		let patched: Value = server
 			.post("/api/applications/patch")
-			.json(
-				&json!({ "id": id, "answers": { "analytics": "yes", "backup_capability": "no" } }),
-			)
+			.json(&json!({ "id": id, "answers": answers }))
 			.await
 			.json();
 		assert_eq!(patched["status"], "draft");
@@ -72,8 +87,37 @@ async fn create_patch_finalize_fork_lifecycle() {
 		assert_ne!(forked["id"], id);
 		assert_eq!(forked["migration"]["dropped"], json!([]));
 		assert_eq!(forked["migration"]["new_questions"], json!([]));
-		// Carried answers re-evaluate to the same verdict.
+		// Answers carry over to the new draft (not a zeroed plan).
+		assert_eq!(forked["answers"]["analytics"], "yes");
+		assert_eq!(forked["answers"]["central"], "bescloud");
 		assert_eq!(forked["evaluation"]["verdict"], "Blocking");
+	})
+	.await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn finalize_requires_all_questions_answered() {
+	run_server(|server, _conn| async move {
+		let created: Value = server
+			.post("/api/applications/create")
+			.json(&json!({}))
+			.await
+			.json();
+		let id = created["id"].as_str().unwrap().to_owned();
+
+		// Only one of many visible questions answered.
+		server
+			.post("/api/applications/patch")
+			.json(&json!({ "id": id, "answers": { "analytics": "yes" } }))
+			.await
+			.assert_status_ok();
+
+		// Finalising an incomplete plan is rejected.
+		server
+			.post("/api/applications/finalize")
+			.json(&json!({ "id": id }))
+			.await
+			.assert_status(StatusCode::BAD_REQUEST);
 	})
 	.await;
 }

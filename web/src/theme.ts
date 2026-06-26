@@ -1,19 +1,21 @@
 import { createTheme } from "@mui/material/styles";
 
-// Placeholder palette — real visual design lands with the wizard UI. Pollen:
-// a warm amber against a leaf green.
-const POLLEN = "#c8951b";
-const POLLEN_LIGHT = "#e0b24a";
-const LEAF = "#2f7d4f";
-const LEAF_LIGHT = "#56a877";
+// BES brand blues: navy carries structure, sky carries interaction.
+const NAVY = "#313f6a";
+const SKY = "#009cea";
 
-export function makeTheme(mode: "light" | "dark") {
-	const dark = mode === "dark";
-	return createTheme({
-		palette: {
-			mode,
-			primary: { main: dark ? POLLEN_LIGHT : POLLEN },
-			secondary: { main: dark ? LEAF_LIGHT : LEAF },
-		},
-	});
-}
+export const theme = createTheme({
+	palette: {
+		mode: "light",
+		primary: { main: NAVY },
+		secondary: { main: SKY },
+		background: { default: "#f4f6f8", paper: "#ffffff" },
+		text: { primary: "#14222b", secondary: "#485a63" },
+	},
+	typography: {
+		fontFamily: '"Inter", system-ui, sans-serif',
+		h1: { fontFamily: '"Space Grotesk", system-ui, sans-serif' },
+		h2: { fontFamily: '"Space Grotesk", system-ui, sans-serif' },
+		h3: { fontFamily: '"Space Grotesk", system-ui, sans-serif' },
+	},
+});

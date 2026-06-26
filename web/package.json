@@ -12,6 +12,9 @@
 	"dependencies": {
 		"@emotion/react": "^11.14.0",
 		"@emotion/styled": "^11.14.1",
+		"@fontsource/ibm-plex-mono": "^5.2.7",
+		"@fontsource/inter": "^5.2.8",
+		"@fontsource/space-grotesk": "^5.2.10",
 		"@mui/icons-material": "^9.1.1",
 		"@mui/material": "^9.1.1",
 		"react": "^19.2.7",

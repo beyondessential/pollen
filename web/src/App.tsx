@@ -1,30 +1,23 @@
-import { Box, Container, Stack, Typography } from "@mui/material";
-import { useApi } from "./api";
+import { Route, Routes } from "react-router-dom";
+
+import ApplicationPage from "./routes/ApplicationPage";
+import NewApplication from "./routes/NewApplication";
 
 export default function App() {
-	const version = useApi("meta", "version");
-
 	return (
-		<Container maxWidth="sm">
-			<Stack spacing={2} sx={{ py: 8 }}>
-				<Typography variant="h3" component="h1">
-					Tamanu deployment setup
-				</Typography>
-				<Typography color="text.secondary">
-					Scaffolding is in place. The wizard lands in a later phase.
-				</Typography>
-				<Box sx={{ fontFamily: "monospace", fontSize: 14 }}>
-					{version.status === "ok" && (
-						<span>
-							{version.data.name} v{version.data.version}
-						</span>
-					)}
-					{version.status === "loading" && <span>connecting…</span>}
-					{version.status === "error" && (
-						<span>api unreachable: {version.error.message}</span>
-					)}
-				</Box>
-			</Stack>
-		</Container>
+		<>
+			<header className="topbar">
+				<div className="brand">
+					<span className="brand-mark">BES</span>
+					<span className="brand-rule" />
+					<span className="brand-name">New Tamanu</span>
+				</div>
+			</header>
+			<Routes>
+				<Route path="/" element={<NewApplication />} />
+				<Route path="/a/:id" element={<ApplicationPage />} />
+				<Route path="*" element={<div className="splash">Not found.</div>} />
+			</Routes>
+		</>
 	);
 }

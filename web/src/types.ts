@@ -64,3 +64,44 @@ export type Solidify<T> = T extends readonly unknown[]
 // ── Wire types ─────────────────────────────────────────────────────────────
 
 export type VersionInfo = Solidify<Schemas["VersionInfo"]>;
+
+// ── Application + ruleset wire types ────────────────────────────────────────
+export type AppView = Solidify<Schemas["AppView"]>;
+export type QuestionView = Solidify<Schemas["QuestionView"]>;
+export type Opt = Solidify<Schemas["Opt"]>;
+export type QuestionKind = Solidify<Schemas["QuestionKind"]>;
+export type ApplicationStatus = Solidify<Schemas["ApplicationStatus"]>;
+export type Evaluation = Solidify<Schemas["Evaluation"]>;
+export type TriggeredConsequence = Solidify<Schemas["TriggeredConsequence"]>;
+export type TriggeredGuidance = Solidify<Schemas["TriggeredGuidance"]>;
+export type Consequence = Solidify<Schemas["Consequence"]>;
+export type Cost = Solidify<Schemas["Cost"]>;
+export type MigrationView = Solidify<Schemas["MigrationView"]>;
+export type Severity = Solidify<Schemas["Severity"]>;
+export type ConsequenceType = Solidify<Schemas["ConsequenceType"]>;
+export type Status = Solidify<Schemas["Status"]>;
+export type Audience = Solidify<Schemas["Audience"]>;
+export type Verdict = Solidify<Schemas["Verdict"]>;
+
+/// An answer value: one option id (single/band) or several (multi).
+export type AnswerValue = string | string[];
+
+// UI-only label/colour maps.
+export const CONSEQUENCE_TYPE_LABEL: Record<ConsequenceType, string> = {
+	Cost: "Cost",
+	Operational: "Operational",
+	Capability: "Capability loss",
+	Support: "Support",
+};
+
+export const STATUS_LABEL: Record<Status, string> = {
+	Requirement: "Requirement",
+	Advisory: "Advisory",
+	Referral: "Referral",
+};
+
+export const AUDIENCE_LABEL: Record<Audience, string> = {
+	Client: "Client IT — required actions",
+	Bes: "BES technical — setup",
+	Record: "Record & acknowledgments",
+};

@@ -20,9 +20,10 @@ check:
     cargo check
 
 # Run the API server, bound to IPv4 so Vite's proxy can reach it, reloading on
-# source change. (Node's vite-proxy can't resolve [::1] literals.)
+# source change. (Node's vite-proxy can't resolve [::1] literals.) Also watches
+# ruleset.ron — it's embedded via include_str!, so editing it must rebuild.
 watch-api:
-    BIND_ADDRESS=127.0.0.1:8080 watchexec -I -w crates -- cargo run --bin pollen-server
+    BIND_ADDRESS=127.0.0.1:8080 watchexec -I -w crates -w ruleset.ron -- cargo run --bin pollen-server
 
 # Run the Vite frontend dev server (proxies /api to watch-api)
 watch-web:

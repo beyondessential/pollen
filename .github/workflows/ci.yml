@@ -87,11 +87,60 @@ jobs:
       - run: npm run build
         working-directory: web
 
+  e2e:
+    name: Playwright
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.3
+      - name: Configure toolchain
+        run: |
+          rustup toolchain install --profile minimal --no-self-update stable
+          rustup default stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      # The fixture spawns pollen-server + migrate; Vite serves the SPA, so the
+      # embedded bundle isn't needed (SKIP_FRONTEND_BUILD avoids the npm build).
+      - name: Build binaries
+        env:
+          SKIP_FRONTEND_BUILD: "1"
+        run: cargo build --bin pollen-server --bin migrate --locked
+      - name: npm ci
+        run: npm ci
+        working-directory: web
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('web/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-playwright-
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: web
+      # The wrapper spins up a throwaway tmpfs Postgres and exports
+      # POLLEN_E2E_ADMIN_DATABASE_URL; the fixture creates per-worker DBs on it.
+      - name: Run e2e
+        run: ../scripts/ramdisk-pg.sh npm run test:e2e
+        working-directory: web
+      - name: Upload report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report
+            web/test-results
+          retention-days: 7
+          if-no-files-found: ignore
+
   # Stable name for branch protection
   ci-pass:
     if: always()
     name: CI pass
-    needs: [test, clippy, fmt, typecheck]
+    needs: [test, clippy, fmt, typecheck, e2e]
     runs-on: ubuntu-latest
     steps:
       - uses: re-actors/alls-green@release/v1

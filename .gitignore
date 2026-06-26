@@ -2,5 +2,7 @@
 **/node_modules
 /web/dist
 /web/openapi.json.tmp
+/web/playwright-report
+/web/test-results
 *.log
 .DS_Store

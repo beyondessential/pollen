@@ -69,6 +69,14 @@ test *args:
 fast +cmd:
     scripts/ramdisk-pg.sh {{ cmd }}
 
+# Run the Playwright e2e suite. Builds the binaries the fixture spawns, then runs
+# against the throwaway RAM-backed Postgres (the wrapper sets
+# POLLEN_E2E_ADMIN_DATABASE_URL). First run on a fresh checkout needs:
+#   cd web && npx playwright install chromium
+test-e2e:
+    cargo build --bin pollen-server --bin migrate
+    cd web && {{ justfile_directory() }}/scripts/ramdisk-pg.sh npm run test:e2e
+
 # Format / lint
 fmt:
     cargo fmt

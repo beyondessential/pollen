@@ -54,7 +54,6 @@ export default function Artifact({ view }: { view: AppView }) {
 		<div className="sheet">
 			<div className="sheet-head">
 				<div>
-					<div className="sheet-eyebrow">Deployment record · no client name by design</div>
 					<h2 className="sheet-title">{ev.derived["size"] ?? "Unsized"} deployment</h2>
 					<div className="sheet-facts">
 						<span>{topology(view.questions, answers)}</span>

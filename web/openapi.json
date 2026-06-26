@@ -1,0 +1,63 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "pollen",
+    "description": "Public API for the Tamanu deployment onboarding wizard.",
+    "contact": {
+      "name": "BES Developers",
+      "email": "contact@bes.au"
+    },
+    "license": {
+      "name": "GPL-3.0-or-later"
+    },
+    "version": ""
+  },
+  "paths": {
+    "/api/meta/version": {
+      "post": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Service name and version. Doubles as a trivial reachability check.",
+        "operationId": "meta_version",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "VersionInfo": {
+        "type": "object",
+        "required": [
+          "name",
+          "version"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "meta",
+      "description": "Service metadata."
+    }
+  ]
+}

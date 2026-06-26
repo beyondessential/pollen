@@ -1,0 +1,35 @@
+[workspace]
+resolver = "3"
+members = ["crates/pollen-server"]
+
+[workspace.package]
+edition = "2024"
+license = "GPL-3.0-or-later"
+authors = [
+	"Félix Saparelli <felix@passcod.name>",
+	"BES Developers <contact@bes.au>",
+]
+
+[workspace.dependencies]
+axum = { version = "0.8.9", features = ["json", "macros"] }
+clap = { version = "4.6.1", features = ["derive", "env"] }
+http = "1.4.0"
+lloggs = { version = "1.4.0", features = ["miette-7"] }
+miette = { version = "7.6.0", features = ["fancy"] }
+mime_guess = "2.0.5"
+problem_details = { version = "0.9.0", features = ["serde", "axum"] }
+rust-embed = { version = "8.11.0", features = ["interpolate-folder-path"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+thiserror = "2.0.18"
+tokio = { version = "1.52.3", features = ["macros", "net", "rt-multi-thread", "signal"] }
+tower-http = { version = "0.6.11", features = ["trace", "compression-gzip"] }
+tracing = "0.1.44"
+utoipa = { version = "5", features = ["uuid", "axum_extras"] }
+utoipa-axum = "0.2"
+utoipa-swagger-ui = { version = "9", default-features = false, features = ["axum", "vendored"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "symbols"

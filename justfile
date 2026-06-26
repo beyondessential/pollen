@@ -106,7 +106,7 @@ build-image:
     case "$(uname -m)" in aarch64|arm64) arch=arm64;; x86_64|amd64) arch=amd64;; *) arch="$(uname -m)";; esac
     # Stage a build context mirroring CI's layout: the binary under <arch>/.
     ctx="$(mktemp -d)"; trap 'rm -rf "$ctx"' EXIT
-    SKIP_FRONTEND_BUILD= cargo build --release --bin pollen-server
-    mkdir -p "$ctx/$arch"; cp target/release/pollen-server "$ctx/$arch/"
+    SKIP_FRONTEND_BUILD= cargo build --release --bin pollen-server --bin migrate
+    mkdir -p "$ctx/$arch"; cp target/release/pollen-server target/release/migrate "$ctx/$arch/"
     echo "building image 'pollen' with: $engine (arch $arch)" >&2
     $engine build -f "$PWD/.github/Containerfile" --build-arg "BIN_DIR=$arch" -t pollen "$ctx"

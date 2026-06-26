@@ -33,16 +33,24 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: arm64-release
-      # The runner ships Node + npm; build.rs uses them to produce the embedded
-      # web/dist/ bundle (build-release re-enables the frontend build).
-      - name: Build binary
+      # build.rs runs the Vite build and rust-embed bakes web/dist/ into the
+      # binary, so the SPA ships inside it. Node must be present: without npm,
+      # build.rs would fall back to an empty dist/ and silently ship a blank UI.
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Build binary (embeds the SPA)
         run: just build-release aarch64-unknown-linux-gnu
         env:
           RUSTFLAGS: "-C target-feature=+crt-static"
       - name: Prepare artifacts
         run: |
           mkdir -p artifacts/arm64
-          cp target/aarch64-unknown-linux-gnu/release/pollen-server artifacts/arm64/
+          for bin in pollen-server migrate; do
+            cp "target/aarch64-unknown-linux-gnu/release/$bin" artifacts/arm64/
+          done
       - uses: actions/upload-artifact@v7
         with:
           name: binaries-arm64

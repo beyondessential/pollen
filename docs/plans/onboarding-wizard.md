@@ -40,9 +40,8 @@ pollen/
     src/, openapi.json, src/api-types.ts (generated)
   migrations/                 # diesel migrations (single DB, clean — no multi-schema)
   ruleset/
-    v1.<ext>                  # the default ruleset, authored in a human-writable,
-                              #   commentable format; bundled + normalized + hashed on boot
-    schema.*                  # schema for the ruleset format (validation + authoring aid)
+    v1.ron                    # the default ruleset, authored in RON (commented);
+                              #   bundled + normalized to canonical JSON + hashed on boot
   scripts/ramdisk-pg.sh       # RAM-backed Postgres test harness (port from canopy)
   .github/                    # CI (ci.yml), CD (cd.yml), Dockerfile
   justfile
@@ -88,14 +87,12 @@ Commit incrementally (jj). Each phase is independently reviewable.
 - Exit: migrations run on the ramdisk DB; round-trip a row in a db test.
 
 ### Phase 2 — Ruleset format & engine
-- **Authoring format.** Author the ruleset in a human-writable, commentable
-  format (so the concrete questions/consequences and their rationale are
-  documented inline, where they're authored — not in a spec). The machine form
-  is canonical JSON; the authoring format normalizes to it. Pick the format
-  here — recommend JSON5/JSONC (smallest step from JSON: comments + trailing
-  commas, parse → `serde_json::Value` → canonicalize); RON or YAML are
-  alternatives. Comments and insignificant formatting are dropped by
-  normalization, so they don't affect the hash.
+- **Authoring format: RON.** Author the ruleset in RON (`ruleset/v1.ron`), so
+  the concrete questions/consequences and their rationale are documented inline
+  where they're authored — not in a spec. Parse RON → the typed `Ruleset` model
+  → serialize to canonical JSON (recursively key-sorted, compact) → hash. The
+  canonical JSON is the machine form stored in `config_store`; comments and
+  formatting are dropped by normalization, so they don't affect the hash.
 - Define the structure (+ a schema for validation/authoring aid):
   - **questions**: stable `id`, kind (single / multi / band), options
     (stable `id`, label, note), and a visibility condition.

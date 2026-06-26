@@ -17,6 +17,7 @@ diesel = { version = "2.3.9", features = ["postgres_backend", "serde_json", "uui
 diesel-async = { version = "0.9.0", features = ["mobc", "postgres", "migrations", "async-connection-wrapper"] }
 diesel-derive-enum = { version = "2.1.0", features = ["postgres"] }
 diesel_migrations = "2.3.2"
+hex = "0.4.3"
 http = "1.4.0"
 jiff = { version = "0.2.24", features = ["serde"] }
 jiff-diesel = { version = "0.1.3", features = ["postgres"] }
@@ -25,9 +26,11 @@ miette = { version = "7.6.0", features = ["fancy"] }
 mime_guess = "2.0.5"
 mobc = "0.9.0"
 problem_details = { version = "0.9.0", features = ["serde", "axum"] }
+ron = "0.12.2"
 rust-embed = { version = "8.11.0", features = ["interpolate-folder-path"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.150"
+sha2 = "0.11.0"
 thiserror = "2.0.18"
 tokio = { version = "1.52.3", features = ["macros", "net", "rt-multi-thread", "signal"] }
 tower-http = { version = "0.6.11", features = ["trace", "compression-gzip"] }

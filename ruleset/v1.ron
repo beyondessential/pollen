@@ -1,0 +1,594 @@
+// The v1 onboarding ruleset. Authored here, in RON; the engine evaluates it
+// (spec WIZ). This file is the single source of truth for the concrete
+// questions and consequences — comments capture the rationale. It is normalized
+// to canonical JSON and content-addressed by hash, so comments and formatting
+// don't affect identity.
+//
+// Stable-id discipline (spec WIZ): every question and option `id` is permanent.
+// Never reuse or repurpose an id; add new ones instead.
+//
+// Many on-prem rules repeat the same "any on-premises facility present" or
+// "any BES cloud present" condition. There are no variables in the data, so
+// the conditions are spelled out at each use.
+//
+// Open content values to confirm with sales/product before v1 ships: band
+// thresholds and their size mapping, the region list, integration categories,
+// the cost tiers/ballparks, the net-check blurb, and the requirement-vs-advisory
+// status of each networking item.
+
+(
+    version: Some("2026.06-draft"),
+
+    questions: [
+        // 1. Analytics intent — asked first; it constrains backups later.
+        (
+            id: "analytics",
+            kind: Single,
+            label: "Connect to the BES analytics platform (Tupaia)?",
+            help: Some("Connecting means BES processes the data, which needs at minimum a low-retention backup. Asked first because it shapes the backup choices."),
+            options: [
+                (id: "yes", label: "Yes, connect to analytics"),
+                (id: "no", label: "No analytics"),
+            ],
+        ),
+
+        // 2. Integrations — recorded for planning; presence sizes Central up.
+        (
+            id: "integrations",
+            kind: Multi,
+            label: "Which integrations are wanted?",
+            help: Some("Integrations are light on the system, so this is recorded for planning. Any present means Central is sized up a little."),
+            options: [
+                (id: "lims", label: "LIMS — laboratories (Senaite or other)"),
+                (id: "msupply", label: "Pharmacy & warehousing (mSupply or other)"),
+                (id: "none", label: "None for now"),
+            ],
+        ),
+        (
+            id: "hosted_integration",
+            kind: Single,
+            label: "Should BES host any of these integrations?",
+            help: Some("Possible, but specced in a separate technical conversation — flagged here, not resolved here."),
+            options: [
+                (id: "yes", label: "Yes — BES hosts it"),
+                (id: "no", label: "No — the client hosts it"),
+            ],
+            // Only when at least one integration is wanted.
+            visible_if: Any([
+                Includes("integrations", "lims"),
+                Includes("integrations", "msupply"),
+            ]),
+        ),
+
+        // 3. Sizing — three bands; the highest reached derives the size.
+        (
+            id: "catchment",
+            kind: Band,
+            label: "Catchment population",
+            help: Some("The total population the health system covers."),
+            options: [
+                (id: "c0", label: "Under 5,000"),
+                (id: "c1", label: "5,000 – 50,000"),
+                (id: "c2", label: "50,000 – 250,000"),
+                (id: "c3", label: "Over 250,000"),
+            ],
+        ),
+        (
+            id: "facilities",
+            kind: Band,
+            label: "Number of facilities",
+            options: [
+                (id: "f0", label: "1 – 5"),
+                (id: "f1", label: "6 – 15"),
+                (id: "f2", label: "16 – 40"),
+                (id: "f3", label: "Over 40"),
+            ],
+        ),
+        (
+            id: "mobile",
+            kind: Band,
+            label: "Mobile clients",
+            options: [
+                (id: "m0", label: "Under 10"),
+                (id: "m1", label: "10 – 50"),
+                (id: "m2", label: "50 – 200"),
+                (id: "m3", label: "Over 200"),
+            ],
+        ),
+
+        // 4. Topology — central placement, plus the mix of facility classes.
+        (
+            id: "central",
+            kind: Single,
+            label: "Where does the central server run?",
+            help: Some("Central is typically in BES cloud even when facilities are on-site. Customer cloud is treated as on-prem."),
+            options: [
+                (id: "bescloud", label: "BES cloud", note: Some("Fully managed AWS hosting; client gets application access by default.")),
+                (id: "customercloud", label: "Customer cloud", note: Some("Treated as on-prem.")),
+                (id: "onprem", label: "True on-prem", note: Some("Bare metal or virtualized on site.")),
+            ],
+        ),
+        (
+            id: "facility_mix",
+            kind: Multi,
+            label: "What's the facility mix?",
+            help: Some("Planning grain only — not which specific facility sits where. The presence of a class is what brings in its requirements."),
+            options: [
+                (id: "bescloud", label: "Some in BES cloud"),
+                (id: "baremetal", label: "Some on-prem, bare metal"),
+                (id: "virtualized", label: "Some on-prem, virtualized"),
+                (id: "iti", label: "Some Tamanu ITI appliances", note: Some("BES-built ARM64 plug-in server.")),
+            ],
+        ),
+
+        // 5. Region — only when any BES cloud is present.
+        (
+            id: "region",
+            kind: Single,
+            label: "Which hosting region?",
+            help: Some("Relevant because part of this deployment is in BES cloud."),
+            options: [
+                (id: "sydney", label: "Sydney", note: Some("Default.")),
+                (id: "zurich", label: "Zurich", note: Some("For Europe.")),
+                (id: "otheraws", label: "Other AWS region", note: Some("Supported, adds ongoing cost.")),
+            ],
+            visible_if: Any([
+                Equals("central", "bescloud"),
+                Includes("facility_mix", "bescloud"),
+            ]),
+        ),
+
+        // 6. Platform — only when any on-prem is present (BES cloud and the ITI
+        // appliance are fixed to Linux on ARM64).
+        (
+            id: "platform",
+            kind: Single,
+            label: "On-prem operating system",
+            help: Some("BES cloud and the ITI appliance are fixed to Linux on ARM64. This is for the on-prem servers."),
+            options: [
+                (id: "linuxarm", label: "Linux on ARM64", note: Some("Ideal.")),
+                (id: "linuxamd", label: "Linux on AMD64", note: Some("Fully supported.")),
+                (id: "windows", label: "Windows Server", note: Some("Phasing out — strong insistence only.")),
+                (id: "other", label: "Other (Red Hat, Kubernetes, non-server Windows)", note: Some("Unsupported.")),
+            ],
+            visible_if: Any([
+                Equals("central", "onprem"),
+                Equals("central", "customercloud"),
+                Includes("facility_mix", "baremetal"),
+                Includes("facility_mix", "virtualized"),
+                Includes("facility_mix", "iti"),
+            ]),
+        ),
+
+        // 7. Backups — capability, then retention (retention only if allowed).
+        (
+            id: "backup_capability",
+            kind: Single,
+            label: "Can BES take backups?",
+            help: Some("Distinct from retention. Clone-upgrade testing needs only the ability to take a one-off backup, even if nothing is kept."),
+            options: [
+                (id: "yes", label: "Yes — BES may take backups"),
+                (id: "no", label: "No — BES may not take backups", note: Some("Removes recovery, analytics, and clone upgrades.")),
+            ],
+        ),
+        (
+            id: "retention",
+            kind: Single,
+            label: "What does BES retain?",
+            options: [
+                (id: "full", label: "Full retention", note: Some("Default, fully integrated.")),
+                (id: "low", label: "Low-retention (process-only)", note: Some("Just enough for analytics + clone upgrades.")),
+                (id: "none", label: "None (self-managed)", note: Some("Client runs their own backups.")),
+            ],
+            visible_if: Equals("backup_capability", "yes"),
+        ),
+
+        // 8. Upgrade cadence — planning data only, never contractual.
+        (
+            id: "cadence",
+            kind: Single,
+            label: "How often do you intend to upgrade?",
+            help: Some("Planning data only — never a contractual term. BES releases roughly fortnightly."),
+            options: [
+                (id: "release", label: "Every release", note: Some("~Fortnightly.")),
+                (id: "quarterly", label: "Quarterly"),
+                (id: "biannual", label: "Twice a year"),
+                (id: "asneeded", label: "As needed / unsure"),
+            ],
+        ),
+
+        // 9. Networking.
+        (
+            id: "dns",
+            kind: Single,
+            label: "DNS authority",
+            help: Some("BES must be able to manage DNS for the deployment."),
+            options: [
+                (id: "bes", label: "BES controls DNS", note: Some("BES domain, provisioned domain, or SOA delegation.")),
+                (id: "client", label: "Client controls DNS", note: Some("Then ACME automation + a wildcard are required.")),
+            ],
+        ),
+        (
+            id: "remote",
+            kind: Single,
+            label: "Remote access for managed servers",
+            options: [
+                (id: "tailscale", label: "Tailscale", note: Some("Standard. Only the specific servers need it allowed.")),
+                (id: "other", label: "Non-Tailscale arrangement", note: Some("Exceptional, adds contract-level cost.")),
+            ],
+        ),
+        (
+            id: "timesync",
+            kind: Single,
+            label: "Time synchronization",
+            options: [
+                (id: "internal", label: "Internal time server", note: Some("Provide the IP.")),
+                (id: "outbound", label: "Allow outbound NTP", note: Some("To public pools.")),
+            ],
+        ),
+    ],
+
+    // Size = the highest band reached across the three sizing questions, mapped
+    // by ordinal. All three have four bands; index 1 ("Small") and 0 both map to
+    // Small, matching the prototype.
+    derivations: [
+        (
+            id: "size",
+            kind: HighestBand(
+                questions: ["catchment", "facilities", "mobile"],
+                labels: ["Small", "Small", "Medium", "Large"],
+            ),
+        ),
+    ],
+
+    // Forward guidance shown before a constraint is reached.
+    guidance: [
+        (
+            at: "backup_capability",
+            when: Equals("analytics", "yes"),
+            message: "You asked for analytics, so backups can't be fully disabled — at minimum, low-retention is needed.",
+        ),
+    ],
+
+    rules: [
+        // ── Intent ──────────────────────────────────────────────────────────
+        (
+            id: "analytics-on",
+            source: "intent",
+            when: Equals("analytics", "yes"),
+            consequence: (
+                status: Requirement,
+                audience: Bes,
+                title: "Analytics connection requested",
+                detail: "Connecting to the analytics platform means BES processes the data, which requires at minimum a low-retention backup. This constrains the backup choices later.",
+            ),
+        ),
+        (
+            id: "int-capacity",
+            source: "intent",
+            when: Any([
+                Includes("integrations", "lims"),
+                Includes("integrations", "msupply"),
+            ]),
+            consequence: (
+                status: Advisory,
+                audience: Bes,
+                types: [Operational],
+                title: "Central sized up for integrations",
+                detail: "Any integrations add load to the central server, so Central is provisioned with more resources. This is a flat allowance — the number of integrations does not change it.",
+            ),
+        ),
+        (
+            id: "int-hosted",
+            source: "intent",
+            when: Equals("hosted_integration", "yes"),
+            consequence: (
+                status: Referral,
+                audience: Record,
+                title: "BES-hosted integration — separate conversation",
+                detail: "Hosting an integration on BES infrastructure is possible but is scoped in a dedicated technical conversation. This record only flags the intent.",
+            ),
+        ),
+
+        // ── Region ──────────────────────────────────────────────────────────
+        (
+            id: "region-other",
+            source: "region",
+            when: All([
+                Any([
+                    Equals("central", "bescloud"),
+                    Includes("facility_mix", "bescloud"),
+                ]),
+                Equals("region", "otheraws"),
+            ]),
+            consequence: (
+                severity: NonDefault,
+                status: Advisory,
+                audience: Bes,
+                types: [Cost],
+                cost: Some((tier: "Adds ongoing cost", ballpark: Some("order of hundreds–thousands / year"))),
+                title: "Non-standard AWS region",
+                detail: "Running outside the standard Sydney / Zurich regions is supported but adds ongoing cost. Sales confirms actual figures.",
+            ),
+        ),
+
+        // ── Platform ────────────────────────────────────────────────────────
+        (
+            id: "plat-windows",
+            source: "platform",
+            when: Equals("platform", "windows"),
+            consequence: (
+                severity: NonDefault,
+                status: Requirement,
+                audience: Client,
+                types: [Cost, Operational, Support],
+                cost: Some((tier: "Client-funded licensing", ballpark: Some("thousands–tens of thousands one-off, or ongoing subscription"))),
+                title: "Windows Server (being phased out)",
+                detail: "Supported only on strong insistence. The client licenses Windows (Standard, not Datacenter). Application performance is slower, and support and incident response are slower and less effective.",
+            ),
+        ),
+        (
+            id: "plat-other",
+            source: "platform",
+            when: Equals("platform", "other"),
+            consequence: (
+                severity: Blocking,
+                status: Requirement,
+                audience: Record,
+                types: [Support, Capability],
+                title: "Unsupported platform",
+                detail: "Red Hat, other distributions, Kubernetes, or non-server Windows are unsupported. BES cannot access the system, so there is no support, no backups, no analytics, and no clone-upgrade testing. The product is open source and can be run this way, but not by BES.",
+            ),
+        ),
+        (
+            id: "plat-image",
+            source: "platform",
+            when: Any([
+                Equals("platform", "linuxarm"),
+                Equals("platform", "linuxamd"),
+            ]),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                title: "BES Ubuntu Server image required",
+                detail: "Linux deployments use the customized BES Ubuntu Server image, set up the BES way.",
+            ),
+        ),
+
+        // ── On-prem server provisioning (by facility class present) ─────────
+        (
+            id: "prov-baremetal",
+            source: "topology",
+            when: Includes("facility_mix", "baremetal"),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                types: [Operational],
+                title: "Bare-metal: provision generously up front",
+                detail: "Disk and resources are hard to change on bare metal, so provision ahead: at least 500 GB disk, 4 cores (prefer 8), and 16 GB RAM (prefer 32).",
+            ),
+        ),
+        (
+            id: "prov-virtualized",
+            source: "topology",
+            when: Includes("facility_mix", "virtualized"),
+            consequence: (
+                status: Advisory,
+                audience: Client,
+                title: "Virtualized: start small, and back up the VM",
+                detail: "Resources can scale, so start around 50 GB / 4 cores / 16 GB and grow. VM-level backups are recommended; telling BES is not required but helps disaster planning.",
+            ),
+        ),
+        (
+            id: "iti-note",
+            source: "topology",
+            when: Includes("facility_mix", "iti"),
+            consequence: (
+                status: Requirement,
+                audience: Bes,
+                title: "Tamanu ITI appliance",
+                detail: "ITI is a BES-built, BES-provisioned ARM64 appliance. The client plugs it into their network; BES installs and manages the software.",
+            ),
+        ),
+
+        // ── Backups ─────────────────────────────────────────────────────────
+        (
+            id: "block-backup-analytics",
+            source: "backups",
+            when: All([
+                Equals("backup_capability", "no"),
+                Equals("analytics", "yes"),
+            ]),
+            consequence: (
+                severity: Blocking,
+                status: Requirement,
+                audience: Record,
+                types: [Capability],
+                title: "Backups disabled, but analytics requested",
+                detail: "Analytics needs at least a low-retention backup to process data. With backups fully disabled this cannot work as specified — permit at least low-retention backups, or drop analytics.",
+            ),
+        ),
+        (
+            id: "backup-off",
+            source: "backups",
+            when: Equals("backup_capability", "no"),
+            consequence: (
+                severity: NonDefault,
+                status: Requirement,
+                audience: Record,
+                types: [Capability, Operational],
+                title: "BES backups disabled",
+                detail: "Disabling BES backups removes BES-managed recovery and clone-upgrade testing. Without clone upgrades there is significant risk of long or failed upgrades and extended downtime, since deployments typically jump many versions at once.",
+            ),
+        ),
+        (
+            id: "block-retention-analytics",
+            source: "backups",
+            when: All([
+                Equals("backup_capability", "yes"),
+                Equals("retention", "none"),
+                Equals("analytics", "yes"),
+            ]),
+            consequence: (
+                severity: Blocking,
+                status: Requirement,
+                audience: Record,
+                types: [Capability],
+                title: "Zero retention, but analytics requested",
+                detail: "Analytics needs at least low-retention backups. Set retention to low-retention (process-only), or drop analytics.",
+            ),
+        ),
+        (
+            id: "self-managed",
+            source: "backups",
+            when: All([
+                Equals("backup_capability", "yes"),
+                Equals("retention", "none"),
+            ]),
+            consequence: (
+                severity: NonDefault,
+                status: Requirement,
+                audience: Client,
+                title: "Self-managed backups",
+                detail: "BES retains nothing; the client must run and assure their own backups. BES can still take one-off backups for clone-upgrade testing.",
+            ),
+        ),
+        (
+            id: "low-retention",
+            source: "backups",
+            when: All([
+                Equals("backup_capability", "yes"),
+                Equals("retention", "low"),
+            ]),
+            consequence: (
+                status: Advisory,
+                audience: Bes,
+                title: "Low-retention (process-only) backups",
+                detail: "Backups are kept only as long as needed to process data into analytics. Enough to unlock analytics and clone-upgrade testing at minimum data cost.",
+            ),
+        ),
+
+        // ── Upgrades ────────────────────────────────────────────────────────
+        (
+            id: "cadence",
+            source: "upgrades",
+            when: Any([
+                Equals("cadence", "quarterly"),
+                Equals("cadence", "biannual"),
+                Equals("cadence", "asneeded"),
+            ]),
+            consequence: (
+                status: Advisory,
+                audience: Bes,
+                types: [Operational],
+                title: "Infrequent upgrades mean larger version jumps",
+                detail: "BES releases roughly fortnightly. Upgrading less often means jumping many versions at once — heavier migrations, more potential downtime, and stronger reliance on clone-upgrade testing, which requires backup capability.",
+            ),
+        ),
+
+        // ── Networking ──────────────────────────────────────────────────────
+        (
+            id: "dns-client",
+            source: "network",
+            when: Equals("dns", "client"),
+            consequence: (
+                severity: NonDefault,
+                status: Requirement,
+                audience: Client,
+                title: "Client-controlled DNS",
+                detail: "If BES does not control DNS, the client must support automatic ACME certificate issuance and provide a wildcard at the domain level (central.<name>.<tld>, facility.<name>.<tld>).",
+            ),
+        ),
+        (
+            id: "dns-bes",
+            source: "network",
+            when: Equals("dns", "bes"),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                title: "BES controls DNS",
+                detail: "BES holds DNS authority — on a BES domain, a provisioned domain, or via subdomain delegation (SOA records).",
+            ),
+        ),
+        (
+            id: "remote-other",
+            source: "network",
+            when: Equals("remote", "other"),
+            consequence: (
+                severity: NonDefault,
+                status: Requirement,
+                audience: Record,
+                types: [Cost, Support],
+                cost: Some((tier: "Exceptional ongoing cost", ballpark: Some("thousands / year at contract level"))),
+                title: "Non-Tailscale remote access",
+                detail: "An exceptional arrangement only. Anything other than Tailscale on BES-managed servers adds significant contract-level cost.",
+            ),
+        ),
+        (
+            id: "remote-tailscale",
+            source: "network",
+            when: Equals("remote", "tailscale"),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                title: "Allow Tailscale on managed servers",
+                detail: "Only the specific BES-managed servers need Tailscale allowed — not the whole network. Firewalls often block it (fine); a net-check confirms connectivity.",
+            ),
+        ),
+        (
+            id: "time-internal",
+            source: "network",
+            when: Equals("timesync", "internal"),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                title: "Point to internal time server",
+                detail: "Provide the internal NTP server IP so servers can synchronize time (required for correct function).",
+            ),
+        ),
+        (
+            id: "time-outbound",
+            source: "network",
+            when: Equals("timesync", "outbound"),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                title: "Allow outbound NTP",
+                detail: "Allow outbound NTP to public pools so servers can synchronize time.",
+            ),
+        ),
+        (
+            id: "dns-partition",
+            source: "network",
+            when: Any([
+                Includes("facility_mix", "baremetal"),
+                Includes("facility_mix", "virtualized"),
+                Includes("facility_mix", "iti"),
+            ]),
+            consequence: (
+                status: Advisory,
+                audience: Client,
+                title: "Make DNS resilient to network partitions",
+                detail: "On-site facilities should run a local DNS cache that survives a partition. Non-resilient DNS degrades Tamanu availability during outages.",
+            ),
+        ),
+        (
+            id: "egress-ip",
+            source: "network",
+            when: All([
+                Equals("central", "bescloud"),
+                Any([
+                    Includes("facility_mix", "baremetal"),
+                    Includes("facility_mix", "virtualized"),
+                    Includes("facility_mix", "iti"),
+                ]),
+            ]),
+            consequence: (
+                status: Advisory,
+                audience: Client,
+                title: "Provide facility egress IP ranges",
+                detail: "With Central in BES cloud and on-prem facilities, share the ranges facility traffic comes from so BES can set network restrictions. All communication is facility-initiated, so facility servers need not be publicly reachable.",
+            ),
+        ),
+    ],
+)

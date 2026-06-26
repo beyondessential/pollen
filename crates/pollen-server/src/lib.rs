@@ -3,6 +3,7 @@ pub mod db;
 pub mod error;
 pub mod fns;
 pub mod openapi;
+pub mod ruleset;
 pub mod server;
 pub mod spa;
 pub mod state;

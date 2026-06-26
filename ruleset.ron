@@ -40,7 +40,7 @@
             id: "integrations",
             kind: Multi,
             label: "Which integrations are wanted?",
-            help: Some("Integrations are light on the system, so this is recorded for planning. Any present means Central is sized up a little."),
+            help: Some("Integrations themselves are usually light on the system, so this is recorded for planning. Any present means Central is sized up a little."),
             options: [
                 (id: "lims", label: "LIMS — laboratories (Senaite or other)"),
                 (id: "msupply", label: "Pharmacy & warehousing (mSupply or other)"),

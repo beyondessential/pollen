@@ -9,9 +9,9 @@ use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 
 fn main() {
-    let (_router, openapi) = OpenApiRouter::with_openapi(ApiDoc::openapi())
-        .merge(fns::routes())
-        .split_for_parts();
-    let json = serde_json::to_string_pretty(&openapi).expect("serialize spec");
-    println!("{json}");
+	let (_router, openapi) = OpenApiRouter::with_openapi(ApiDoc::openapi())
+		.merge(fns::routes())
+		.split_for_parts();
+	let json = serde_json::to_string_pretty(&openapi).expect("serialize spec");
+	println!("{json}");
 }

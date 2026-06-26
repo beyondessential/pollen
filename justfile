@@ -61,4 +61,4 @@ build-release target:
 
 # Build the container image
 build-image:
-    docker build -f .github/Dockerfile -t pollen .
+    docker build -f .github/Containerfile -t pollen .

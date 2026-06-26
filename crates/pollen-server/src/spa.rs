@@ -11,36 +11,36 @@ struct Assets;
 /// a long-lived immutable cache; every other path falls back to `index.html` so
 /// the client-side router can take over.
 pub async fn handler(uri: Uri) -> impl IntoResponse {
-    let path = uri.path().trim_start_matches('/');
-    let is_asset = path.starts_with("assets/");
+	let path = uri.path().trim_start_matches('/');
+	let is_asset = path.starts_with("assets/");
 
-    let resolved = if !is_asset && Assets::get(path).is_none() {
-        "index.html"
-    } else {
-        path
-    };
+	let resolved = if !is_asset && Assets::get(path).is_none() {
+		"index.html"
+	} else {
+		path
+	};
 
-    let Some(file) = Assets::get(resolved) else {
-        return (StatusCode::NOT_FOUND, "not found").into_response();
-    };
+	let Some(file) = Assets::get(resolved) else {
+		return (StatusCode::NOT_FOUND, "not found").into_response();
+	};
 
-    let mime_type = mime_guess::from_path(resolved).first_or_octet_stream();
-    let mime = if mime_type.type_() == mime_guess::mime::TEXT {
-        format!("{mime_type}; charset=utf-8")
-    } else {
-        mime_type.to_string()
-    };
+	let mime_type = mime_guess::from_path(resolved).first_or_octet_stream();
+	let mime = if mime_type.type_() == mime_guess::mime::TEXT {
+		format!("{mime_type}; charset=utf-8")
+	} else {
+		mime_type.to_string()
+	};
 
-    let cache = if is_asset {
-        HeaderValue::from_static("public, max-age=31536000, immutable")
-    } else {
-        HeaderValue::from_static("no-cache, no-store, must-revalidate")
-    };
+	let cache = if is_asset {
+		HeaderValue::from_static("public, max-age=31536000, immutable")
+	} else {
+		HeaderValue::from_static("no-cache, no-store, must-revalidate")
+	};
 
-    Response::builder()
-        .status(StatusCode::OK)
-        .header(header::CONTENT_TYPE, mime)
-        .header(header::CACHE_CONTROL, cache)
-        .body(Body::from(file.data.into_owned()))
-        .unwrap()
+	Response::builder()
+		.status(StatusCode::OK)
+		.header(header::CONTENT_TYPE, mime)
+		.header(header::CACHE_CONTROL, cache)
+		.body(Body::from(file.data.into_owned()))
+		.unwrap()
 }

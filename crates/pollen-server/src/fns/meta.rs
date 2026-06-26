@@ -8,8 +8,8 @@ use crate::state::AppState;
 
 #[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct VersionInfo {
-    pub name: String,
-    pub version: String,
+	pub name: String,
+	pub version: String,
 }
 
 /// Service name and version. Doubles as a trivial reachability check.
@@ -21,12 +21,12 @@ pub struct VersionInfo {
     responses((status = 200, body = VersionInfo)),
 )]
 pub async fn version(State(_state): State<AppState>) -> Result<Json<VersionInfo>> {
-    Ok(Json(VersionInfo {
-        name: env!("CARGO_PKG_NAME").to_owned(),
-        version: env!("CARGO_PKG_VERSION").to_owned(),
-    }))
+	Ok(Json(VersionInfo {
+		name: env!("CARGO_PKG_NAME").to_owned(),
+		version: env!("CARGO_PKG_VERSION").to_owned(),
+	}))
 }
 
 pub fn routes() -> OpenApiRouter<AppState> {
-    OpenApiRouter::new().routes(routes!(version))
+	OpenApiRouter::new().routes(routes!(version))
 }

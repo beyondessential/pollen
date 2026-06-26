@@ -190,12 +190,12 @@
             visible_if: Equals("backup_capability", "yes"),
         ),
 
-        // 8. Upgrade cadence — planning data only, never contractual.
+        // 8. Upgrade cadence — planning data only, not binding.
         (
             id: "cadence",
             kind: Single,
             label: "How often do you intend to upgrade?",
-            help: Some("Planning data only — never a contractual term. BES releases roughly fortnightly."),
+            help: Some("Planning data only — not binding. BES releases roughly fortnightly."),
             options: [
                 (id: "release", label: "Every release", note: Some("~Fortnightly.")),
                 (id: "quarterly", label: "Quarterly"),
@@ -221,7 +221,7 @@
             label: "Remote access for managed servers",
             options: [
                 (id: "tailscale", label: "Tailscale", note: Some("Standard. Only the specific servers need it allowed.")),
-                (id: "other", label: "Non-Tailscale arrangement", note: Some("Exceptional, adds contract-level cost.")),
+                (id: "other", label: "Non-Tailscale arrangement", note: Some("Exceptional, adds significant cost.")),
             ],
         ),
         (
@@ -511,9 +511,9 @@
                 status: Requirement,
                 audience: Record,
                 types: [Cost, Support],
-                cost: Some((tier: "Exceptional ongoing cost", ballpark: Some("thousands / year at contract level"))),
+                cost: Some((tier: "Exceptional ongoing cost", ballpark: Some("thousands / year"))),
                 title: "Non-Tailscale remote access",
-                detail: "An exceptional arrangement only. Anything other than Tailscale on BES-managed servers adds significant contract-level cost.",
+                detail: "An exceptional arrangement only. Anything other than Tailscale on BES-managed servers adds significant ongoing cost.",
             ),
         ),
         (

@@ -18,7 +18,7 @@ async fn config_store_and_application_roundtrip() {
 		assert_eq!(stored.content, content);
 
 		// A new draft bound to that ruleset, with the expected defaults.
-		let draft = Application::create_draft(&mut conn, hash, None)
+		let draft = Application::create_draft(&mut conn, hash, None, &json!({}))
 			.await
 			.unwrap();
 		assert_eq!(draft.status, ApplicationStatus::Draft);
@@ -32,7 +32,7 @@ async fn config_store_and_application_roundtrip() {
 		assert_eq!(fetched.id, draft.id);
 
 		// A fork records lineage back to its predecessor.
-		let child = Application::create_draft(&mut conn, hash, Some(draft.id))
+		let child = Application::create_draft(&mut conn, hash, Some(draft.id), &json!({}))
 			.await
 			.unwrap();
 		assert_eq!(child.parent_id, Some(draft.id));

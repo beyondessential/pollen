@@ -8,7 +8,17 @@ use uuid::Uuid;
 use crate::error::{AppError, Result};
 
 /// Whether an artifact is still being edited or has been frozen.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, diesel_derive_enum::DbEnum)]
+#[derive(
+	Debug,
+	Clone,
+	Copy,
+	PartialEq,
+	Eq,
+	Serialize,
+	Deserialize,
+	diesel_derive_enum::DbEnum,
+	utoipa::ToSchema,
+)]
 #[ExistingTypePath = "crate::db::schema::sql_types::ApplicationStatus"]
 #[DbValueStyle = "snake_case"]
 #[serde(rename_all = "snake_case")]
@@ -36,18 +46,21 @@ pub struct Application {
 }
 
 impl Application {
-	/// Create a new draft bound to a ruleset hash. `parent_id` carries fork
-	/// lineage when the draft is spawned from an existing artifact.
+	/// Create a new draft bound to a ruleset hash, with the given starting
+	/// answers. `parent_id` carries fork lineage when spawned from an existing
+	/// artifact.
 	pub async fn create_draft(
 		db: &mut AsyncPgConnection,
 		config_hash: &str,
 		parent_id: Option<Uuid>,
+		answers: &Value,
 	) -> Result<Self> {
 		use crate::db::schema::applications::dsl;
 		diesel::insert_into(dsl::applications)
 			.values((
 				dsl::config_hash.eq(config_hash),
 				dsl::parent_id.eq(parent_id),
+				dsl::answers.eq(answers),
 			))
 			.returning(Self::as_returning())
 			.get_result(db)
@@ -61,6 +74,37 @@ impl Application {
 			.find(id)
 			.select(Self::as_select())
 			.first(db)
+			.await
+			.map_err(AppError::from)
+	}
+
+	/// Replace a draft's answers. Callers enforce that the application is a
+	/// draft before calling.
+	pub async fn set_answers(
+		db: &mut AsyncPgConnection,
+		id: Uuid,
+		answers: &Value,
+	) -> Result<Self> {
+		use crate::db::schema::applications::dsl;
+		diesel::update(dsl::applications.find(id))
+			.set(dsl::answers.eq(answers))
+			.returning(Self::as_returning())
+			.get_result(db)
+			.await
+			.map_err(AppError::from)
+	}
+
+	/// Freeze a draft: mark it finalized and stamp the time. Callers enforce
+	/// that the application is a draft before calling.
+	pub async fn finalize(db: &mut AsyncPgConnection, id: Uuid) -> Result<Self> {
+		use crate::db::schema::applications::dsl;
+		diesel::update(dsl::applications.find(id))
+			.set((
+				dsl::status.eq(ApplicationStatus::Finalized),
+				dsl::finalized_at.eq(jiff_diesel::NullableTimestamp::from(Some(Timestamp::now()))),
+			))
+			.returning(Self::as_returning())
+			.get_result(db)
 			.await
 			.map_err(AppError::from)
 	}

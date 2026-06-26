@@ -12,6 +12,7 @@ authors = [
 
 [workspace.dependencies]
 axum = { version = "0.8.9", features = ["json", "macros"] }
+axum-test = "20.0.0"
 clap = { version = "4.6.1", features = ["derive", "env"] }
 diesel = { version = "2.3.9", features = ["postgres_backend", "serde_json", "uuid"] }
 diesel-async = { version = "0.9.0", features = ["mobc", "postgres", "migrations", "async-connection-wrapper"] }
@@ -36,7 +37,7 @@ thiserror = "2.0.18"
 tokio = { version = "1.52.3", features = ["macros", "net", "rt-multi-thread", "signal"] }
 tower-http = { version = "0.6.11", features = ["trace", "compression-gzip"] }
 tracing = "0.1.44"
-utoipa = { version = "5", features = ["uuid", "axum_extras"] }
+utoipa = { version = "5", features = ["uuid", "axum_extras", "jiff_0_2"] }
 utoipa-axum = "0.2"
 utoipa-swagger-ui = { version = "9", default-features = false, features = ["axum", "vendored"] }
 uuid = { version = "1.23.1", features = ["serde", "v4"] }

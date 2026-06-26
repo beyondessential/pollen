@@ -84,7 +84,7 @@ impl Question {
 	}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, utoipa::ToSchema)]
 pub enum QuestionKind {
 	/// Pick one option.
 	Single,
@@ -94,7 +94,7 @@ pub enum QuestionKind {
 	Band,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct Opt {
 	pub id: String,
 	pub label: String,
@@ -129,7 +129,7 @@ pub struct Rule {
 	pub consequence: Consequence,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct Consequence {
 	#[serde(default)]
 	pub severity: Severity,
@@ -143,7 +143,7 @@ pub struct Consequence {
 	pub cost: Option<Cost>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct Cost {
 	pub tier: String,
 	#[serde(default)]
@@ -151,7 +151,7 @@ pub struct Cost {
 }
 
 /// The viability axis (spec WIZ, Severity).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, utoipa::ToSchema)]
 pub enum Severity {
 	#[default]
 	Default,
@@ -160,7 +160,7 @@ pub enum Severity {
 }
 
 /// The "this is worse" axis (spec WIZ, Consequence type).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, utoipa::ToSchema)]
 pub enum ConsequenceType {
 	Cost,
 	Operational,
@@ -169,7 +169,7 @@ pub enum ConsequenceType {
 }
 
 /// The technical-versus-contractual line (spec WIZ, Status).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, utoipa::ToSchema)]
 pub enum Status {
 	Requirement,
 	Advisory,
@@ -177,7 +177,7 @@ pub enum Status {
 }
 
 /// Which reader a consequence is grouped under in the by-audience view.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, utoipa::ToSchema)]
 pub enum Audience {
 	Client,
 	Bes,

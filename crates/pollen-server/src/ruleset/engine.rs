@@ -1,18 +1,23 @@
 //! Evaluate a ruleset against a user's answers: derive values, collect the
-//! union of triggered consequences, surface active guidance, and reduce to a
-//! verdict (spec WIZ, Rule engine model).
+//! union of triggered consequences, surface active guidance and the set of
+//! currently-visible questions, and reduce to a verdict (spec WIZ, Rule engine
+//! model).
 
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 use super::answers::Answers;
 use super::model::{Consequence, DerivationKind, Ruleset, Severity};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Evaluation {
 	/// Derived values keyed by derivation id (e.g. `size` → `Medium`).
 	pub derived: BTreeMap<String, String>,
+	/// The ids of questions currently shown, in ruleset order (spec WIZ,
+	/// visibility). The frontend renders exactly these.
+	pub visible_questions: Vec<String>,
 	/// Every triggered consequence, in ruleset order.
 	pub consequences: Vec<TriggeredConsequence>,
 	/// Guidance whose condition currently holds.
@@ -20,14 +25,14 @@ pub struct Evaluation {
 	pub verdict: Verdict,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct TriggeredConsequence {
 	pub id: String,
 	pub source: String,
 	pub consequence: Consequence,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct TriggeredGuidance {
 	pub at: String,
 	pub message: String,
@@ -35,7 +40,7 @@ pub struct TriggeredGuidance {
 
 /// The viability verdict: the worst severity present across triggered
 /// consequences. Default-severity consequences don't move it off `Clear`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 pub enum Verdict {
 	Clear,
 	NonDefault,
@@ -44,6 +49,13 @@ pub enum Verdict {
 
 pub fn evaluate(ruleset: &Ruleset, answers: &Answers) -> Evaluation {
 	let derived = derive(ruleset, answers);
+
+	let visible_questions = ruleset
+		.questions
+		.iter()
+		.filter(|q| q.visible_if.eval(answers))
+		.map(|q| q.id.clone())
+		.collect();
 
 	let consequences: Vec<TriggeredConsequence> = ruleset
 		.rules
@@ -82,6 +94,7 @@ pub fn evaluate(ruleset: &Ruleset, answers: &Answers) -> Evaluation {
 
 	Evaluation {
 		derived,
+		visible_questions,
 		consequences,
 		guidance,
 		verdict,

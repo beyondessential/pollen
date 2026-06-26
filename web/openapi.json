@@ -13,6 +13,191 @@
     "version": ""
   },
   "paths": {
+    "/api/applications/create": {
+      "post": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Create a new draft, binding the bundled default ruleset or a previewed branch.",
+        "operationId": "applications_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArgs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/applications/finalize": {
+      "post": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Finalize a draft, freezing it against its bound ruleset. Always produces an\nartifact; the verdict (including a blocking one) is recorded, not enforced.",
+        "operationId": "applications_finalize",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinalizeArgs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppView"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/applications/fork": {
+      "post": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Fork a new draft from any application, with lineage to it. A named branch\nrebinds to a new ruleset and migrates the answers; otherwise the parent's\nruleset is kept. The parent is left untouched.",
+        "operationId": "applications_fork",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForkArgs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/applications/get": {
+      "post": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Read an application with its current evaluation.",
+        "operationId": "applications_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetArgs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/applications/patch": {
+      "post": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Replace a draft's answers. Rejected (409) once finalized.",
+        "operationId": "applications_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchArgs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppView"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/meta/version": {
       "post": {
         "tags": [
@@ -37,6 +222,452 @@
   },
   "components": {
     "schemas": {
+      "AppView": {
+        "type": "object",
+        "description": "The full state of an application: its lifecycle fields, the questions to\nrender, the current answers, the evaluation (consequences, verdict, derived\nvalues, visible questions, guidance), and — on a fork — what changed.",
+        "required": [
+          "id",
+          "status",
+          "created_at",
+          "config_hash",
+          "questions",
+          "answers",
+          "evaluation"
+        ],
+        "properties": {
+          "answers": {},
+          "config_hash": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "evaluation": {
+            "$ref": "#/components/schemas/Evaluation"
+          },
+          "finalized_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "migration": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MigrationView"
+              }
+            ]
+          },
+          "parent_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuestionView"
+            }
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApplicationStatus"
+          }
+        }
+      },
+      "ApplicationStatus": {
+        "type": "string",
+        "description": "Whether an artifact is still being edited or has been frozen.",
+        "enum": [
+          "draft",
+          "finalized"
+        ]
+      },
+      "Audience": {
+        "type": "string",
+        "description": "Which reader a consequence is grouped under in the by-audience view.",
+        "enum": [
+          "Client",
+          "Bes",
+          "Record"
+        ]
+      },
+      "Consequence": {
+        "type": "object",
+        "required": [
+          "status",
+          "audience",
+          "title",
+          "detail"
+        ],
+        "properties": {
+          "audience": {
+            "$ref": "#/components/schemas/Audience"
+          },
+          "cost": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Cost"
+              }
+            ]
+          },
+          "detail": {
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "title": {
+            "type": "string"
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConsequenceType"
+            }
+          }
+        }
+      },
+      "ConsequenceType": {
+        "type": "string",
+        "description": "The \"this is worse\" axis (spec WIZ, Consequence type).",
+        "enum": [
+          "Cost",
+          "Operational",
+          "Capability",
+          "Support"
+        ]
+      },
+      "Cost": {
+        "type": "object",
+        "required": [
+          "tier"
+        ],
+        "properties": {
+          "ballpark": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tier": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateArgs": {
+        "type": "object",
+        "properties": {
+          "config_branch": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A ruleset branch to preview; omitted binds the bundled default."
+          }
+        }
+      },
+      "Evaluation": {
+        "type": "object",
+        "required": [
+          "derived",
+          "visible_questions",
+          "consequences",
+          "guidance",
+          "verdict"
+        ],
+        "properties": {
+          "consequences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TriggeredConsequence"
+            },
+            "description": "Every triggered consequence, in ruleset order."
+          },
+          "derived": {
+            "type": "object",
+            "description": "Derived values keyed by derivation id (e.g. `size` → `Medium`).",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "guidance": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TriggeredGuidance"
+            },
+            "description": "Guidance whose condition currently holds."
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          },
+          "visible_questions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The ids of questions currently shown, in ruleset order (spec WIZ,\nvisibility). The frontend renders exactly these."
+          }
+        }
+      },
+      "FinalizeArgs": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "ForkArgs": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "config_branch": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A ruleset branch to rebind to; omitted keeps the parent's ruleset."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "GetArgs": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "MigrationView": {
+        "type": "object",
+        "description": "What a fork's migration changed (spec WIZ, stable-id migration).",
+        "required": [
+          "dropped",
+          "new_questions"
+        ],
+        "properties": {
+          "dropped": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "new_questions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Opt": {
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PatchArgs": {
+        "type": "object",
+        "required": [
+          "id",
+          "answers"
+        ],
+        "properties": {
+          "answers": {
+            "description": "Answers keyed by question id; each value is an option id or a list of them."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "ProblemDetailsSchema": {
+        "type": "object",
+        "description": "Wire-shape mirror of [`problem_details::ProblemDetails`] for OpenAPI.\n\nEvery error response serializes to this RFC 7807 shape via [`AppError`]'s\n`IntoResponse`. This struct exists so OpenAPI specs can reference a concrete\nschema; nothing constructs values of it at runtime.",
+        "required": [
+          "type",
+          "title",
+          "status"
+        ],
+        "properties": {
+          "detail": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Human-readable explanation specific to this occurrence."
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "HTTP status code generated by the origin server.",
+            "example": 404,
+            "minimum": 0
+          },
+          "title": {
+            "type": "string",
+            "description": "Short human-readable summary of the problem."
+          },
+          "type": {
+            "type": "string",
+            "format": "uri",
+            "description": "A URI reference identifying the problem type.",
+            "example": "/errors/not-found"
+          }
+        }
+      },
+      "QuestionKind": {
+        "type": "string",
+        "enum": [
+          "Single",
+          "Multi",
+          "Band"
+        ]
+      },
+      "QuestionView": {
+        "type": "object",
+        "description": "A question's render metadata (the engine decides visibility; see\n`Evaluation::visible_questions`).",
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "options"
+        ],
+        "properties": {
+          "help": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/QuestionKind"
+          },
+          "label": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Opt"
+            }
+          }
+        }
+      },
+      "Severity": {
+        "type": "string",
+        "description": "The viability axis (spec WIZ, Severity).",
+        "enum": [
+          "Default",
+          "NonDefault",
+          "Blocking"
+        ]
+      },
+      "Status": {
+        "type": "string",
+        "description": "The technical-versus-contractual line (spec WIZ, Status).",
+        "enum": [
+          "Requirement",
+          "Advisory",
+          "Referral"
+        ]
+      },
+      "TriggeredConsequence": {
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "consequence"
+        ],
+        "properties": {
+          "consequence": {
+            "$ref": "#/components/schemas/Consequence"
+          },
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      },
+      "TriggeredGuidance": {
+        "type": "object",
+        "required": [
+          "at",
+          "message"
+        ],
+        "properties": {
+          "at": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "Verdict": {
+        "type": "string",
+        "description": "The viability verdict: the worst severity present across triggered\nconsequences. Default-severity consequences don't move it off `Clear`.",
+        "enum": [
+          "Clear",
+          "NonDefault",
+          "Blocking"
+        ]
+      },
       "VersionInfo": {
         "type": "object",
         "required": [
@@ -55,6 +686,10 @@
     }
   },
   "tags": [
+    {
+      "name": "applications",
+      "description": "Onboarding artifacts: create, read, edit, finalize, fork."
+    },
     {
       "name": "meta",
       "description": "Service metadata."

@@ -4,6 +4,98 @@
  */
 
 export interface paths {
+    "/api/applications/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a new draft, binding the bundled default ruleset or a previewed branch. */
+        post: operations["applications_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/finalize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Finalize a draft, freezing it against its bound ruleset. Always produces an
+         *     artifact; the verdict (including a blocking one) is recorded, not enforced.
+         */
+        post: operations["applications_finalize"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/fork": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fork a new draft from any application, with lineage to it. A named branch
+         *     rebinds to a new ruleset and migrates the answers; otherwise the parent's
+         *     ruleset is kept. The parent is left untouched.
+         */
+        post: operations["applications_fork"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read an application with its current evaluation. */
+        post: operations["applications_get"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/patch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Replace a draft's answers. Rejected (409) once finalized. */
+        post: operations["applications_patch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/meta/version": {
         parameters: {
             query?: never;
@@ -25,6 +117,168 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description The full state of an application: its lifecycle fields, the questions to
+         *     render, the current answers, the evaluation (consequences, verdict, derived
+         *     values, visible questions, guidance), and — on a fork — what changed.
+         */
+        AppView: {
+            answers: unknown;
+            config_hash: string;
+            /** Format: date-time */
+            created_at: string;
+            evaluation: components["schemas"]["Evaluation"];
+            /** Format: date-time */
+            finalized_at?: string | null;
+            /** Format: uuid */
+            id: string;
+            migration?: null | components["schemas"]["MigrationView"];
+            /** Format: uuid */
+            parent_id?: string | null;
+            questions: components["schemas"]["QuestionView"][];
+            status: components["schemas"]["ApplicationStatus"];
+        };
+        /**
+         * @description Whether an artifact is still being edited or has been frozen.
+         * @enum {string}
+         */
+        ApplicationStatus: "draft" | "finalized";
+        /**
+         * @description Which reader a consequence is grouped under in the by-audience view.
+         * @enum {string}
+         */
+        Audience: "Client" | "Bes" | "Record";
+        Consequence: {
+            audience: components["schemas"]["Audience"];
+            cost?: null | components["schemas"]["Cost"];
+            detail: string;
+            severity?: components["schemas"]["Severity"];
+            status: components["schemas"]["Status"];
+            title: string;
+            types?: components["schemas"]["ConsequenceType"][];
+        };
+        /**
+         * @description The "this is worse" axis (spec WIZ, Consequence type).
+         * @enum {string}
+         */
+        ConsequenceType: "Cost" | "Operational" | "Capability" | "Support";
+        Cost: {
+            ballpark?: string | null;
+            tier: string;
+        };
+        CreateArgs: {
+            /** @description A ruleset branch to preview; omitted binds the bundled default. */
+            config_branch?: string | null;
+        };
+        Evaluation: {
+            /** @description Every triggered consequence, in ruleset order. */
+            consequences: components["schemas"]["TriggeredConsequence"][];
+            /** @description Derived values keyed by derivation id (e.g. `size` → `Medium`). */
+            derived: {
+                [key: string]: string;
+            };
+            /** @description Guidance whose condition currently holds. */
+            guidance: components["schemas"]["TriggeredGuidance"][];
+            verdict: components["schemas"]["Verdict"];
+            /**
+             * @description The ids of questions currently shown, in ruleset order (spec WIZ,
+             *     visibility). The frontend renders exactly these.
+             */
+            visible_questions: string[];
+        };
+        FinalizeArgs: {
+            /** Format: uuid */
+            id: string;
+        };
+        ForkArgs: {
+            /** @description A ruleset branch to rebind to; omitted keeps the parent's ruleset. */
+            config_branch?: string | null;
+            /** Format: uuid */
+            id: string;
+        };
+        GetArgs: {
+            /** Format: uuid */
+            id: string;
+        };
+        /** @description What a fork's migration changed (spec WIZ, stable-id migration). */
+        MigrationView: {
+            dropped: string[];
+            new_questions: string[];
+        };
+        Opt: {
+            id: string;
+            label: string;
+            note?: string | null;
+        };
+        PatchArgs: {
+            /** @description Answers keyed by question id; each value is an option id or a list of them. */
+            answers: unknown;
+            /** Format: uuid */
+            id: string;
+        };
+        /**
+         * @description Wire-shape mirror of [`problem_details::ProblemDetails`] for OpenAPI.
+         *
+         *     Every error response serializes to this RFC 7807 shape via [`AppError`]'s
+         *     `IntoResponse`. This struct exists so OpenAPI specs can reference a concrete
+         *     schema; nothing constructs values of it at runtime.
+         */
+        ProblemDetailsSchema: {
+            /** @description Human-readable explanation specific to this occurrence. */
+            detail?: string | null;
+            /**
+             * Format: int32
+             * @description HTTP status code generated by the origin server.
+             * @example 404
+             */
+            status: number;
+            /** @description Short human-readable summary of the problem. */
+            title: string;
+            /**
+             * Format: uri
+             * @description A URI reference identifying the problem type.
+             * @example /errors/not-found
+             */
+            type: string;
+        };
+        /** @enum {string} */
+        QuestionKind: "Single" | "Multi" | "Band";
+        /**
+         * @description A question's render metadata (the engine decides visibility; see
+         *     `Evaluation::visible_questions`).
+         */
+        QuestionView: {
+            help?: string | null;
+            id: string;
+            kind: components["schemas"]["QuestionKind"];
+            label: string;
+            options: components["schemas"]["Opt"][];
+        };
+        /**
+         * @description The viability axis (spec WIZ, Severity).
+         * @enum {string}
+         */
+        Severity: "Default" | "NonDefault" | "Blocking";
+        /**
+         * @description The technical-versus-contractual line (spec WIZ, Status).
+         * @enum {string}
+         */
+        Status: "Requirement" | "Advisory" | "Referral";
+        TriggeredConsequence: {
+            consequence: components["schemas"]["Consequence"];
+            id: string;
+            source: string;
+        };
+        TriggeredGuidance: {
+            at: string;
+            message: string;
+        };
+        /**
+         * @description The viability verdict: the worst severity present across triggered
+         *     consequences. Default-severity consequences don't move it off `Clear`.
+         * @enum {string}
+         */
+        Verdict: "Clear" | "NonDefault" | "Blocking";
         VersionInfo: {
             name: string;
             version: string;
@@ -38,6 +292,145 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    applications_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateArgs"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppView"];
+                };
+            };
+        };
+    };
+    applications_finalize: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinalizeArgs"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppView"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
+                };
+            };
+        };
+    };
+    applications_fork: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForkArgs"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppView"];
+                };
+            };
+        };
+    };
+    applications_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GetArgs"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppView"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
+                };
+            };
+        };
+    };
+    applications_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchArgs"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppView"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
+                };
+            };
+        };
+    };
     meta_version: {
         parameters: {
             query?: never;

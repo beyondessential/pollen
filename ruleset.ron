@@ -1,8 +1,12 @@
-// The v1 onboarding ruleset. Authored here, in RON; the engine evaluates it
+// The onboarding ruleset. Authored here, in RON; the engine evaluates it
 // (spec WIZ). This file is the single source of truth for the concrete
 // questions and consequences — comments capture the rationale. It is normalized
 // to canonical JSON and content-addressed by hash, so comments and formatting
 // don't affect identity.
+//
+// There is one canonical ruleset, here. Variant or proposed rulesets live on
+// git branches of this same file (previewed via ?config=<branch>) — not as
+// parallel versioned files. Its identity is its content hash, never a label.
 //
 // Stable-id discipline (spec WIZ): every question and option `id` is permanent.
 // Never reuse or repurpose an id; add new ones instead.
@@ -17,8 +21,6 @@
 // status of each networking item.
 
 (
-    version: Some("2026.06-draft"),
-
     questions: [
         // 1. Analytics intent — asked first; it constrains backups later.
         (

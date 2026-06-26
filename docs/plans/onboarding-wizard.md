@@ -39,9 +39,9 @@ pollen/
   web/                        # React + MUI + Vite SPA (pollen-web)
     src/, openapi.json, src/api-types.ts (generated)
   migrations/                 # diesel migrations (single DB, clean — no multi-schema)
-  ruleset/
-    v1.ron                    # the default ruleset, authored in RON (commented);
-                              #   bundled + normalized to canonical JSON + hashed on boot
+  ruleset.ron                 # the canonical ruleset, authored in RON (commented);
+                              #   bundled + normalized to canonical JSON + hashed on boot.
+                              #   Versions are git branches of this file, not parallel files.
   scripts/ramdisk-pg.sh       # RAM-backed Postgres test harness (port from canopy)
   .github/                    # CI (ci.yml), CD (cd.yml), Dockerfile
   justfile
@@ -87,7 +87,7 @@ Commit incrementally (jj). Each phase is independently reviewable.
 - Exit: migrations run on the ramdisk DB; round-trip a row in a db test.
 
 ### Phase 2 — Ruleset format & engine
-- **Authoring format: RON.** Author the ruleset in RON (`ruleset/v1.ron`), so
+- **Authoring format: RON.** Author the ruleset in RON (`ruleset.ron`), so
   the concrete questions/consequences and their rationale are documented inline
   where they're authored — not in a spec. Parse RON → the typed `Ruleset` model
   → serialize to canonical JSON (recursively key-sorted, compact) → hash. The

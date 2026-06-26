@@ -7,10 +7,10 @@ use pollen_server::ruleset::{
 };
 use serde_json::json;
 
-const V1: &str = include_str!("../../../ruleset/v1.ron");
+const RULESET: &str = include_str!("../../../ruleset.ron");
 
 fn v1() -> Ruleset {
-	Ruleset::from_ron(V1).expect("parse v1.ron")
+	Ruleset::from_ron(RULESET).expect("parse ruleset.ron")
 }
 
 fn answers(value: serde_json::Value) -> Answers {

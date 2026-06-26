@@ -26,8 +26,9 @@ where it is authored — not in a spec.
   Vite build unless skipped for dev. The dev loop is the API binary + Vite proxy.
 - **Migrations** live in `migrations/` (one database — no multi-schema).
   Create them with the diesel CLI via `just migration <name>`, never by hand.
-- **The ruleset is data**, not code. It is authored in RON under `ruleset/`,
-  normalized to canonical JSON, and content-addressed by hash. The concrete
+- **The ruleset is data**, not code. It is authored in RON at `ruleset.ron`,
+  normalized to canonical JSON, and content-addressed by hash. Versions are git
+  branches of this one file, not parallel files. The concrete
   questions/consequences and their rationale are documented inline there. The
   engine loads and evaluates it.
 

@@ -10,9 +10,6 @@ use super::condition::Condition;
 /// rules that fire requirements and consequences, and forward guidance.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Ruleset {
-	/// Human-facing version label for the recognition header (not the hash).
-	#[serde(default)]
-	pub version: Option<String>,
 	pub questions: Vec<Question>,
 	#[serde(default)]
 	pub derivations: Vec<Derivation>,

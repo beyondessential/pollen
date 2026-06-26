@@ -1,5 +1,6 @@
 import { Link, Route, Routes } from "react-router-dom";
 
+import besLogo from "./assets/bes-logo.png";
 import ApplicationPage from "./routes/ApplicationPage";
 import NewApplication from "./routes/NewApplication";
 
@@ -8,7 +9,7 @@ export default function App() {
 		<>
 			<header className="topbar">
 				<Link to="/" className="brand">
-					<span className="brand-mark">BES</span>
+					<img src={besLogo} className="brand-logo" alt="BES" />
 					<span className="brand-rule" />
 					<span className="brand-name">New Tamanu</span>
 				</Link>

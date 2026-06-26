@@ -81,12 +81,11 @@ body {
 	border-color: #c4d0d6;
 	background: var(--sky-tint);
 }
-.brand-mark {
-	font-family: var(--font-display);
-	font-weight: 700;
-	letter-spacing: 0.18em;
-	color: var(--navy);
-	font-size: 15px;
+.brand-logo {
+	height: 26px;
+	width: 26px;
+	border-radius: 5px;
+	display: block;
 }
 .brand-rule {
 	width: 1px;
@@ -412,8 +411,14 @@ body {
 .actions {
 	display: flex;
 	justify-content: flex-end;
+	align-items: center;
 	gap: 10px;
 	margin-top: 28px;
+}
+.actions-hint {
+	margin-right: auto;
+	font-size: 13px;
+	color: var(--ink-faint);
 }
 .btn {
 	display: inline-flex;

@@ -498,12 +498,52 @@ body {
 	font-size: 11px;
 	color: var(--ink-faint);
 }
-.sheet-actions {
+.sheet-controls {
 	display: flex;
-	gap: 8px;
-	padding: 16px 30px;
+	align-items: center;
+	gap: 10px;
+	padding: 14px 30px;
 	border-bottom: 1px solid var(--line-soft);
 	flex-wrap: wrap;
+}
+.tg-group {
+	display: flex;
+	gap: 6px;
+}
+.tg {
+	padding: 7px 13px;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	border-radius: 8px;
+	font-family: inherit;
+	font-size: 12.5px;
+	color: var(--ink-soft);
+	cursor: pointer;
+}
+.tg.on {
+	background: var(--navy);
+	color: #fff;
+	border-color: var(--navy);
+}
+.sheet-search {
+	flex: 1;
+	min-width: 150px;
+	padding: 8px 12px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	font-family: inherit;
+	font-size: 13px;
+	color: var(--ink);
+	background: var(--surface);
+}
+.sheet-control-actions {
+	display: flex;
+	gap: 6px;
+}
+.ledger-empty {
+	font-size: 13px;
+	color: var(--ink-faint);
+	line-height: 1.5;
 }
 .sheet-section {
 	padding: 20px 30px;

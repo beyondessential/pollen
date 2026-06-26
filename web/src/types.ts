@@ -103,5 +103,26 @@ export const STATUS_LABEL: Record<Status, string> = {
 export const AUDIENCE_LABEL: Record<Audience, string> = {
 	Client: "Client IT — required actions",
 	Bes: "BES technical — setup",
-	Record: "Record & acknowledgments",
+	Record: "Record & acknowledgements",
 };
+
+// Topic grouping for the artifact's by-topic view, keyed by a rule's `source`.
+export const TOPIC_LABEL: Record<string, string> = {
+	intent: "Intent",
+	topology: "Topology",
+	region: "Region",
+	platform: "Platform",
+	backups: "Backups",
+	upgrades: "Upgrades",
+	network: "Networking",
+};
+
+export const TOPIC_ORDER: string[] = [
+	"intent",
+	"topology",
+	"region",
+	"platform",
+	"backups",
+	"upgrades",
+	"network",
+];

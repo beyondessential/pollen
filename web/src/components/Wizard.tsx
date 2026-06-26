@@ -61,7 +61,7 @@ export default function Wizard({
 						<span className="meter-v">{ev.derived["size"] ?? "—"}</span>
 					</div>
 					<div className="meter">
-						<span className="meter-k">Off-default</span>
+						<span className="meter-k">Custom</span>
 						<span className="meter-v" style={{ color: offDefault ? "var(--offdef)" : undefined }}>
 							{offDefault}
 						</span>

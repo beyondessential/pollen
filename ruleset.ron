@@ -114,7 +114,7 @@
             options: [
                 (id: "bescloud", label: "BES cloud", note: Some("Fully managed AWS hosting; client gets application access by default.")),
                 (id: "customercloud", label: "Customer cloud", note: Some("Treated as on-prem.")),
-                (id: "onprem", label: "True on-prem", note: Some("Bare metal or virtualized on site.")),
+                (id: "onprem", label: "True on-prem", note: Some("Bare metal or virtualised on site.")),
             ],
         ),
         (
@@ -125,7 +125,7 @@
             options: [
                 (id: "bescloud", label: "Some in BES cloud"),
                 (id: "baremetal", label: "Some on-prem, bare metal"),
-                (id: "virtualized", label: "Some on-prem, virtualized"),
+                (id: "virtualised", label: "Some on-prem, virtualised"),
                 (id: "iti", label: "Some Tamanu ITI appliances", note: Some("BES-built ARM64 plug-in server.")),
             ],
         ),
@@ -163,7 +163,7 @@
                 Equals("central", "onprem"),
                 Equals("central", "customercloud"),
                 Includes("facility_mix", "baremetal"),
-                Includes("facility_mix", "virtualized"),
+                Includes("facility_mix", "virtualised"),
                 Includes("facility_mix", "iti"),
             ]),
         ),
@@ -227,7 +227,7 @@
         (
             id: "timesync",
             kind: Single,
-            label: "Time synchronization",
+            label: "Time synchronisation",
             options: [
                 (id: "internal", label: "Internal time server", note: Some("Provide the IP.")),
                 (id: "outbound", label: "Allow outbound NTP", note: Some("To public pools.")),
@@ -375,7 +375,7 @@
                 status: Requirement,
                 audience: Client,
                 title: "BES Ubuntu Server image required",
-                detail: "Linux deployments use the customized BES Ubuntu Server image, set up the BES way.",
+                detail: "Linux deployments use the customised BES Ubuntu Server image, set up the BES way.",
             ),
         ),
 
@@ -393,9 +393,9 @@
             ),
         ),
         (
-            id: "prov-virtualized",
+            id: "prov-virtualised",
             source: "topology",
-            when: Includes("facility_mix", "virtualized"),
+            when: Includes("facility_mix", "virtualised"),
             consequence: (
                 status: Advisory,
                 audience: Client,
@@ -535,7 +535,7 @@
                 status: Requirement,
                 audience: Client,
                 title: "Point to internal time server",
-                detail: "Provide the internal NTP server IP so servers can synchronize time (required for correct function).",
+                detail: "Provide the internal NTP server IP so servers can synchronise time (required for correct function).",
             ),
         ),
         (
@@ -546,7 +546,7 @@
                 status: Requirement,
                 audience: Client,
                 title: "Allow outbound NTP",
-                detail: "Allow outbound NTP to public pools so servers can synchronize time.",
+                detail: "Allow outbound NTP to public pools so servers can synchronise time.",
             ),
         ),
         (
@@ -554,7 +554,7 @@
             source: "network",
             when: Any([
                 Includes("facility_mix", "baremetal"),
-                Includes("facility_mix", "virtualized"),
+                Includes("facility_mix", "virtualised"),
                 Includes("facility_mix", "iti"),
             ]),
             consequence: (
@@ -571,7 +571,7 @@
                 Equals("central", "bescloud"),
                 Any([
                     Includes("facility_mix", "baremetal"),
-                    Includes("facility_mix", "virtualized"),
+                    Includes("facility_mix", "virtualised"),
                     Includes("facility_mix", "iti"),
                 ]),
             ]),

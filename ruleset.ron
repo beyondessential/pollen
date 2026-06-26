@@ -176,7 +176,7 @@
             help: Some("Distinct from retention. Clone-upgrade testing needs only the ability to take a one-off backup, even if nothing is kept."),
             options: [
                 (id: "yes", label: "Yes — BES may take backups"),
-                (id: "no", label: "No — BES may not take backups", note: Some("Removes recovery, Tupaia, and clone upgrades.")),
+                (id: "no", label: "No — BES may not take backups", note: Some("Removes managed recovery, Tupaia, and clone upgrades.")),
             ],
         ),
         (

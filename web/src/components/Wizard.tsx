@@ -25,6 +25,12 @@ export default function Wizard({
 	const blocking = ev.consequences.filter((c) => c.consequence.severity === "Blocking").length;
 	const guidanceFor = (qid: string) => ev.guidance.find((g) => g.at === qid)?.message;
 
+	// Most-severe first in the ledger; stable within a severity (ruleset order).
+	const severityRank = { Blocking: 0, NonDefault: 1, Default: 2 };
+	const ledger = [...ev.consequences].sort(
+		(a, b) => severityRank[a.consequence.severity] - severityRank[b.consequence.severity],
+	);
+
 	async function change(qid: string, value: AnswerValue) {
 		const next = { ...answers, [qid]: value };
 		// Reflect the choice immediately; the server's re-evaluation follows.
@@ -75,7 +81,7 @@ export default function Wizard({
 				</div>
 				<div className="rail-section-h">Consequences</div>
 				<div className="ledger">
-					{ev.consequences.map((c) => (
+					{ledger.map((c) => (
 						<ConsequenceCard key={c.id} c={c.consequence} />
 					))}
 				</div>

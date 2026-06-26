@@ -20,10 +20,11 @@ check:
     cargo check
 
 # Run the API server, bound to IPv4 so Vite's proxy can reach it, reloading on
-# source change. (Node's vite-proxy can't resolve [::1] literals.) Also watches
-# ruleset.ron — it's embedded via include_str!, so editing it must rebuild.
+# source change. (Node's vite-proxy can't resolve [::1] literals.) Watches the
+# repo dir and filters to crates/ + ruleset.ron (which is embedded via
+# include_str!) — watching the dir, not the file, survives editor rename-saves.
 watch-api:
-    BIND_ADDRESS=127.0.0.1:8080 watchexec -I -w crates -w ruleset.ron -- cargo run --bin pollen-server
+    BIND_ADDRESS=127.0.0.1:8080 watchexec -w crates -W . -f 'crates/**' -f 'ruleset.ron' -- cargo run --bin pollen-server
 
 # Run the Vite frontend dev server (proxies /api to watch-api)
 watch-web:

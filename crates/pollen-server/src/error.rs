@@ -54,6 +54,11 @@ pub enum AppError {
 	#[error("conflict: {0}")]
 	Conflict(String),
 
+	/// Too many ruleset-preview resolutions in a short window. Protects the
+	/// source repository host's request quota. Maps to 429.
+	#[error("rate limit exceeded")]
+	RateLimited,
+
 	/// A dependency the tool calls out to failed or is not configured. Maps to
 	/// 502. The message is a caller-safe summary; underlying detail is logged
 	/// server-side only.
@@ -85,6 +90,7 @@ impl AppError {
 			Self::BadRequest(_) => StatusCode::BAD_REQUEST,
 			Self::NotFound(_) => StatusCode::NOT_FOUND,
 			Self::Conflict(_) => StatusCode::CONFLICT,
+			Self::RateLimited => StatusCode::TOO_MANY_REQUESTS,
 			Self::Upstream(_) => StatusCode::BAD_GATEWAY,
 			Self::DatabaseQuery(diesel::result::Error::NotFound) => StatusCode::NOT_FOUND,
 			Self::Problem(p) => p
@@ -117,6 +123,7 @@ impl AppError {
 						Self::BadRequest(_) => "bad-request",
 						Self::NotFound(_) => "not-found",
 						Self::Conflict(_) => "conflict",
+						Self::RateLimited => "rate-limited",
 						Self::Upstream(_) => "upstream",
 						Self::Problem(_) => unreachable!(),
 					}

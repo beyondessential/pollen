@@ -128,6 +128,9 @@ A check that inspects whether a supplied URL "looks like" it points at the repos
 A branch is mutable; naming a branch is therefore preview-only, and finalizing binds the resolved content hash, not the branch name.
 The binding chain strips mutability at each step: a branch resolves to content (verified to come from the configured repository), which hashes to an immutable identity, which is stored once and referenced by artifacts.
 
+Resolving a branch against the source repository is rate-limited, and a resolved result is briefly cached, so repeated or abusive preview requests do not exhaust the repository host's request quota.
+Binding the already-stored default ruleset — the common path, with no branch named — makes no request to the source repository.
+
 ### Resolution and lifecycle
 
 - **First load.**

@@ -116,20 +116,33 @@ Commit incrementally (jj). Each phase is independently reviewable.
 - Exit: engine evaluates the v1 ruleset deterministically; tests green.
 
 ### Phase 3 — Ruleset resolution & binding (security-critical)
-- On boot: load the bundled v1 ruleset, normalize, hash, upsert into
-  `config_store`; this hash is the default binding for new drafts.
+- On boot: load the bundled `ruleset.ron`, parse + `validate()`, normalize,
+  hash, upsert into `config_store`; this hash is the default binding for new
+  drafts. Fail fast (panic) if the bundled ruleset is invalid.
 - **`?config=<branch>` preview** (spec §Preview against repository refs):
-  1. resolve the branch against the configured repo's own ref list → commit SHA
-     *in that repo*;
-  2. fetch the ruleset file at that SHA, normalize, hash, upsert, bind.
-  Reject anything that is not a branch resolvable through the configured repo's
-  refs — no URL matching, no arbitrary fetch. Tests assert a fork-branch / crafted
-  URL is rejected.
+  1. resolve the branch against the configured repo's own refs → commit SHA
+     *in that repo*, via the **GitHub REST API** (`reqwest`);
+  2. fetch `ruleset.ron` at that SHA, parse + validate + normalize + hash +
+     upsert + bind.
+  The input is only ever a branch *name*, resolved through the configured repo —
+  never a URL. No URL matching, no arbitrary fetch.
+  - **Config**: the source repo (`owner/repo`) is one value; an optional token
+    lifts the unauthenticated rate limit. The fetched path is fixed (`ruleset.ron`).
+  - Abstract the HTTP behind a `RefSource` trait (resolve_ref + fetch_file) so
+    the resolver, cache, rate limiter, and rejection paths are unit-tested with a
+    fake source — no network in tests.
+- **Rate limiting** (the default path is free — it binds the boot-cached hash and
+  makes no GitHub call; only previews hit GitHub):
+  - A per-branch resolution cache with a short TTL, so repeated previews of the
+    same branch reuse the resolved hash without re-hitting GitHub.
+  - A global token-bucket limiter on GitHub resolutions; exceeding it returns 429
+    (`AppError::RateLimited`). Strong by default (protects GitHub's quota and the
+    public, unauthenticated endpoint from abuse).
 - **Stable-id migration**: set-diff over question/option ids between two bound
   rulesets → carried / dropped / newly-unanswered, producing the "what changed"
   summary. Unit-tested.
-- Exit: preview binds a branch's content hash; migration diff is correct; the
-  rejection paths are covered.
+- Exit: preview binds a branch's content hash (via the fake source); the cache
+  and rate limiter behave; migration diff is correct.
 
 ### Phase 4 — Application lifecycle API
 - Endpoints (mounted under `/api`, openapi-annotated):

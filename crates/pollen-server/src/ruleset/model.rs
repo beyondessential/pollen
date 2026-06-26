@@ -100,6 +100,10 @@ pub struct Opt {
 	pub label: String,
 	#[serde(default)]
 	pub note: Option<String>,
+	/// In a multi-select, choosing this option clears the others, and choosing
+	/// any other clears this one (e.g. a "none of these" choice).
+	#[serde(default)]
+	pub exclusive: bool,
 }
 
 /// A value derived from answers, surfaced in the artifact (e.g. the size band).
@@ -113,9 +117,12 @@ pub struct Derivation {
 pub enum DerivationKind {
 	/// The highest band reached across the named band questions, mapped to a
 	/// label by ordinal (`labels[max ordinal]`). Absent if none are answered.
+	/// When `bump_when` holds, the band is raised one step (capped at the top).
 	HighestBand {
 		questions: Vec<String>,
 		labels: Vec<String>,
+		#[serde(default)]
+		bump_when: Option<Condition>,
 	},
 }
 

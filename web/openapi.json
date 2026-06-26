@@ -501,6 +501,10 @@
           "label"
         ],
         "properties": {
+          "exclusive": {
+            "type": "boolean",
+            "description": "In a multi-select, choosing this option clears the others, and choosing\nany other clears this one (e.g. a \"none of these\" choice)."
+          },
           "id": {
             "type": "string"
           },

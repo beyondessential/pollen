@@ -105,7 +105,11 @@ fn derive(ruleset: &Ruleset, answers: &Answers) -> BTreeMap<String, String> {
 	let mut out = BTreeMap::new();
 	for d in &ruleset.derivations {
 		match &d.kind {
-			DerivationKind::HighestBand { questions, labels } => {
+			DerivationKind::HighestBand {
+				questions,
+				labels,
+				bump_when,
+			} => {
 				let mut max: Option<usize> = None;
 				for qid in questions {
 					if let (Some(q), Some(answer)) = (ruleset.question(qid), answers.one(qid))
@@ -113,6 +117,12 @@ fn derive(ruleset: &Ruleset, answers: &Answers) -> BTreeMap<String, String> {
 					{
 						max = Some(max.map_or(ix, |m| m.max(ix)));
 					}
+				}
+				// Bump one band up (capped at the top) when the condition holds.
+				if let Some(ix) = max.as_mut()
+					&& bump_when.as_ref().is_some_and(|c| c.eval(answers))
+				{
+					*ix = (*ix + 1).min(labels.len().saturating_sub(1));
 				}
 				if let Some(label) = max.and_then(|ix| labels.get(ix)) {
 					out.insert(d.id.clone(), label.clone());

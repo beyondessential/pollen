@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { callApi } from "../api";
-import type { AnswerValue, AppView, QuestionView } from "../types";
+import type { AnswerValue, AppView, Opt, QuestionView } from "../types";
 import { Check, ConsequenceCard, VerdictBanner } from "./visuals";
 
 export default function Wizard({
@@ -165,7 +165,7 @@ function QuestionCard({
 								type="button"
 								key={o.id}
 								className={`choice${selected ? " on" : ""}`}
-								onClick={() => onChange(q.kind === "Multi" ? toggle(value, o.id) : o.id)}
+								onClick={() => onChange(q.kind === "Multi" ? toggleMulti(q, value, o) : o.id)}
 							>
 								<span className="choice-tick">{selected && <Check size={13} />}</span>
 								<span>
@@ -181,7 +181,12 @@ function QuestionCard({
 	);
 }
 
-function toggle(value: AnswerValue | undefined, id: string): string[] {
-	const arr = Array.isArray(value) ? value : [];
-	return arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id];
+// Toggle an option in a multi-select, honouring exclusivity: an exclusive
+// option ("none of these") clears the rest, and any other clears the exclusive ones.
+function toggleMulti(q: QuestionView, value: AnswerValue | undefined, opt: Opt): string[] {
+	const current = Array.isArray(value) ? value : [];
+	if (current.includes(opt.id)) return current.filter((x) => x !== opt.id);
+	if (opt.exclusive) return [opt.id];
+	const exclusiveIds = new Set(q.options.filter((o) => o.exclusive).map((o) => o.id));
+	return [...current.filter((x) => !exclusiveIds.has(x)), opt.id];
 }

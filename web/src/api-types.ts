@@ -206,6 +206,11 @@ export interface components {
             new_questions: string[];
         };
         Opt: {
+            /**
+             * @description In a multi-select, choosing this option clears the others, and choosing
+             *     any other clears this one (e.g. a "none of these" choice).
+             */
+            exclusive?: boolean;
             id: string;
             label: string;
             note?: string | null;

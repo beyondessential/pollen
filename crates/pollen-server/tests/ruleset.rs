@@ -67,7 +67,8 @@ fn demo_config_is_blocking() {
 	);
 
 	assert_eq!(eval.verdict, Verdict::Blocking);
-	assert_eq!(eval.derived.get("size").map(String::as_str), Some("Medium"));
+	// Bands reach Medium; the LIMS integration bumps it to Large.
+	assert_eq!(eval.derived.get("size").map(String::as_str), Some("Large"));
 
 	let ids = fired_ids(&eval);
 	// The blocking conflict and a representative spread of consequences.
@@ -148,6 +149,41 @@ fn non_fhir_integration_adds_cost_without_blocking() {
 	assert!(ids.contains(&"int-capacity"));
 	// A cost, not a blocker.
 	assert_eq!(eval.verdict, Verdict::NonDefault);
+}
+
+#[test]
+fn none_integration_is_exclusive() {
+	let rs = v1();
+	let none = rs
+		.question("integrations")
+		.unwrap()
+		.options
+		.iter()
+		.find(|o| o.id == "none")
+		.unwrap();
+	assert!(none.exclusive);
+}
+
+#[test]
+fn integrations_bump_the_size() {
+	// Bands reach Medium either way; an integration bumps it to Large.
+	let bumped = evaluate(
+		&v1(),
+		&answers(json!({ "catchment": "c2", "integrations": ["lims"] })),
+	);
+	assert_eq!(
+		bumped.derived.get("size").map(String::as_str),
+		Some("Large")
+	);
+
+	let plain = evaluate(
+		&v1(),
+		&answers(json!({ "catchment": "c2", "integrations": ["none"] })),
+	);
+	assert_eq!(
+		plain.derived.get("size").map(String::as_str),
+		Some("Medium")
+	);
 }
 
 #[test]

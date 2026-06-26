@@ -47,7 +47,7 @@
                 (id: "rispacs", label: "RISPACS / Imaging"),
                 (id: "other_fhir", label: "Other FHIR-based integration"),
                 (id: "other_nonfhir", label: "Other non-FHIR integration"),
-                (id: "none", label: "None for now"),
+                (id: "none", label: "None for now", exclusive: true),
             ],
         ),
         (
@@ -221,7 +221,7 @@
             kind: Single,
             label: "Remote access for managed servers",
             options: [
-                (id: "tailscale", label: "Tailscale", note: Some("Standard. Only the specific servers need it allowed.")),
+                (id: "tailscale", label: "Tailscale", note: Some("Standard. Servers join BES's Tailscale network; only those servers need it allowed.")),
                 (id: "other", label: "Non-Tailscale arrangement", note: Some("Exceptional, adds significant cost.")),
             ],
         ),
@@ -245,6 +245,14 @@
             kind: HighestBand(
                 questions: ["catchment", "facilities", "mobile"],
                 labels: ["Small", "Small", "Medium", "Large"],
+                // Any integration bumps the deployment up one size (capped).
+                bump_when: Some(Any([
+                    Includes("integrations", "lims"),
+                    Includes("integrations", "msupply"),
+                    Includes("integrations", "rispacs"),
+                    Includes("integrations", "other_fhir"),
+                    Includes("integrations", "other_nonfhir"),
+                ])),
             ),
         ),
     ],
@@ -537,8 +545,8 @@
             consequence: (
                 status: Requirement,
                 audience: Client,
-                title: "Allow Tailscale on managed servers",
-                detail: "Only the specific BES-managed servers need Tailscale allowed — not the whole network. Firewalls often block it (fine); a net-check confirms connectivity.",
+                title: "Allow BES's Tailscale on managed servers",
+                detail: "The BES-managed servers join BES's own Tailscale network — not a separate one the client runs. Only those specific servers need Tailscale allowed, not the whole network. Firewalls often block it (fine); a net-check confirms connectivity.",
             ),
         ),
         (

@@ -22,15 +22,16 @@
 
 (
     questions: [
-        // 1. Analytics intent — asked first; it constrains backups later.
+        // 1. Tupaia — asked first; it constrains backups later. (Stable id stays
+        // "analytics"; only the copy names the product.)
         (
             id: "analytics",
             kind: Single,
-            label: "Connect to the BES analytics platform (Tupaia)?",
-            help: Some("Connecting means BES processes the data, which needs at minimum a low-retention backup. Asked first because it shapes the backup choices."),
+            label: "Connect to Tupaia?",
+            help: Some("Connecting means BES processes the data, which needs at minimum a low-retention backup."),
             options: [
-                (id: "yes", label: "Yes, connect to analytics"),
-                (id: "no", label: "No analytics"),
+                (id: "yes", label: "Yes, connect to Tupaia"),
+                (id: "no", label: "No Tupaia"),
             ],
         ),
 
@@ -128,7 +129,6 @@
             id: "region",
             kind: Single,
             label: "Which hosting region?",
-            help: Some("Relevant because part of this deployment is in BES cloud."),
             options: [
                 (id: "sydney", label: "Sydney", note: Some("Default.")),
                 (id: "zurich", label: "Zurich", note: Some("For Europe.")),
@@ -170,7 +170,7 @@
             help: Some("Distinct from retention. Clone-upgrade testing needs only the ability to take a one-off backup, even if nothing is kept."),
             options: [
                 (id: "yes", label: "Yes — BES may take backups"),
-                (id: "no", label: "No — BES may not take backups", note: Some("Removes recovery, analytics, and clone upgrades.")),
+                (id: "no", label: "No — BES may not take backups", note: Some("Removes recovery, Tupaia, and clone upgrades.")),
             ],
         ),
         (
@@ -179,7 +179,7 @@
             label: "What does BES retain?",
             options: [
                 (id: "full", label: "Full retention", note: Some("Default, fully integrated.")),
-                (id: "low", label: "Low-retention (process-only)", note: Some("Just enough for analytics + clone upgrades.")),
+                (id: "low", label: "Low-retention (process-only)", note: Some("Just enough for Tupaia + clone upgrades.")),
                 (id: "none", label: "None (self-managed)", note: Some("Client runs their own backups.")),
             ],
             visible_if: Equals("backup_capability", "yes"),
@@ -248,7 +248,7 @@
         (
             at: "backup_capability",
             when: Equals("analytics", "yes"),
-            message: "You asked for analytics, so backups can't be fully disabled — at minimum, low-retention is needed.",
+            message: "You asked for Tupaia, so backups can't be fully disabled — at minimum, low-retention is needed.",
         ),
     ],
 
@@ -261,8 +261,8 @@
             consequence: (
                 status: Requirement,
                 audience: Bes,
-                title: "Analytics connection requested",
-                detail: "Connecting to the analytics platform means BES processes the data, which requires at minimum a low-retention backup. This constrains the backup choices later.",
+                title: "Tupaia connection requested",
+                detail: "Connecting to Tupaia means BES processes the data, which requires at minimum a low-retention backup.",
             ),
         ),
         (
@@ -339,7 +339,7 @@
                 audience: Record,
                 types: [Support, Capability],
                 title: "Unsupported platform",
-                detail: "Red Hat, other distributions, Kubernetes, or non-server Windows are unsupported. BES cannot access the system, so there is no support, no backups, no analytics, and no clone-upgrade testing. The product is open source and can be run this way, but not by BES.",
+                detail: "Red Hat, other distributions, Kubernetes, or non-server Windows are unsupported. BES cannot access the system, so there is no support, no backups, no Tupaia, and no clone-upgrade testing. The product is open source and can be run this way, but not by BES.",
             ),
         ),
         (
@@ -406,8 +406,8 @@
                 status: Requirement,
                 audience: Record,
                 types: [Capability],
-                title: "Backups disabled, but analytics requested",
-                detail: "Analytics needs at least a low-retention backup to process data. With backups fully disabled this cannot work as specified — permit at least low-retention backups, or drop analytics.",
+                title: "Backups disabled, but Tupaia requested",
+                detail: "Tupaia needs at least a low-retention backup to process data. With backups fully disabled this cannot work as specified — permit at least low-retention backups, or drop Tupaia.",
             ),
         ),
         (
@@ -436,8 +436,8 @@
                 status: Requirement,
                 audience: Record,
                 types: [Capability],
-                title: "Zero retention, but analytics requested",
-                detail: "Analytics needs at least low-retention backups. Set retention to low-retention (process-only), or drop analytics.",
+                title: "Zero retention, but Tupaia requested",
+                detail: "Tupaia needs at least low-retention backups. Set retention to low-retention (process-only), or drop Tupaia.",
             ),
         ),
         (
@@ -466,7 +466,7 @@
                 status: Advisory,
                 audience: Bes,
                 title: "Low-retention (process-only) backups",
-                detail: "Backups are kept only as long as needed to process data into analytics. Enough to unlock analytics and clone-upgrade testing at minimum data cost.",
+                detail: "Backups are kept only as long as needed to process data into Tupaia. Enough to unlock Tupaia and clone-upgrade testing at minimum data cost.",
             ),
         ),
 

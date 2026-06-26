@@ -24,6 +24,9 @@ export default function Artifact({ view }: { view: AppView }) {
 		(c) => c.consequence.severity === "NonDefault",
 	).length;
 	const blocking = ev.consequences.filter((c) => c.consequence.severity === "Blocking").length;
+	const started = Object.values(answers).some((v) =>
+		Array.isArray(v) ? v.length > 0 : v != null && v !== "",
+	);
 
 	async function makeNewVersion() {
 		setBusy(true);
@@ -67,7 +70,13 @@ export default function Artifact({ view }: { view: AppView }) {
 			</div>
 
 			<div style={{ padding: "22px 30px 0" }}>
-				<VerdictBanner verdict={ev.verdict} offDefault={offDefault} blocking={blocking} big />
+				<VerdictBanner
+					verdict={ev.verdict}
+					offDefault={offDefault}
+					blocking={blocking}
+					started={started}
+					big
+				/>
 			</div>
 
 			<div className="sheet-actions">

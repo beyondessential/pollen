@@ -15,6 +15,9 @@ export default function Wizard({
 
 	const answers = view.answers as unknown as Record<string, AnswerValue>;
 	const ev = view.evaluation;
+	const started = Object.values(answers).some((v) =>
+		Array.isArray(v) ? v.length > 0 : v != null && v !== "",
+	);
 	const byId = new Map(view.questions.map((q) => [q.id, q]));
 	const offDefault = ev.consequences.filter(
 		(c) => c.consequence.severity === "NonDefault",
@@ -46,7 +49,12 @@ export default function Wizard({
 	return (
 		<div className="frame">
 			<aside className="rail">
-				<VerdictBanner verdict={ev.verdict} offDefault={offDefault} blocking={blocking} />
+				<VerdictBanner
+					verdict={ev.verdict}
+					offDefault={offDefault}
+					blocking={blocking}
+					started={started}
+				/>
 				<div className="meters">
 					<div className="meter">
 						<span className="meter-k">Size</span>
@@ -67,13 +75,9 @@ export default function Wizard({
 				</div>
 				<div className="rail-section-h">Consequences</div>
 				<div className="ledger">
-					{ev.consequences.length === 0 ? (
-						<p className="ledger-empty">
-							Choices that leave the default path show up here as you go.
-						</p>
-					) : (
-						ev.consequences.map((c) => <ConsequenceCard key={c.id} c={c.consequence} />)
-					)}
+					{ev.consequences.map((c) => (
+						<ConsequenceCard key={c.id} c={c.consequence} />
+					))}
 				</div>
 			</aside>
 

@@ -119,13 +119,30 @@ export function VerdictBanner({
 	verdict,
 	offDefault,
 	blocking,
+	started = true,
 	big = false,
 }: {
 	verdict: Verdict;
 	offDefault: number;
 	blocking: number;
+	/// Whether any choice has been made yet. Before then there's no verdict to
+	/// report — only an empty form.
+	started?: boolean;
 	big?: boolean;
 }) {
+	if (!started) {
+		return (
+			<div
+				className={`verdict${big ? " verdict-big" : ""}`}
+				style={{ background: "var(--line-soft)", color: "var(--ink-soft)" }}
+			>
+				<div>
+					<div className="verdict-t">Nothing recorded yet</div>
+					<div className="verdict-s">Make a choice and its consequences appear here.</div>
+				</div>
+			</div>
+		);
+	}
 	const m = verdictMeta(verdict);
 	const subtitle =
 		verdict === "Blocking"

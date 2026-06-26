@@ -148,7 +148,7 @@ export function VerdictBanner({
 		verdict === "Blocking"
 			? `${blocking} blocking conflict${blocking === 1 ? "" : "s"} — something must change. Everything is still recorded below.`
 			: verdict === "NonDefault"
-				? `${offDefault} choice${offDefault === 1 ? "" : "s"} off the default path. The client is opting into the consequences.`
+				? `${offDefault} choice${offDefault === 1 ? "" : "s"} off the default path. This will be harder to support.`
 				: "No off-default choices recorded.";
 	return (
 		<div

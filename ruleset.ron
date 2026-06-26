@@ -310,7 +310,7 @@
                 types: [Cost],
                 cost: Some((tier: "Significant one-off development cost")),
                 title: "Non-FHIR integration needs custom development",
-                detail: "A non-FHIR integration has no standard interface, so connecting it requires bespoke development. It is supported with no other blockers, but adds significant one-off development cost. Sales confirms the figure.",
+                detail: "A non-FHIR integration has no standard interface, so connecting it requires bespoke development. It is supported with no other blockers, but adds significant one-off development cost.",
             ),
         ),
 

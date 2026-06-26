@@ -38,7 +38,7 @@ The tool surfaces these boundaries to the user, not only records them here.
 
 The tool is driven by a declarative ruleset, not by hard-coded question logic.
 The ruleset is data the engine evaluates; this section describes the model the ruleset expresses.
-The decision points the v1 ruleset captures, and the consequences each triggers, are specified separately in [WIZR](ruleset.md).
+The concrete questions, options, and consequences are not enumerated here: they are defined in the ruleset and documented where it is authored.
 
 Every captured item and every consequence carries up to three independent tags.
 
@@ -79,6 +79,12 @@ A requirement or consequence appears when its trigger condition holds.
   Conditions spanning several answers are evaluated both for blocking conflicts and for forward guidance, so an early intent can constrain a later question.
 
 The artifact renders the union of every triggered block, grouped for the reader.
+
+### Visibility and forward guidance
+
+The engine shows a question only when its precondition holds, and hides it otherwise; a precondition is a presence-of-class flag or a cross-field condition.
+When an earlier answer will constrain a later question, the engine warns forward at the point the constraint is set, before the later question is reached.
+At finalize, the engine re-checks every cross-field condition as a final consistency pass, so a conflict reached by pushing past a warning is still caught.
 
 ## Artifact lifecycle
 

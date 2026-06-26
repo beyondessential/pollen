@@ -5,10 +5,11 @@ axum backend that embeds a React + MUI + Vite SPA and owns its own PostgreSQL
 database. It is self-contained — no shared code, database, or auth with any
 other service. It stores no client names, no free text, and no sensitive data.
 
-Read the specs (the durable "what") and the active plan in
-[`docs/plans/`](docs/plans/) before making changes:
-- [`.workhorse/specs/wizard/onboarding.md`](.workhorse/specs/wizard/onboarding.md) — the tool and its engine (lifecycle, ruleset binding, outputs).
-- [`.workhorse/specs/wizard/ruleset.md`](.workhorse/specs/wizard/ruleset.md) — the v1 question flow and the consequences it encodes.
+Read [`.workhorse/specs/wizard/onboarding.md`](.workhorse/specs/wizard/onboarding.md)
+(the durable "what" — the tool, engine, lifecycle, ruleset binding, outputs) and
+the active plan in [`docs/plans/`](docs/plans/) before making changes. The
+concrete v1 questions and consequences live in the ruleset, documented inline
+where it is authored — not in a spec.
 
 ## Development workflow
 - Specs first: update `.workhorse/specs/` per [`.workhorse/rules.md`](.workhorse/rules.md), then implement, then test.
@@ -25,8 +26,10 @@ Read the specs (the durable "what") and the active plan in
   Vite build unless skipped for dev. The dev loop is the API binary + Vite proxy.
 - **Migrations** live in `migrations/` (one database — no multi-schema).
   Create them with the diesel CLI via `just migration <name>`, never by hand.
-- **The ruleset is data**, not code: `ruleset/v1.json`, content-addressed by
-  hash. The engine loads and evaluates it.
+- **The ruleset is data**, not code. It is authored in a human-writable,
+  commentable format under `ruleset/`, normalized to canonical JSON, and
+  content-addressed by hash. The concrete questions/consequences and their
+  rationale are documented inline there. The engine loads and evaluates it.
 
 ## Naming & copy
 - No seedling/legacy jargon.

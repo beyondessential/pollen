@@ -171,7 +171,6 @@ body {
 	color: var(--ink-soft);
 	line-height: 1.5;
 	margin: 0 0 14px;
-	max-width: 64ch;
 }
 .choices {
 	display: flex;

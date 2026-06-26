@@ -59,6 +59,32 @@ lint:
 build-release target:
     SKIP_FRONTEND_BUILD= cargo build --locked --target {{ target }} --release --bins
 
-# Build the container image
+# Build the container image locally. Prefers podman, falls back to docker.
+# Rootless podman needs a subuid/subgid range to map image file ownership (e.g.
+# gid 42 in Debian bases); where that isn't configured, this uses rootful podman
+# if sudo is passwordless. Override explicitly with CONTAINER_ENGINE="sudo podman".
 build-image:
-    docker build -f .github/Containerfile -t pollen .
+    #!/usr/bin/env bash
+    set -euo pipefail
+    engine="${CONTAINER_ENGINE:-}"
+    if [ -z "$engine" ]; then
+        if command -v podman >/dev/null; then
+            if grep -q "^$(id -un):\|^$(id -u):" /etc/subgid 2>/dev/null; then
+                engine="podman"          # rootless: subgid range is configured
+            elif sudo -n true 2>/dev/null; then
+                engine="sudo podman"     # no subgid range; use rootful via passwordless sudo
+            else
+                engine="podman"          # let podman report the rootless mapping error
+            fi
+        elif command -v docker >/dev/null; then
+            engine="docker"
+        fi
+    fi
+    [ -n "$engine" ] || { echo "error: need podman or docker on PATH" >&2; exit 69; }
+    case "$(uname -m)" in aarch64|arm64) arch=arm64;; x86_64|amd64) arch=amd64;; *) arch="$(uname -m)";; esac
+    # Stage a build context mirroring CI's layout: the binary under <arch>/.
+    ctx="$(mktemp -d)"; trap 'rm -rf "$ctx"' EXIT
+    SKIP_FRONTEND_BUILD= cargo build --release --bin pollen-server
+    mkdir -p "$ctx/$arch"; cp target/release/pollen-server "$ctx/$arch/"
+    echo "building image 'pollen' with: $engine (arch $arch)" >&2
+    $engine build -f "$PWD/.github/Containerfile" --build-arg "BIN_DIR=$arch" -t pollen "$ctx"

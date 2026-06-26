@@ -82,7 +82,7 @@ jobs:
         uses: docker/build-push-action@v7.2.0
         with:
           context: .github/build-context
-          file: .github/Dockerfile
+          file: .github/Containerfile
           platforms: linux/arm64
           push: true
           labels: ${{ steps.meta.outputs.labels }}

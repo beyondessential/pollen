@@ -11,8 +11,10 @@ RUN addgroup -g 1000 app && adduser -D -u 1000 -G app app
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 # The SPA is embedded in the binary, so the image carries nothing but the
-# binary itself. We only build for arm64.
-COPY --chmod=0755 arm64/ /usr/bin/
+# binary itself. CI builds for arm64 (the default); `just build-image` overrides
+# BIN_DIR to the host arch for a local build.
+ARG BIN_DIR=arm64
+COPY --chmod=0755 ${BIN_DIR}/ /usr/bin/
 
 USER app
 ENV HOME=/home/app

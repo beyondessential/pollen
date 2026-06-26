@@ -2,13 +2,13 @@
 
 Pollen is the public-facing Tamanu deployment onboarding wizard: a standalone
 axum backend that embeds a React + MUI + Vite SPA and owns its own PostgreSQL
-database. It is **not** part of canopy — it shares no domain code, no database,
-and no auth with the fleet control plane. It stores no client names, no free
-text, and no sensitive data.
+database. It is self-contained — no shared code, database, or auth with any
+other service. It stores no client names, no free text, and no sensitive data.
 
-Read [`.workhorse/specs/wizard/onboarding.md`](.workhorse/specs/wizard/onboarding.md)
-(the durable "what") and the active plan in [`docs/plans/`](docs/plans/) before
-making changes.
+Read the specs (the durable "what") and the active plan in
+[`docs/plans/`](docs/plans/) before making changes:
+- [`.workhorse/specs/wizard/onboarding.md`](.workhorse/specs/wizard/onboarding.md) — the tool and its engine (lifecycle, ruleset binding, outputs).
+- [`.workhorse/specs/wizard/ruleset.md`](.workhorse/specs/wizard/ruleset.md) — the v1 question flow and the consequences it encodes.
 
 ## Development workflow
 - Specs first: update `.workhorse/specs/` per [`.workhorse/rules.md`](.workhorse/rules.md), then implement, then test.

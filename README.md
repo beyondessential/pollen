@@ -8,10 +8,10 @@ default supported path, and produces a permanent, shareable artifact that
 records the choices for the client's IT team, the BES technical team, and as a
 record of what was agreed.
 
-It is a public-facing, unauthenticated companion to the Tamanu fleet —
-deliberately isolated from the operator control plane: it stores no fleet data,
-no client names, and no free text, so the artifacts it produces are
-non-sensitive and addressable by an unguessable id alone.
+It is public-facing and unauthenticated, and stores no client names, no free
+text, and no sensitive data, so the artifacts it produces are non-sensitive and
+addressable by an unguessable id alone.
 
-See [`.workhorse/specs/wizard/onboarding.md`](.workhorse/specs/wizard/onboarding.md)
-for what the system does, and [`docs/plans/`](docs/plans/) for build plans.
+For what the system does, see the specs — [`onboarding.md`](.workhorse/specs/wizard/onboarding.md)
+(the tool and its engine) and [`ruleset.md`](.workhorse/specs/wizard/ruleset.md)
+(the v1 question flow) — and [`docs/plans/`](docs/plans/) for build plans.

@@ -1,7 +1,9 @@
 # Build plan — deployment onboarding wizard (pollen)
 
-Implements [`WIZ`](../../.workhorse/specs/wizard/onboarding.md).
-This is the build roadmap (the "how"); the spec is the durable "what".
+Implements [`WIZ`](../../.workhorse/specs/wizard/onboarding.md) (engine, lifecycle,
+ruleset binding, outputs) and [`WIZR`](../../.workhorse/specs/wizard/ruleset.md)
+(the v1 question flow). This is the build roadmap (the "how"); the specs are the
+durable "what".
 
 ## Shape and stack
 

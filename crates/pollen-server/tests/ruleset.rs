@@ -195,6 +195,14 @@ fn no_dns_is_an_off_default_risk() {
 }
 
 #[test]
+fn windows_requires_time_sync_setup() {
+	// Windows servers don't get time sync for free the way the Linux servers do,
+	// so choosing Windows always raises the requirement to configure it.
+	let eval = evaluate(&v1(), &answers(json!({ "platform": "windows" })));
+	assert!(fired_ids(&eval).contains(&"time-windows"));
+}
+
+#[test]
 fn dns_arrangement_targets_the_consequence() {
 	// The BES subdomain is the frictionless default; the other arrangements each
 	// fire their own consequence and read as non-default.

@@ -628,6 +628,21 @@
                 detail: "Allow outbound NTP to public pools so servers can synchronise time.",
             ),
         ),
+        // Time sync is configured for you on the BES-provisioned Linux servers,
+        // but not on Windows — the client must set it up there. Fires for either
+        // time source.
+        (
+            id: "time-windows",
+            source: "network",
+            when: Equals("platform", "windows"),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                types: [Operational],
+                title: "Configure time sync on the Windows servers",
+                detail: "On the BES-provisioned Linux servers time synchronisation is handled for you; on Windows servers the client must configure it explicitly against the chosen time source. Accurate, synchronised time is required — clock drift will break Tamanu.",
+            ),
+        ),
         (
             id: "dns-partition",
             source: "network",

@@ -161,7 +161,7 @@ This comparison is the "what changed" summary the user sees on update: newly-req
 ### Finalised web view
 
 The canonical artifact is a live page that renders the same underlying data in more than one way.
-It can be presented grouped by audience or grouped by topic, and supports searching, expanding and collapsing, and deep-linking to a section.
+It can be presented grouped by audience or grouped by topic, with every consequence shown in full, and supports searching and deep-linking to a section.
 
 Its header surfaces non-identifying recognition facts so one artifact is distinguishable from another without any free text or name: the size band, the topology shape, the region, the version number, and the creation date — enough that "the fifteen-facility hybrid in the alternate region, version two" reads differently from "the five-facility all-cloud default-region".
 

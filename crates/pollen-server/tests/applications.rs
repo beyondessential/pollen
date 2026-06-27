@@ -143,6 +143,34 @@ async fn fork_to_default_updates_a_stale_draft() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn stale_finalised_plan_also_offers_an_update() {
+	run_server(|server, mut conn| async move {
+		// A finalised plan frozen against a now-superseded ruleset still surfaces
+		// that a newer default is available (it would fork to a new draft).
+		let bundled = ResolvedRuleset::from_ron(BUNDLED_RULESET).expect("bundled ruleset");
+		let content = serde_json::to_value(&bundled.ruleset).unwrap();
+		let stale_hash = "stale-finalised-hash";
+		ConfigRow::upsert(&mut conn, stale_hash, &content)
+			.await
+			.unwrap();
+		let app =
+			Application::create_draft(&mut conn, stale_hash, None, &json!({ "analytics": "yes" }))
+				.await
+				.unwrap();
+		Application::finalise(&mut conn, app.id).await.unwrap();
+
+		let fetched: Value = server
+			.post("/api/applications/get")
+			.json(&json!({ "id": app.id.to_string() }))
+			.await
+			.json();
+		assert_eq!(fetched["status"], "finalised");
+		assert_eq!(fetched["update_available"], true);
+	})
+	.await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn finalise_requires_all_questions_answered() {
 	run_server(|server, _conn| async move {
 		let created: Value = server

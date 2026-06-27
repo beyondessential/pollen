@@ -87,7 +87,7 @@ function Loaded({ initial }: { initial: AppView }) {
 				action="Update to the latest"
 				onAct={() => rebind({ to_default: true })}
 			>
-				The ruleset has been updated since this plan started.
+				A newer ruleset is available than the one this plan uses.
 			</UpdateBar>
 		);
 	}

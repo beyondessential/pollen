@@ -29,8 +29,9 @@ pub struct AppView {
 	pub created_at: Timestamp,
 	pub finalised_at: Option<Timestamp>,
 	pub config_hash: String,
-	/// True for a draft bound to a ruleset other than the current bundled
-	/// default — i.e. a newer default is available to update to.
+	/// True when the plan is bound to a ruleset other than the current bundled
+	/// default — a newer default is available. A draft updates in place; a
+	/// finalised plan spawns a new draft on the new ruleset.
 	pub update_available: bool,
 	pub questions: Vec<QuestionView>,
 	pub answers: Value,
@@ -325,9 +326,9 @@ fn build_view(
 ) -> Result<AppView> {
 	let answers: Answers = serde_json::from_value(app.answers.clone()).map_err(AppError::custom)?;
 	let evaluation = evaluate(ruleset, &answers);
-	// A draft bound to anything other than the current default can be updated.
-	let update_available =
-		app.status == ApplicationStatus::Draft && app.config_hash.as_str() != default_hash;
+	// Any plan bound to a ruleset other than the current default can be updated
+	// (a draft rebinds in place; a finalised one spawns a new draft).
+	let update_available = app.config_hash.as_str() != default_hash;
 	Ok(AppView {
 		id: app.id,
 		status: app.status,

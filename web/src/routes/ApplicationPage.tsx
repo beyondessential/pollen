@@ -14,7 +14,11 @@ export default function ApplicationPage() {
 	if (state.status === "error") {
 		return <div className="splash">Couldn't load this plan: {state.error.message}</div>;
 	}
-	if (state.status !== "ok") {
+	// `useApi` keeps the previous plan's data on screen during a refetch, so when
+	// navigating between plans `state.data` is briefly the old plan. Wait for the
+	// fetch matching this URL before mounting, or the keyed `Loaded` initialises
+	// from stale data and never updates.
+	if (state.status !== "ok" || state.data.id !== id) {
 		return <div className="splash">Loading…</div>;
 	}
 	// Re-key on id so local edit state resets when navigating between artifacts.

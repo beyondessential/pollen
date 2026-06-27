@@ -96,10 +96,14 @@ test("a fresh plan offers to resume the previous one", async ({ page }) => {
 	const second = page.url();
 	await expect(page.getByRole("button", { name: "Resume" })).toBeHidden();
 
-	// Resuming from another fresh plan returns to the most recent (the second).
+	// Resuming from another fresh plan returns to the most recent (the second),
+	// with its saved answer shown selected (not a blank form).
 	await page.getByRole("link", { name: "Start a new plan" }).click();
 	await page.getByRole("button", { name: "Resume" }).click();
 	await expect(page).toHaveURL(second);
+	await expect(
+		page.locator(".choice.on").filter({ hasText: "Yes, connect to Tupaia" }),
+	).toBeVisible();
 });
 
 test("a blocking, incomplete plan can't be finalised", async ({ page }) => {

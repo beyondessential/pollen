@@ -79,6 +79,9 @@ A requirement or consequence appears when its trigger condition holds.
   Conditions spanning several answers are evaluated both for blocking conflicts and for forward guidance, so an early intent can constrain a later question.
 
 The artifact renders the union of every triggered block, grouped for the reader.
+Authored prose (consequence detail, question help, option notes, guidance) may
+carry limited inline markup — links, which open in a new tab, and light emphasis
+— so it can point to further documentation.
 
 ### Visibility and forward guidance
 

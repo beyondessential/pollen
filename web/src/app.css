@@ -359,6 +359,22 @@ body {
 	margin: 5px 0 9px;
 	max-width: 70ch;
 }
+/* Inline markup (links open in a new tab; see markup.tsx) in ruleset prose. */
+.cons-detail a,
+.qhelp a,
+.guide a,
+.choice-note a {
+	color: var(--sky-deep);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+.cons-detail code,
+.qhelp code,
+.guide code,
+.choice-note code {
+	font-family: var(--font-mono);
+	font-size: 0.9em;
+}
 .cons-tags {
 	display: flex;
 	flex-wrap: wrap;

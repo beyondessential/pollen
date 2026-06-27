@@ -29,6 +29,7 @@ const CLEAR: Array<[string, string]> = [
 	["How is the BES-controlled domain set up?", "BES subdomain on tamanu.app"],
 	["Remote access for managed servers", "Tailscale"],
 	["Time synchronisation", "Public NTP"],
+	["Allow telemetry?", "Yes, allow telemetry"],
 ];
 
 // Walk the all-default plan and finalise it, landing on the artifact.

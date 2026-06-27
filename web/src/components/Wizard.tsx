@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { callApi } from "../api";
+import { Markup } from "../markup";
 import type { AnswerValue, AppView, Opt, QuestionView } from "../types";
 import { Check, ConsequenceCard, VerdictBanner } from "./visuals";
 
@@ -137,8 +138,16 @@ function QuestionCard({
 	return (
 		<div className="card">
 			<h3 className="qtitle">{q.label}</h3>
-			{q.help && <p className="qhelp">{q.help}</p>}
-			{guidance && <div className="guide">{guidance}</div>}
+			{q.help && (
+				<p className="qhelp">
+					<Markup text={q.help} />
+				</p>
+			)}
+			{guidance && (
+				<div className="guide">
+					<Markup text={guidance} />
+				</div>
+			)}
 
 			{q.kind === "Band" ? (
 				<div className="bandrow">
@@ -170,7 +179,11 @@ function QuestionCard({
 								<span className="choice-tick">{selected && <Check size={13} />}</span>
 								<span>
 									<span className="choice-title">{o.label}</span>
-									{o.note && <span className="choice-note">{o.note}</span>}
+									{o.note && (
+										<span className="choice-note">
+											<Markup text={o.note} />
+										</span>
+									)}
 								</span>
 							</button>
 						);

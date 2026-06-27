@@ -250,6 +250,18 @@
                 (id: "internal", label: "Internal time server", note: Some("Provide the IP.")),
             ],
         ),
+
+        // 10. Telemetry — operational data only; gates support, backups, mobile.
+        (
+            id: "telemetry",
+            kind: Single,
+            label: "Allow telemetry?",
+            help: Some("Telemetry is operational data only — no patient, clinical, or otherwise sensitive data is ever transmitted. It's what lets BES support the deployment, back it up, and keep mobile working."),
+            options: [
+                (id: "yes", label: "Yes, allow telemetry"),
+                (id: "no", label: "No telemetry"),
+            ],
+        ),
     ],
 
     // Size = the highest band reached across the three sizing questions, mapped
@@ -674,6 +686,73 @@
                 audience: Client,
                 title: "Provide facility egress IP ranges",
                 detail: "With Central in BES cloud and on-prem facilities, share the ranges facility traffic comes from so BES can set network restrictions. All communication is facility-initiated, so facility servers need not be publicly reachable.",
+            ),
+        ),
+        // Mobile clients reach Central directly. When BES hosts Central this is
+        // handled; when the client hosts it, they must expose it publicly.
+        (
+            id: "mobile-public-ip",
+            source: "network",
+            when: All([
+                Answered("mobile"),
+                Not(Equals("mobile", "m0")),
+                Any([
+                    Equals("central", "onprem"),
+                    Equals("central", "customercloud"),
+                ]),
+            ]),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                types: [Operational],
+                title: "Central needs a public static IP for mobile clients",
+                detail: "Mobile clients connect to the central server directly, so when you host Central yourself it needs a public static IP with its HTTPS interface reachable from the internet. (When BES hosts Central, BES provides this.)",
+            ),
+        ),
+        // Any on-prem presence means the client's network must carry Tamanu's
+        // traffic and reach what it needs to install and upgrade.
+        (
+            id: "onprem-network",
+            source: "network",
+            when: Any([
+                Equals("central", "onprem"),
+                Equals("central", "customercloud"),
+                Includes("facility_mix", "baremetal"),
+                Includes("facility_mix", "virtualised"),
+                Includes("facility_mix", "iti"),
+            ]),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                types: [Operational],
+                title: "Allow Tamanu traffic on the on-prem network",
+                detail: "With on-prem servers, client IT must configure the network to allow Tamanu's application traffic between the Tamanu instances, and the outbound traffic Tamanu needs to install and upgrade.",
+            ),
+        ),
+        // ── Telemetry ───────────────────────────────────────────────────────
+        (
+            id: "telemetry-off",
+            source: "telemetry",
+            when: Equals("telemetry", "no"),
+            consequence: (
+                severity: NonDefault,
+                status: Requirement,
+                audience: Client,
+                types: [Support, Capability],
+                title: "No telemetry — support, backups, and mobile are opted out",
+                detail: "Declining telemetry opts the deployment out of BES tech support, managed backups, and mobile support. Telemetry carries operational data only — never patient, clinical, or sensitive data.",
+            ),
+        ),
+        (
+            id: "telemetry-on",
+            source: "telemetry",
+            when: Equals("telemetry", "yes"),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                types: [Operational],
+                title: "Allow outbound to BES telemetry",
+                detail: "Allow outbound traffic to the BES telemetry endpoints (the DNS names and IPs BES provides) so operational telemetry can be sent.",
             ),
         ),
     ],

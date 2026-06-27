@@ -195,6 +195,50 @@ fn no_dns_is_an_off_default_risk() {
 }
 
 #[test]
+fn self_hosted_central_with_mobile_needs_public_ip() {
+	// Mobile clients + client-hosted Central → public-IP requirement; not when
+	// BES hosts Central, and not when there are no mobile clients.
+	let onprem = evaluate(
+		&v1(),
+		&answers(json!({ "central": "onprem", "mobile": "m2" })),
+	);
+	assert!(fired_ids(&onprem).contains(&"mobile-public-ip"));
+
+	let bes = evaluate(
+		&v1(),
+		&answers(json!({ "central": "bescloud", "mobile": "m2" })),
+	);
+	assert!(!fired_ids(&bes).contains(&"mobile-public-ip"));
+
+	let no_mobile = evaluate(
+		&v1(),
+		&answers(json!({ "central": "onprem", "mobile": "m0" })),
+	);
+	assert!(!fired_ids(&no_mobile).contains(&"mobile-public-ip"));
+}
+
+#[test]
+fn on_prem_requires_network_setup() {
+	let onprem = evaluate(&v1(), &answers(json!({ "facility_mix": ["baremetal"] })));
+	assert!(fired_ids(&onprem).contains(&"onprem-network"));
+
+	let cloud = evaluate(&v1(), &answers(json!({ "facility_mix": ["bescloud"] })));
+	assert!(!fired_ids(&cloud).contains(&"onprem-network"));
+}
+
+#[test]
+fn declining_telemetry_is_an_off_default_opt_out() {
+	let off = evaluate(&v1(), &answers(json!({ "telemetry": "no" })));
+	assert!(fired_ids(&off).contains(&"telemetry-off"));
+	assert_eq!(off.verdict, Verdict::NonDefault);
+
+	let on = evaluate(&v1(), &answers(json!({ "telemetry": "yes" })));
+	let ids = fired_ids(&on);
+	assert!(ids.contains(&"telemetry-on"));
+	assert!(!ids.contains(&"telemetry-off"));
+}
+
+#[test]
 fn windows_requires_time_sync_setup() {
 	// Windows servers don't get time sync for free the way the Linux servers do,
 	// so choosing Windows always raises the requirement to configure it.

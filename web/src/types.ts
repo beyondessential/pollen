@@ -115,6 +115,7 @@ export const TOPIC_LABEL: Record<string, string> = {
 	backups: "Backups",
 	upgrades: "Upgrades",
 	network: "Networking",
+	telemetry: "Telemetry",
 };
 
 export const TOPIC_ORDER: string[] = [
@@ -125,4 +126,5 @@ export const TOPIC_ORDER: string[] = [
 	"backups",
 	"upgrades",
 	"network",
+	"telemetry",
 ];

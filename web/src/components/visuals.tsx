@@ -8,6 +8,7 @@ import {
 	type Severity,
 	type Verdict,
 } from "../types";
+import { Markup } from "../markup";
 
 // Minimal inline icons (lucide-style paths), so nothing is fetched at runtime.
 function Icon({ paths, size = 16 }: { paths: string; size?: number }) {
@@ -69,7 +70,9 @@ export function ConsequenceCard({ c }: { c: Consequence }) {
 					<span className="cons-dot" style={{ background: sev.dot }} />
 					<span className="cons-title">{c.title}</span>
 				</div>
-				<p className="cons-detail">{c.detail}</p>
+				<p className="cons-detail">
+					<Markup text={c.detail} />
+				</p>
 				<div className="cons-tags">
 					{c.types.map((t) => (
 						<Tag key={t} color={TYPE_COLOR[t].color} bg={TYPE_COLOR[t].bg}>

@@ -42,6 +42,7 @@ async fn create_patch_finalise_fork_lifecycle() {
 			"dns_arrangement": "bes_subdomain",
 			"remote": "tailscale",
 			"timesync": "internal",
+			"telemetry": "yes",
 		});
 		let patched: Value = server
 			.post("/api/applications/patch")

@@ -294,8 +294,8 @@ fn windows_requires_time_sync_setup() {
 
 #[test]
 fn dns_arrangement_targets_the_consequence() {
-	// The BES subdomain is the frictionless default; the other arrangements each
-	// fire their own consequence and read as non-default.
+	// Each arrangement fires its own consequence. Only the SOA-delegated client
+	// subdomain reads as off-default; the rest stay on the default path.
 	let subdomain = evaluate(
 		&v1(),
 		&answers(json!({ "dns": "bes", "dns_arrangement": "bes_subdomain" })),
@@ -303,6 +303,7 @@ fn dns_arrangement_targets_the_consequence() {
 	assert!(fired_ids(&subdomain).contains(&"dns-bes-subdomain"));
 	assert_eq!(subdomain.verdict, Verdict::Clear);
 
+	// A client-owned domain pointed at BES is targeted but not off-default.
 	let client_domain = evaluate(
 		&v1(),
 		&answers(json!({ "dns": "bes", "dns_arrangement": "client_domain" })),
@@ -310,7 +311,15 @@ fn dns_arrangement_targets_the_consequence() {
 	let ids = fired_ids(&client_domain);
 	assert!(ids.contains(&"dns-bes-client-domain"));
 	assert!(!ids.contains(&"dns-bes-subdomain"));
-	assert_eq!(client_domain.verdict, Verdict::NonDefault);
+	assert_eq!(client_domain.verdict, Verdict::Clear);
+
+	// Only the SOA delegation is off-default.
+	let soa = evaluate(
+		&v1(),
+		&answers(json!({ "dns": "bes", "dns_arrangement": "client_subdomain" })),
+	);
+	assert!(fired_ids(&soa).contains(&"dns-bes-client-subdomain"));
+	assert_eq!(soa.verdict, Verdict::NonDefault);
 }
 
 #[test]

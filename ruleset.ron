@@ -560,7 +560,6 @@
             source: "network",
             when: All([Equals("dns", "bes"), Equals("dns_arrangement", "bes_topdomain")]),
             consequence: (
-                severity: NonDefault,
                 status: Requirement,
                 audience: Client,
                 types: [Cost],
@@ -574,7 +573,6 @@
             source: "network",
             when: All([Equals("dns", "bes"), Equals("dns_arrangement", "client_domain")]),
             consequence: (
-                severity: NonDefault,
                 status: Requirement,
                 audience: Client,
                 title: "DNS: client-owned domain pointed at BES",

@@ -412,7 +412,7 @@
                 status: Requirement,
                 audience: Client,
                 title: "BES Ubuntu Server image required",
-                detail: "Linux deployments use the customised BES Ubuntu Server image, set up the BES way.",
+                detail: "Linux deployments use the customised [BES Ubuntu Server image](https://github.com/beyondessential/linux-images), set up the BES way.",
             ),
         ),
 
@@ -426,7 +426,7 @@
                 audience: Client,
                 types: [Operational],
                 title: "Bare-metal: provision generously up front",
-                detail: "Disk and resources are hard to change on bare metal, so provision ahead: at least 500 GB disk, 4 cores (prefer 8), and 16 GB RAM (prefer 32).",
+                detail: "Disk and resources are hard to change on bare metal, so provision ahead: at least 500 GB SSD, 4 cores (prefer 8), and 16 GB RAM (prefer 32). Multiple disks and multiple TB are NOT usually required, though you may want to do RAID for redundancy.",
             ),
         ),
         (

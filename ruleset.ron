@@ -546,7 +546,7 @@
                 status: Requirement,
                 audience: Client,
                 title: "Allow BES's Tailscale on managed servers",
-                detail: "The BES-managed servers join BES's own Tailscale network — not a separate one the client runs. Only those specific servers need Tailscale allowed, not the whole network. Firewalls often block it (fine); a net-check confirms connectivity.",
+                detail: "The BES-managed servers join BES's own Tailscale network — not a separate one the client runs. Only those specific servers need Tailscale allowed, not the whole network. Firewalls often block it; download Tailscale and run its netcheck command on the server or another computer configured similarly to confirm connectivity.",
             ),
         ),
         (

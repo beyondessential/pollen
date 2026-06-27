@@ -195,7 +195,7 @@
             id: "cadence",
             kind: Single,
             label: "How often do you intend to upgrade?",
-            help: Some("Planning data only — not binding. BES releases roughly fortnightly."),
+            help: Some("Planning data only — not binding. Tamanu releases on a fortnightly schedule."),
             options: [
                 (id: "release", label: "Every release", note: Some("~Fortnightly.")),
                 (id: "quarterly", label: "Quarterly"),

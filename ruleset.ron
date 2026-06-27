@@ -757,7 +757,7 @@
                 audience: Client,
                 types: [Operational],
                 title: "Allow Tamanu traffic on the on-prem network",
-                detail: "With on-prem servers, client IT must configure the network to allow Tamanu's application traffic between the Tamanu instances, and the outbound traffic Tamanu needs to install and upgrade.",
+                detail: "With on-prem servers, client IT must configure the network to allow Tamanu's application traffic between the Tamanu instances, and the outbound traffic Tamanu needs to install and upgrade. See our [network requirements](https://beyond-essential.slab.com/posts/tamanu-compute-resource-recommendations-network-requirements-and-minimum-specs-wipjcyn1?shr=wipjcyn1#h0uun-network-requirements).",
             ),
         ),
         // ── Telemetry ───────────────────────────────────────────────────────

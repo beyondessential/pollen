@@ -30,6 +30,17 @@ const CLEAR: Array<[string, string]> = [
 	["Time synchronisation", "Public NTP"],
 ];
 
+// Walk the all-default plan and finalise it, landing on the artifact.
+async function finaliseDefaultPlan(page: Page) {
+	await page.goto("/");
+	await expect(page).toHaveURL(/\/a\//); // URL collapses to the new draft's id
+	for (const [question, option] of CLEAR) {
+		await answer(page, question, option);
+	}
+	await page.getByRole("button", { name: "Finalise" }).click();
+	await expect(page.getByRole("heading", { name: "Small deployment" })).toBeVisible();
+}
+
 test("walks a default plan to a finalised artifact", async ({ page }) => {
 	await page.goto("/");
 	await expect(page).toHaveURL(/\/a\//); // URL collapses to the new draft's id
@@ -53,6 +64,21 @@ test("walks a default plan to a finalised artifact", async ({ page }) => {
 	await expect(page.getByRole("heading", { name: "Networking" })).toBeVisible();
 	await page.getByPlaceholder("Search consequences…").fill("Tailscale");
 	await expect(page.getByText("Allow BES's Tailscale on managed servers")).toBeVisible();
+});
+
+test("'Make changes' opens the new version in a new tab", async ({ page, context }) => {
+	await finaliseDefaultPlan(page);
+
+	const popupPromise = context.waitForEvent("page");
+	await page.getByRole("button", { name: "Make changes" }).click();
+	const popup = await popupPromise;
+
+	// The new tab holds a fresh editable draft, distinct from the artifact tab.
+	await expect(popup).toHaveURL(/\/a\//);
+	await expect(popup.getByRole("button", { name: "Finalise" })).toBeVisible();
+	expect(popup.url()).not.toBe(page.url());
+	// The original tab still shows the finalised artifact.
+	await expect(page.getByRole("heading", { name: "Small deployment" })).toBeVisible();
 });
 
 test("a blocking, incomplete plan can't be finalised", async ({ page }) => {

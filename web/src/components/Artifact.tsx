@@ -47,10 +47,15 @@ export default function Artifact({ view }: { view: AppView }) {
 	}, [ev.consequences, grouping, query]);
 
 	async function makeNewVersion() {
+		// Open the tab synchronously within the click so it isn't popup-blocked,
+		// then point it at the fork once created (fall back to in-place if the
+		// browser blocked the window anyway).
+		const tab = window.open("about:blank", "_blank");
 		setBusy(true);
 		try {
 			const forked = await callApi("applications", "fork", { id: view.id });
-			navigate(`/a/${forked.id}`);
+			if (tab) tab.location.href = `/a/${forked.id}`;
+			else navigate(`/a/${forked.id}`);
 		} finally {
 			setBusy(false);
 		}

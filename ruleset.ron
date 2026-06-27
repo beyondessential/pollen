@@ -216,6 +216,22 @@
                 (id: "local", label: "No DNS — all local", note: Some("All servers talk over HTTP.")),
             ],
         ),
+        // 9a. When BES controls DNS, how the domain is owned and reaches BES's
+        // DNS. Each arrangement targets a different setup action (see the
+        // dns-bes-* rules); the BES subdomain is the frictionless default.
+        (
+            id: "dns_arrangement",
+            kind: Single,
+            label: "How is the BES-controlled domain set up?",
+            help: Some("Who owns the domain, and how it reaches BES's DNS."),
+            options: [
+                (id: "bes_subdomain", label: "BES subdomain on tamanu.app", note: Some("A name under BES's own tamanu.app domain.")),
+                (id: "bes_topdomain", label: "BES-owned dedicated domain", note: Some("A dedicated top-level domain BES owns and runs; small ongoing cost.")),
+                (id: "client_domain", label: "Client-owned domain, pointed to BES", note: Some("Client purchases the domain and points it at a BES-provisioned DNS zone.")),
+                (id: "client_subdomain", label: "Client subdomain, delegated via SOA", note: Some("Client IT allocates a subdomain and delegates it (SOA) to a BES-provisioned DNS zone.")),
+            ],
+            visible_if: Equals("dns", "bes"),
+        ),
         (
             id: "remote",
             kind: Single,
@@ -513,15 +529,56 @@
                 detail: "With no DNS, servers reach each other over plain HTTP on the local network: no certificates, no TLS, no name-based routing. Supported, but an operational and security risk — traffic is unencrypted. Weigh the tradeoffs.",
             ),
         ),
+        // BES controls DNS — the action depends on how the domain is owned and
+        // reaches BES's zone (dns_arrangement). The BES subdomain is the default;
+        // the others each add a cost or a client-side step.
         (
-            id: "dns-bes",
+            id: "dns-bes-subdomain",
             source: "network",
-            when: Equals("dns", "bes"),
+            when: All([Equals("dns", "bes"), Equals("dns_arrangement", "bes_subdomain")]),
             consequence: (
                 status: Requirement,
                 audience: Client,
-                title: "BES controls DNS",
-                detail: "BES holds DNS authority — on a BES domain, a provisioned domain, or via subdomain delegation (SOA records).",
+                title: "DNS: a name on BES's tamanu.app",
+                detail: "BES and the client agree on a name under BES's own tamanu.app domain. BES provisions and runs the DNS — nothing for client IT to set up.",
+            ),
+        ),
+        (
+            id: "dns-bes-topdomain",
+            source: "network",
+            when: All([Equals("dns", "bes"), Equals("dns_arrangement", "bes_topdomain")]),
+            consequence: (
+                severity: NonDefault,
+                status: Requirement,
+                audience: Client,
+                types: [Cost],
+                cost: Some((tier: "Small ongoing cost", ballpark: Some("tens / year"))),
+                title: "DNS: a dedicated BES-owned domain",
+                detail: "BES and the client agree on a name for a dedicated top-level domain that BES owns and runs. The domain registration carries a small ongoing cost.",
+            ),
+        ),
+        (
+            id: "dns-bes-client-domain",
+            source: "network",
+            when: All([Equals("dns", "bes"), Equals("dns_arrangement", "client_domain")]),
+            consequence: (
+                severity: NonDefault,
+                status: Requirement,
+                audience: Client,
+                title: "DNS: client-owned domain pointed at BES",
+                detail: "The client purchases the domain, and client IT points it at the DNS zone BES provisions. BES runs the zone; the client owns the registration.",
+            ),
+        ),
+        (
+            id: "dns-bes-client-subdomain",
+            source: "network",
+            when: All([Equals("dns", "bes"), Equals("dns_arrangement", "client_subdomain")]),
+            consequence: (
+                severity: NonDefault,
+                status: Requirement,
+                audience: Client,
+                title: "DNS: client subdomain delegated to BES (SOA)",
+                detail: "Client IT allocates a subdomain on a domain the client already controls and delegates it (SOA records) to the DNS zone BES provisions.",
             ),
         ),
         (

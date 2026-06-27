@@ -39,6 +39,7 @@ async fn create_patch_finalise_fork_lifecycle() {
 			"backup_capability": "no",
 			"cadence": "release",
 			"dns": "bes",
+			"dns_arrangement": "bes_subdomain",
 			"remote": "tailscale",
 			"timesync": "internal",
 		});

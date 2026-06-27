@@ -125,6 +125,7 @@ fn default_path_is_clear() {
 			"retention": "full",
 			"cadence": "release",
 			"dns": "bes",
+			"dns_arrangement": "bes_subdomain",
 			"remote": "tailscale",
 			"timesync": "internal",
 		})),
@@ -133,7 +134,7 @@ fn default_path_is_clear() {
 	assert_eq!(eval.verdict, Verdict::Clear);
 	assert_eq!(eval.derived.get("size").map(String::as_str), Some("Small"));
 	let ids = fired_ids(&eval);
-	assert!(ids.contains(&"dns-bes"));
+	assert!(ids.contains(&"dns-bes-subdomain"));
 	assert!(!ids.contains(&"region-other"));
 	assert!(!ids.contains(&"plat-windows"));
 }
@@ -191,6 +192,27 @@ fn no_dns_is_an_off_default_risk() {
 	let eval = evaluate(&v1(), &answers(json!({ "dns": "local" })));
 	assert!(fired_ids(&eval).contains(&"dns-local"));
 	assert_eq!(eval.verdict, Verdict::NonDefault);
+}
+
+#[test]
+fn dns_arrangement_targets_the_consequence() {
+	// The BES subdomain is the frictionless default; the other arrangements each
+	// fire their own consequence and read as non-default.
+	let subdomain = evaluate(
+		&v1(),
+		&answers(json!({ "dns": "bes", "dns_arrangement": "bes_subdomain" })),
+	);
+	assert!(fired_ids(&subdomain).contains(&"dns-bes-subdomain"));
+	assert_eq!(subdomain.verdict, Verdict::Clear);
+
+	let client_domain = evaluate(
+		&v1(),
+		&answers(json!({ "dns": "bes", "dns_arrangement": "client_domain" })),
+	);
+	let ids = fired_ids(&client_domain);
+	assert!(ids.contains(&"dns-bes-client-domain"));
+	assert!(!ids.contains(&"dns-bes-subdomain"));
+	assert_eq!(client_domain.verdict, Verdict::NonDefault);
 }
 
 #[test]

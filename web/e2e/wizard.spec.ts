@@ -26,6 +26,7 @@ const CLEAR: Array<[string, string]> = [
 	["What does BES retain?", "Full retention"],
 	["How often do you intend to upgrade?", "Every release"],
 	["DNS authority", "BES controls DNS"],
+	["How is the BES-controlled domain set up?", "BES subdomain on tamanu.app"],
 	["Remote access for managed servers", "Tailscale"],
 	["Time synchronisation", "Public NTP"],
 ];

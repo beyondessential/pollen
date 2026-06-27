@@ -479,6 +479,13 @@ body {
 	border-radius: 6px;
 	padding: 1px 6px;
 }
+.updatebar-sub {
+	color: var(--ink-soft);
+}
+.updatebar-actions {
+	display: flex;
+	gap: 8px;
+}
 
 /* ── Artifact sheet ──────────────────────────────────────────────────── */
 .sheet {

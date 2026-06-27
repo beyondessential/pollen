@@ -93,6 +93,7 @@ An artifact is either a **draft** or a **finalised** version, and a finalised ve
 - **Draft.**
   A draft is resumable at a URL carrying an unguessable identifier, and is editable.
   It is persisted, so the same URL reopens the same in-progress artifact.
+  The browser also keeps a short, bounded list of recently-touched artifacts (their identifiers and recognition facts only, never identifying data); starting a fresh plan offers to resume the most recent, until the fresh plan itself carries a decision.
 - **Finalise.**
   Finalising produces a permanent, immutable artifact at its own identifier URL.
   This is the canonical artifact.

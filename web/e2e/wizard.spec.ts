@@ -81,6 +81,27 @@ test("'Make changes' opens the new version in a new tab", async ({ page, context
 	await expect(page.getByRole("heading", { name: "Small deployment" })).toBeVisible();
 });
 
+test("a fresh plan offers to resume the previous one", async ({ page }) => {
+	// First plan: a decision so it's remembered in local storage.
+	await page.goto("/");
+	await expect(page).toHaveURL(/\/a\//);
+	await answer(page, "Connect to Tupaia?", "No Tupaia");
+
+	// A fresh plan offers to resume it; making a decision records the new plan
+	// and dismisses the offer.
+	await page.getByRole("link", { name: "Start a new plan" }).click();
+	await expect(page).toHaveURL(/\/a\//);
+	await expect(page.getByRole("button", { name: "Resume" })).toBeVisible();
+	await answer(page, "Connect to Tupaia?", "Yes, connect to Tupaia");
+	const second = page.url();
+	await expect(page.getByRole("button", { name: "Resume" })).toBeHidden();
+
+	// Resuming from another fresh plan returns to the most recent (the second).
+	await page.getByRole("link", { name: "Start a new plan" }).click();
+	await page.getByRole("button", { name: "Resume" }).click();
+	await expect(page).toHaveURL(second);
+});
+
 test("a blocking, incomplete plan can't be finalised", async ({ page }) => {
 	await page.goto("/");
 	await answer(page, "Connect to Tupaia?", "Yes, connect to Tupaia");

@@ -607,10 +607,21 @@
                 detail: "An exceptional arrangement only. Anything other than Tailscale on BES-managed servers adds significant ongoing cost.",
             ),
         ),
+        // Only when the client has on-prem servers to configure — with
+        // everything in BES cloud, BES handles its own network.
         (
             id: "remote-tailscale",
             source: "network",
-            when: Equals("remote", "tailscale"),
+            when: All([
+                Equals("remote", "tailscale"),
+                Any([
+                    Equals("central", "onprem"),
+                    Equals("central", "customercloud"),
+                    Includes("facility_mix", "baremetal"),
+                    Includes("facility_mix", "virtualised"),
+                    Includes("facility_mix", "iti"),
+                ]),
+            ]),
             consequence: (
                 status: Requirement,
                 audience: Client,
@@ -618,10 +629,21 @@
                 detail: "The BES-managed servers join BES's own Tailscale network — not a separate one the client runs. Only those specific servers need Tailscale allowed, not the whole network. Firewalls often block it; [download Tailscale](https://tailscale.com/download) and run its netcheck command on the server or another computer configured similarly to confirm connectivity.",
             ),
         ),
+        // Time sync (either source) is a client-network requirement only when
+        // there are on-prem servers; BES handles its own cloud servers.
         (
             id: "time-internal",
             source: "network",
-            when: Equals("timesync", "internal"),
+            when: All([
+                Equals("timesync", "internal"),
+                Any([
+                    Equals("central", "onprem"),
+                    Equals("central", "customercloud"),
+                    Includes("facility_mix", "baremetal"),
+                    Includes("facility_mix", "virtualised"),
+                    Includes("facility_mix", "iti"),
+                ]),
+            ]),
             consequence: (
                 status: Requirement,
                 audience: Client,
@@ -632,7 +654,16 @@
         (
             id: "time-outbound",
             source: "network",
-            when: Equals("timesync", "outbound"),
+            when: All([
+                Equals("timesync", "outbound"),
+                Any([
+                    Equals("central", "onprem"),
+                    Equals("central", "customercloud"),
+                    Includes("facility_mix", "baremetal"),
+                    Includes("facility_mix", "virtualised"),
+                    Includes("facility_mix", "iti"),
+                ]),
+            ]),
             consequence: (
                 status: Requirement,
                 audience: Client,
@@ -743,16 +774,62 @@
                 detail: "Declining telemetry opts the deployment out of BES tech support, managed backups, and mobile support. Telemetry carries operational data only — never patient, clinical, or sensitive data.",
             ),
         ),
+        // The outbound allowance is a client-network requirement only when there
+        // are on-prem servers; BES's own cloud servers send telemetry directly.
         (
             id: "telemetry-on",
             source: "telemetry",
-            when: Equals("telemetry", "yes"),
+            when: All([
+                Equals("telemetry", "yes"),
+                Any([
+                    Equals("central", "onprem"),
+                    Equals("central", "customercloud"),
+                    Includes("facility_mix", "baremetal"),
+                    Includes("facility_mix", "virtualised"),
+                    Includes("facility_mix", "iti"),
+                ]),
+            ]),
             consequence: (
                 status: Requirement,
                 audience: Client,
                 types: [Operational],
                 title: "Allow outbound to BES telemetry",
                 detail: "Allow outbound traffic to the BES telemetry endpoints (the DNS names and IPs BES provides) so operational telemetry can be sent.",
+            ),
+        ),
+        // Declining telemetry removes backups and mobile support — which
+        // contradicts asking for Tupaia (needs backups) or mobile clients.
+        (
+            id: "block-telemetry-analytics",
+            source: "telemetry",
+            when: All([
+                Equals("telemetry", "no"),
+                Equals("analytics", "yes"),
+            ]),
+            consequence: (
+                severity: Blocking,
+                status: Requirement,
+                audience: Record,
+                types: [Capability],
+                title: "Tupaia requested, but telemetry declined",
+                detail: "Declining telemetry opts out of managed backups, but Tupaia needs at least a low-retention backup to process data. This cannot work as specified — allow telemetry, or drop Tupaia.",
+            ),
+        ),
+        (
+            id: "block-telemetry-mobile",
+            source: "telemetry",
+            when: All([
+                Equals("telemetry", "no"),
+                Answered("mobile"),
+                Not(Equals("mobile", "m0")),
+            ]),
+            consequence: (
+                severity: Blocking,
+                status: Requirement,
+                audience: Record,
+                types: [Capability, Support],
+                title: "Mobile clients expected, but telemetry declined",
+                detail: "Declining telemetry opts out of mobile support, but mobile clients are expected. This cannot work as specified — allow telemetry, or remove the mobile clients.",
             ),
         ),
     ],

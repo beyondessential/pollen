@@ -61,11 +61,12 @@ test("walks a default plan to a finalised artifact", async ({ page }) => {
 	// The finalised artifact.
 	await expect(page.getByRole("heading", { name: "Tiny deployment" })).toBeVisible();
 
-	// By-topic grouping and search both work.
+	// By-topic grouping and search both work. (All-cloud, so the networking
+	// item present is the DNS arrangement, not the on-prem-only allowances.)
 	await page.getByRole("button", { name: "By topic" }).click();
 	await expect(page.getByRole("heading", { name: "Networking" })).toBeVisible();
-	await page.getByPlaceholder("Search consequences…").fill("Tailscale");
-	await expect(page.getByText("Allow BES's Tailscale on managed servers")).toBeVisible();
+	await page.getByPlaceholder("Search consequences…").fill("tamanu.app");
+	await expect(page.getByText("DNS: a name on BES's tamanu.app")).toBeVisible();
 });
 
 test("'Make changes' opens the new version in a new tab", async ({ page, context }) => {

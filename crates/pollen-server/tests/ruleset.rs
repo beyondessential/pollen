@@ -232,10 +232,56 @@ fn declining_telemetry_is_an_off_default_opt_out() {
 	assert!(fired_ids(&off).contains(&"telemetry-off"));
 	assert_eq!(off.verdict, Verdict::NonDefault);
 
-	let on = evaluate(&v1(), &answers(json!({ "telemetry": "yes" })));
+	// The outbound allowance only applies when there are on-prem servers.
+	let on = evaluate(
+		&v1(),
+		&answers(json!({ "telemetry": "yes", "central": "onprem" })),
+	);
 	let ids = fired_ids(&on);
 	assert!(ids.contains(&"telemetry-on"));
 	assert!(!ids.contains(&"telemetry-off"));
+}
+
+#[test]
+fn client_network_items_need_on_prem() {
+	let common = |facility: &str| {
+		json!({
+			"central": "bescloud",
+			"facility_mix": [facility],
+			"remote": "tailscale",
+			"timesync": "outbound",
+			"telemetry": "yes",
+		})
+	};
+	// All-cloud: the client-side network allowances don't apply.
+	let cloud = evaluate(&v1(), &answers(common("bescloud")));
+	let cloud_ids = fired_ids(&cloud);
+	for id in ["remote-tailscale", "time-outbound", "telemetry-on"] {
+		assert!(!cloud_ids.contains(&id), "{id} should not fire all-cloud");
+	}
+	// With an on-prem facility, they do.
+	let onprem = evaluate(&v1(), &answers(common("baremetal")));
+	let onprem_ids = fired_ids(&onprem);
+	for id in ["remote-tailscale", "time-outbound", "telemetry-on"] {
+		assert!(onprem_ids.contains(&id), "{id} should fire with on-prem");
+	}
+}
+
+#[test]
+fn declining_telemetry_blocks_tupaia_and_mobile() {
+	let tupaia = evaluate(
+		&v1(),
+		&answers(json!({ "telemetry": "no", "analytics": "yes" })),
+	);
+	assert!(fired_ids(&tupaia).contains(&"block-telemetry-analytics"));
+	assert_eq!(tupaia.verdict, Verdict::Blocking);
+
+	let mobile = evaluate(
+		&v1(),
+		&answers(json!({ "telemetry": "no", "mobile": "m2" })),
+	);
+	assert!(fired_ids(&mobile).contains(&"block-telemetry-mobile"));
+	assert_eq!(mobile.verdict, Verdict::Blocking);
 }
 
 #[test]

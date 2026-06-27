@@ -132,7 +132,7 @@ fn default_path_is_clear() {
 	);
 
 	assert_eq!(eval.verdict, Verdict::Clear);
-	assert_eq!(eval.derived.get("size").map(String::as_str), Some("Small"));
+	assert_eq!(eval.derived.get("size").map(String::as_str), Some("Tiny"));
 	let ids = fired_ids(&eval);
 	assert!(ids.contains(&"dns-bes-subdomain"));
 	assert!(!ids.contains(&"region-other"));

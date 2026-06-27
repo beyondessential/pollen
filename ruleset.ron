@@ -76,10 +76,10 @@
             label: "Catchment population",
             help: Some("The total population the health system covers."),
             options: [
-                (id: "c0", label: "Under 5,000"),
-                (id: "c1", label: "5,000 – 50,000"),
-                (id: "c2", label: "50,000 – 250,000"),
-                (id: "c3", label: "Over 250,000"),
+                (id: "c0", label: "<1k"),
+                (id: "c1", label: "1-10k"),
+                (id: "c2", label: "10-100k"),
+                (id: "c3", label: ">100k"),
             ],
         ),
         (
@@ -87,10 +87,10 @@
             kind: Band,
             label: "Number of facilities",
             options: [
-                (id: "f0", label: "1 – 5"),
-                (id: "f1", label: "6 – 15"),
-                (id: "f2", label: "16 – 40"),
-                (id: "f3", label: "Over 40"),
+                (id: "f0", label: "One"),
+                (id: "f1", label: "2-5"),
+                (id: "f2", label: "6-20"),
+                (id: "f3", label: "20+"),
             ],
         ),
         (
@@ -98,10 +98,10 @@
             kind: Band,
             label: "Mobile clients",
             options: [
-                (id: "m0", label: "Under 10"),
-                (id: "m1", label: "10 – 50"),
-                (id: "m2", label: "50 – 200"),
-                (id: "m3", label: "Over 200"),
+                (id: "m0", label: "None"),
+                (id: "m1", label: "1-10"),
+                (id: "m2", label: "10-50"),
+                (id: "m3", label: "50+"),
             ],
         ),
 
@@ -253,14 +253,14 @@
     ],
 
     // Size = the highest band reached across the three sizing questions, mapped
-    // by ordinal. All three have four bands; index 1 ("Small") and 0 both map to
-    // Small, matching the prototype.
+    // by ordinal. All three have four bands; the lowest maps to Tiny, then Small,
+    // Medium, Large.
     derivations: [
         (
             id: "size",
             kind: HighestBand(
                 questions: ["catchment", "facilities", "mobile"],
-                labels: ["Small", "Small", "Medium", "Large"],
+                labels: ["Tiny", "Small", "Medium", "Large"],
                 // Any integration bumps the deployment up one size (capped).
                 bump_when: Some(Any([
                     Includes("integrations", "lims"),

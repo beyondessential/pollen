@@ -16,9 +16,9 @@ async function answer(page: Page, question: string, option: string) {
 const CLEAR: Array<[string, string]> = [
 	["Connect to Tupaia?", "No Tupaia"],
 	["Which integrations are wanted?", "None for now"],
-	["Catchment population", "Under 5,000"],
-	["Number of facilities", "1 – 5"],
-	["Mobile clients", "Under 10"],
+	["Catchment population", "<1k"],
+	["Number of facilities", "One"],
+	["Mobile clients", "None"],
 	["Where does the central server run?", "BES cloud"],
 	["What's the facility mix?", "Some in BES cloud"],
 	["Which hosting region?", "Sydney"],
@@ -39,7 +39,7 @@ async function finaliseDefaultPlan(page: Page) {
 		await answer(page, question, option);
 	}
 	await page.getByRole("button", { name: "Finalise" }).click();
-	await expect(page.getByRole("heading", { name: "Small deployment" })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Tiny deployment" })).toBeVisible();
 }
 
 test("walks a default plan to a finalised artifact", async ({ page }) => {
@@ -58,7 +58,7 @@ test("walks a default plan to a finalised artifact", async ({ page }) => {
 	await finalise.click();
 
 	// The finalised artifact.
-	await expect(page.getByRole("heading", { name: "Small deployment" })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Tiny deployment" })).toBeVisible();
 
 	// By-topic grouping and search both work.
 	await page.getByRole("button", { name: "By topic" }).click();
@@ -79,7 +79,7 @@ test("'Make changes' opens the new version in a new tab", async ({ page, context
 	await expect(popup.getByRole("button", { name: "Finalise" })).toBeVisible();
 	expect(popup.url()).not.toBe(page.url());
 	// The original tab still shows the finalised artifact.
-	await expect(page.getByRole("heading", { name: "Small deployment" })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Tiny deployment" })).toBeVisible();
 });
 
 test("a fresh plan offers to resume the previous one", async ({ page }) => {

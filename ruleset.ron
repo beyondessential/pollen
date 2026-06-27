@@ -436,7 +436,7 @@
                 status: Requirement,
                 audience: Bes,
                 title: "Tamanu ITI appliance",
-                detail: "ITI is a BES-built, BES-provisioned ARM64 appliance. The client plugs it into their network; BES installs and manages the software.",
+                detail: "ITI is a BES-built, BES-provisioned ARM64 Linux appliance. The client plugs it into their network; BES installs and manages the software.",
             ),
         ),
 
@@ -628,7 +628,7 @@
                 detail: "Allow outbound NTP to public pools so servers can synchronise time.",
             ),
         ),
-        // Time sync is configured for you on the BES-provisioned Linux servers,
+        // Time sync is configured for you on the BES-managed Linux servers,
         // but not on Windows — the client must set it up there. Fires for either
         // time source.
         (
@@ -640,7 +640,7 @@
                 audience: Client,
                 types: [Operational],
                 title: "Configure time sync on the Windows servers",
-                detail: "On the BES-provisioned Linux servers time synchronisation is handled for you; on Windows servers the client must configure it explicitly against the chosen time source. Accurate, synchronised time is required — clock drift will break Tamanu.",
+                detail: "On the BES-managed Linux servers time synchronisation is handled for you; on Windows servers the client must configure it explicitly against the chosen time source. Accurate, synchronised time is required — clock drift will break Tamanu.",
             ),
         ),
         (

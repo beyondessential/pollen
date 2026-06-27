@@ -13,3 +13,12 @@ It is public-facing and unauthenticated, and stores no client names, no free
 text, and no sensitive data, so the artifacts it produces are non-sensitive and
 addressable by an unguessable id alone.
 
+## Ruleset
+
+The ruleset.ron file describes all the content of the form and the final report.
+
+You can preview a ruleset change by pushing it to a branch in this repo and
+appending `?config=name-of-branch` to live URLs. Doing so with an in-progress
+plan will fork that plan to a new version with the config being previewed.
+
+Changing the _engine_ or _visual style_ requires code changes and a full deploy.

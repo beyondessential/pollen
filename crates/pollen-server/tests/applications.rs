@@ -5,6 +5,8 @@ mod common;
 
 use axum::http::StatusCode;
 use common::run_server;
+use pollen_server::db::{Application, ConfigRow};
+use pollen_server::ruleset::{BUNDLED_RULESET, ResolvedRuleset};
 use serde_json::{Value, json};
 
 #[tokio::test(flavor = "multi_thread")]
@@ -18,6 +20,8 @@ async fn create_patch_finalise_fork_lifecycle() {
 			.json();
 		assert_eq!(created["status"], "draft");
 		assert_eq!(created["evaluation"]["verdict"], "Clear");
+		// Freshly bound to the bundled default, so no update is available.
+		assert_eq!(created["update_available"], false);
 		let id = created["id"].as_str().unwrap().to_owned();
 
 		// A complete, blocking configuration: analytics on but backups disabled.
@@ -91,6 +95,49 @@ async fn create_patch_finalise_fork_lifecycle() {
 		assert_eq!(forked["answers"]["analytics"], "yes");
 		assert_eq!(forked["answers"]["central"], "bescloud");
 		assert_eq!(forked["evaluation"]["verdict"], "Blocking");
+	})
+	.await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn fork_to_default_updates_a_stale_draft() {
+	run_server(|server, mut conn| async move {
+		// A draft bound to a ruleset hash other than the current default. We
+		// store the bundled ruleset's content under a fabricated hash so it
+		// still evaluates, but reads as "not the current default".
+		let bundled = ResolvedRuleset::from_ron(BUNDLED_RULESET).expect("bundled ruleset");
+		let content = serde_json::to_value(&bundled.ruleset).unwrap();
+		let stale_hash = "stale-test-hash";
+		ConfigRow::upsert(&mut conn, stale_hash, &content)
+			.await
+			.unwrap();
+		let app =
+			Application::create_draft(&mut conn, stale_hash, None, &json!({ "analytics": "yes" }))
+				.await
+				.unwrap();
+		let id = app.id.to_string();
+
+		// The draft reports an update is available (bound hash != default).
+		let fetched: Value = server
+			.post("/api/applications/get")
+			.json(&json!({ "id": id }))
+			.await
+			.json();
+		assert_eq!(fetched["update_available"], true);
+		assert_eq!(fetched["config_hash"], stale_hash);
+
+		// Updating to the default rebinds, carries answers over, and clears the
+		// flag; lineage points back to the stale draft.
+		let updated: Value = server
+			.post("/api/applications/fork")
+			.json(&json!({ "id": id, "to_default": true }))
+			.await
+			.json();
+		assert_eq!(updated["status"], "draft");
+		assert_eq!(updated["parent_id"], id);
+		assert_eq!(updated["update_available"], false);
+		assert_ne!(updated["config_hash"], stale_hash);
+		assert_eq!(updated["answers"]["analytics"], "yes");
 	})
 	.await;
 }

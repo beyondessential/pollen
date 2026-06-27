@@ -51,9 +51,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Fork a new draft from any application, with lineage to it. A named branch
-         *     rebinds to a new ruleset and migrates the answers; otherwise the parent's
-         *     ruleset is kept. The parent is left untouched.
+         * Fork a new draft from any application, with lineage to it. `to_default`
+         *     rebinds to the bundled default; a named branch rebinds to that previewed
+         *     ruleset; otherwise the parent's ruleset is kept. Rebinding migrates the
+         *     answers (stable-id set-diff). The parent is left untouched.
          */
         post: operations["applications_fork"];
         delete?: never;
@@ -137,6 +138,11 @@ export interface components {
             parent_id?: string | null;
             questions: components["schemas"]["QuestionView"][];
             status: components["schemas"]["ApplicationStatus"];
+            /**
+             * @description True for a draft bound to a ruleset other than the current bundled
+             *     default — i.e. a newer default is available to update to.
+             */
+            update_available: boolean;
         };
         /**
          * @description Whether an artifact is still being edited or has been frozen.
@@ -195,6 +201,11 @@ export interface components {
             config_branch?: string | null;
             /** Format: uuid */
             id: string;
+            /**
+             * @description Rebind to the current bundled default ruleset (takes precedence over
+             *     `config_branch`). Used to update a stale draft to the latest default.
+             */
+            to_default?: boolean;
         };
         GetArgs: {
             /** Format: uuid */

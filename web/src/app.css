@@ -452,6 +452,33 @@ body {
 	opacity: 0.5;
 	cursor: default;
 }
+.btn.sm {
+	padding: 7px 14px;
+	font-size: 13px;
+	border-radius: 8px;
+}
+
+/* ── Update / preview notice ─────────────────────────────────────────── */
+.updatebar {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 8px 16px;
+	padding: 11px 22px;
+	background: var(--sky-tint);
+	border-bottom: 1px solid #bfe6f9;
+	color: var(--navy-deep);
+	font-size: 13.5px;
+}
+.updatebar code {
+	font-family: var(--font-mono);
+	font-size: 12px;
+	background: var(--surface);
+	border: 1px solid #bfe6f9;
+	border-radius: 6px;
+	padding: 1px 6px;
+}
 
 /* ── Artifact sheet ──────────────────────────────────────────────────── */
 .sheet {
@@ -608,6 +635,7 @@ body {
 /* ── Print: a clean PDF of the artifact ──────────────────────────────── */
 @media print {
 	.topbar,
+	.updatebar,
 	.sheet-controls {
 		display: none;
 	}
@@ -626,6 +654,13 @@ body {
 	.card,
 	.record {
 		break-inside: avoid;
+	}
+	/* The entrance animation (opacity 0→1, fill both) can otherwise be captured
+	   mid-flight on a freshly re-rendered view, printing sections greyed out. */
+	.cons,
+	.card {
+		animation: none;
+		opacity: 1;
 	}
 	a {
 		color: inherit;

@@ -29,6 +29,9 @@ pub struct AppView {
 	pub created_at: Timestamp,
 	pub finalised_at: Option<Timestamp>,
 	pub config_hash: String,
+	/// True for a draft bound to a ruleset other than the current bundled
+	/// default — i.e. a newer default is available to update to.
+	pub update_available: bool,
 	pub questions: Vec<QuestionView>,
 	pub answers: Value,
 	pub evaluation: Evaluation,
@@ -95,6 +98,10 @@ pub struct ForkArgs {
 	/// A ruleset branch to rebind to; omitted keeps the parent's ruleset.
 	#[serde(default)]
 	pub config_branch: Option<String>,
+	/// Rebind to the current bundled default ruleset (takes precedence over
+	/// `config_branch`). Used to update a stale draft to the latest default.
+	#[serde(default)]
+	pub to_default: bool,
 }
 
 /// Create a new draft, binding the bundled default ruleset or a previewed branch.
@@ -112,7 +119,12 @@ pub async fn create(
 	store_config(&mut conn, &resolved).await?;
 	let app =
 		Application::create_draft(&mut conn, &resolved.hash, None, &serde_json::json!({})).await?;
-	Ok(Json(build_view(app, &resolved.ruleset, None)?))
+	Ok(Json(build_view(
+		app,
+		&resolved.ruleset,
+		None,
+		&state.default_ruleset.hash,
+	)?))
 }
 
 /// Read an application with its current evaluation.
@@ -128,7 +140,12 @@ pub async fn get(
 	let mut conn = state.db.get().await?;
 	let app = Application::get(&mut conn, args.id).await?;
 	let ruleset = load_ruleset(&mut conn, &app.config_hash).await?;
-	Ok(Json(build_view(app, &ruleset, None)?))
+	Ok(Json(build_view(
+		app,
+		&ruleset,
+		None,
+		&state.default_ruleset.hash,
+	)?))
 }
 
 /// Replace a draft's answers. Rejected (409) once finalised.
@@ -151,7 +168,12 @@ pub async fn patch(
 	}
 	let app = Application::set_answers(&mut conn, args.id, &args.answers).await?;
 	let ruleset = load_ruleset(&mut conn, &app.config_hash).await?;
-	Ok(Json(build_view(app, &ruleset, None)?))
+	Ok(Json(build_view(
+		app,
+		&ruleset,
+		None,
+		&state.default_ruleset.hash,
+	)?))
 }
 
 /// Finalise a draft, freezing it against its bound ruleset. Always produces an
@@ -187,12 +209,18 @@ pub async fn finalise(
 		));
 	}
 	let app = Application::finalise(&mut conn, args.id).await?;
-	Ok(Json(build_view(app, &ruleset, None)?))
+	Ok(Json(build_view(
+		app,
+		&ruleset,
+		None,
+		&state.default_ruleset.hash,
+	)?))
 }
 
-/// Fork a new draft from any application, with lineage to it. A named branch
-/// rebinds to a new ruleset and migrates the answers; otherwise the parent's
-/// ruleset is kept. The parent is left untouched.
+/// Fork a new draft from any application, with lineage to it. `to_default`
+/// rebinds to the bundled default; a named branch rebinds to that previewed
+/// ruleset; otherwise the parent's ruleset is kept. Rebinding migrates the
+/// answers (stable-id set-diff). The parent is left untouched.
 #[utoipa::path(
     post, path = "/fork", operation_id = "applications_fork", tag = "applications",
     request_body = ForkArgs,
@@ -208,20 +236,29 @@ pub async fn fork(
 	let parent_answers: Answers =
 		serde_json::from_value(parent.answers.clone()).map_err(AppError::custom)?;
 
-	// A named branch rebinds (and stores) a new ruleset; otherwise keep the
-	// parent's binding (already in config_store).
-	let (new_hash, new_ruleset) = match args.config_branch.as_deref() {
-		Some(branch) => {
-			let resolved = state
-				.resolver
-				.as_ref()
-				.ok_or_else(|| AppError::BadRequest("ruleset preview is not configured".into()))?
-				.resolve(branch)
-				.await?;
-			store_config(&mut conn, &resolved).await?;
-			(resolved.hash, resolved.ruleset)
+	// `to_default` rebinds to the bundled default; a named branch rebinds (and
+	// stores) the previewed ruleset; otherwise keep the parent's binding
+	// (already in config_store).
+	let (new_hash, new_ruleset) = if args.to_default {
+		let resolved = (*state.default_ruleset).clone();
+		store_config(&mut conn, &resolved).await?;
+		(resolved.hash, resolved.ruleset)
+	} else {
+		match args.config_branch.as_deref() {
+			Some(branch) => {
+				let resolved = state
+					.resolver
+					.as_ref()
+					.ok_or_else(|| {
+						AppError::BadRequest("ruleset preview is not configured".into())
+					})?
+					.resolve(branch)
+					.await?;
+				store_config(&mut conn, &resolved).await?;
+				(resolved.hash, resolved.ruleset)
+			}
+			None => (parent.config_hash.clone(), parent_ruleset.clone()),
 		}
-		None => (parent.config_hash.clone(), parent_ruleset.clone()),
 	};
 
 	let migration = migrate(&parent_ruleset, &new_ruleset, &parent_answers);
@@ -232,7 +269,12 @@ pub async fn fork(
 		dropped: migration.dropped,
 		new_questions: migration.new_questions,
 	};
-	Ok(Json(build_view(app, &new_ruleset, Some(view))?))
+	Ok(Json(build_view(
+		app,
+		&new_ruleset,
+		Some(view),
+		&state.default_ruleset.hash,
+	)?))
 }
 
 pub fn routes() -> OpenApiRouter<AppState> {
@@ -279,9 +321,13 @@ fn build_view(
 	app: Application,
 	ruleset: &Ruleset,
 	migration: Option<MigrationView>,
+	default_hash: &str,
 ) -> Result<AppView> {
 	let answers: Answers = serde_json::from_value(app.answers.clone()).map_err(AppError::custom)?;
 	let evaluation = evaluate(ruleset, &answers);
+	// A draft bound to anything other than the current default can be updated.
+	let update_available =
+		app.status == ApplicationStatus::Draft && app.config_hash.as_str() != default_hash;
 	Ok(AppView {
 		id: app.id,
 		status: app.status,
@@ -289,6 +335,7 @@ fn build_view(
 		created_at: app.created_at,
 		finalised_at: app.finalised_at,
 		config_hash: app.config_hash,
+		update_available,
 		questions: ruleset.questions.iter().map(QuestionView::from).collect(),
 		answers: app.answers,
 		evaluation,

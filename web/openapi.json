@@ -90,7 +90,7 @@
         "tags": [
           "applications"
         ],
-        "summary": "Fork a new draft from any application, with lineage to it. A named branch\nrebinds to a new ruleset and migrates the answers; otherwise the parent's\nruleset is kept. The parent is left untouched.",
+        "summary": "Fork a new draft from any application, with lineage to it. `to_default`\nrebinds to the bundled default; a named branch rebinds to that previewed\nruleset; otherwise the parent's ruleset is kept. Rebinding migrates the\nanswers (stable-id set-diff). The parent is left untouched.",
         "operationId": "applications_fork",
         "requestBody": {
           "content": {
@@ -230,6 +230,7 @@
           "status",
           "created_at",
           "config_hash",
+          "update_available",
           "questions",
           "answers",
           "evaluation"
@@ -282,6 +283,10 @@
           },
           "status": {
             "$ref": "#/components/schemas/ApplicationStatus"
+          },
+          "update_available": {
+            "type": "boolean",
+            "description": "True for a draft bound to a ruleset other than the current bundled\ndefault — i.e. a newer default is available to update to."
           }
         }
       },
@@ -457,6 +462,10 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "to_default": {
+            "type": "boolean",
+            "description": "Rebind to the current bundled default ruleset (takes precedence over\n`config_branch`). Used to update a stale draft to the latest default."
           }
         }
       },

@@ -16,6 +16,7 @@ addressable by an unguessable id alone.
 ## Ruleset
 
 The ruleset.ron file describes all the content of the form and the final report.
+It is pulled from `main` by the live site every five minutes.
 
 You can preview a ruleset change by pushing it to a branch in this repo and
 appending `?config=name-of-branch` to live URLs. Doing so with an in-progress

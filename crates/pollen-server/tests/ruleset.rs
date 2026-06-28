@@ -285,6 +285,25 @@ fn declining_telemetry_blocks_tupaia_and_mobile() {
 }
 
 #[test]
+fn iti_only_hides_the_on_prem_os_question() {
+	let shows = |eval: &pollen_server::ruleset::Evaluation| {
+		eval.visible_questions.iter().any(|q| q == "platform")
+	};
+	// BES cloud + ITI only: both are fixed to Linux/ARM64, so no OS to choose.
+	let iti = evaluate(
+		&v1(),
+		&answers(json!({ "central": "bescloud", "facility_mix": ["bescloud", "iti"] })),
+	);
+	assert!(!shows(&iti));
+	// A bare-metal facility does have an OS to choose.
+	let baremetal = evaluate(
+		&v1(),
+		&answers(json!({ "central": "bescloud", "facility_mix": ["baremetal"] })),
+	);
+	assert!(shows(&baremetal));
+}
+
+#[test]
 fn windows_requires_time_sync_setup() {
 	// Windows servers don't get time sync for free the way the Linux servers do,
 	// so choosing Windows always raises the requirement to configure it.

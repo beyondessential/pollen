@@ -22,3 +22,7 @@ appending `?config=name-of-branch` to live URLs. Doing so with an in-progress
 plan will fork that plan to a new version with the config being previewed.
 
 Changing the _engine_ or _visual style_ requires code changes and a full deploy.
+
+## Local dev
+
+Run `just watch-api` and `just watch-web` in two terminals and open <http://localhost:8090>.

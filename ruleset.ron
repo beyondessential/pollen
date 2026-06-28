@@ -146,8 +146,9 @@
             ]),
         ),
 
-        // 6. Platform — only when any on-prem is present (BES cloud and the ITI
-        // appliance are fixed to Linux on ARM64).
+        // 6. Platform — only when an on-prem server has an OS to choose. BES
+        // cloud and the ITI appliance are fixed to Linux on ARM64, so neither
+        // (incl. an ITI-only on-site setup) brings up this question.
         (
             id: "platform",
             kind: Single,
@@ -164,7 +165,6 @@
                 Equals("central", "customercloud"),
                 Includes("facility_mix", "baremetal"),
                 Includes("facility_mix", "virtualised"),
-                Includes("facility_mix", "iti"),
             ]),
         ),
 

@@ -14,11 +14,6 @@
 // Many on-prem rules repeat the same "any on-premises facility present" or
 // "any BES cloud present" condition. There are no variables in the data, so
 // the conditions are spelled out at each use.
-//
-// Open content values to confirm with sales/product before v1 ships: band
-// thresholds and their size mapping, the region list, integration categories,
-// the cost tiers/ballparks, the net-check blurb, and the requirement-vs-advisory
-// status of each networking item.
 
 (
     questions: [

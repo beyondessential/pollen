@@ -17,10 +17,9 @@
 
 (
     questions: [
-        // 1. Tupaia — asked first; it constrains backups later. (Stable id stays
-        // "analytics"; only the copy names the product.)
+        // 1. Tupaia — asked first; it constrains backups later.
         (
-            id: "analytics",
+            id: "tupaia",
             kind: Single,
             label: "Connect to Tupaia?",
             help: Some("Connecting means BES processes the data, which needs at minimum a low-retention backup."),
@@ -284,7 +283,7 @@
     guidance: [
         (
             at: "backup_capability",
-            when: Equals("analytics", "yes"),
+            when: Equals("tupaia", "yes"),
             message: "You asked for Tupaia, so backups can't be fully disabled — at minimum, low-retention is needed.",
         ),
     ],
@@ -292,9 +291,9 @@
     rules: [
         // ── Intent ──────────────────────────────────────────────────────────
         (
-            id: "analytics-on",
+            id: "tupaia-on",
             source: "intent",
-            when: Equals("analytics", "yes"),
+            when: Equals("tupaia", "yes"),
             consequence: (
                 status: Requirement,
                 audience: Bes,
@@ -449,11 +448,11 @@
 
         // ── Backups ─────────────────────────────────────────────────────────
         (
-            id: "block-backup-analytics",
+            id: "block-backup-tupaia",
             source: "backups",
             when: All([
                 Equals("backup_capability", "no"),
-                Equals("analytics", "yes"),
+                Equals("tupaia", "yes"),
             ]),
             consequence: (
                 severity: Blocking,
@@ -793,11 +792,11 @@
         // Declining telemetry removes backups and mobile support — which
         // contradicts asking for Tupaia (needs backups) or mobile clients.
         (
-            id: "block-telemetry-analytics",
+            id: "block-telemetry-tupaia",
             source: "telemetry",
             when: All([
                 Equals("telemetry", "no"),
-                Equals("analytics", "yes"),
+                Equals("tupaia", "yes"),
             ]),
             consequence: (
                 severity: Blocking,

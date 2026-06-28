@@ -43,12 +43,12 @@ fn canonical_hash_is_deterministic() {
 
 #[test]
 fn demo_config_is_blocking() {
-	// The prototype's demo config: analytics on, backups disabled, Windows,
+	// The prototype's demo config: Tupaia on, backups disabled, Windows,
 	// other AWS region, hybrid cloud + on-prem, infrequent upgrades.
 	let eval = evaluate(
 		&v1(),
 		&answers(json!({
-			"analytics": "yes",
+			"tupaia": "yes",
 			"integrations": ["lims"],
 			"hosted_integration": "no",
 			"catchment": "c1",
@@ -73,9 +73,9 @@ fn demo_config_is_blocking() {
 	let ids = fired_ids(&eval);
 	// The blocking conflict and a representative spread of consequences.
 	for expected in [
-		"block-backup-analytics",
+		"block-backup-tupaia",
 		"backup-off",
-		"analytics-on",
+		"tupaia-on",
 		"int-capacity",
 		"region-other",
 		"plat-windows",
@@ -97,13 +97,13 @@ fn demo_config_is_blocking() {
 }
 
 #[test]
-fn analytics_without_backups_blocks() {
+fn tupaia_without_backups_blocks() {
 	let eval = evaluate(
 		&v1(),
-		&answers(json!({ "analytics": "yes", "backup_capability": "no" })),
+		&answers(json!({ "tupaia": "yes", "backup_capability": "no" })),
 	);
 	assert_eq!(eval.verdict, Verdict::Blocking);
-	assert!(fired_ids(&eval).contains(&"block-backup-analytics"));
+	assert!(fired_ids(&eval).contains(&"block-backup-tupaia"));
 }
 
 #[test]
@@ -113,7 +113,7 @@ fn default_path_is_clear() {
 	let eval = evaluate(
 		&v1(),
 		&answers(json!({
-			"analytics": "no",
+			"tupaia": "no",
 			"integrations": ["none"],
 			"catchment": "c0",
 			"facilities": "f0",
@@ -271,9 +271,9 @@ fn client_network_items_need_on_prem() {
 fn declining_telemetry_blocks_tupaia_and_mobile() {
 	let tupaia = evaluate(
 		&v1(),
-		&answers(json!({ "telemetry": "no", "analytics": "yes" })),
+		&answers(json!({ "telemetry": "no", "tupaia": "yes" })),
 	);
-	assert!(fired_ids(&tupaia).contains(&"block-telemetry-analytics"));
+	assert!(fired_ids(&tupaia).contains(&"block-telemetry-tupaia"));
 	assert_eq!(tupaia.verdict, Verdict::Blocking);
 
 	let mobile = evaluate(
@@ -342,8 +342,8 @@ fn dns_arrangement_targets_the_consequence() {
 }
 
 #[test]
-fn analytics_guidance_shows_at_backups() {
-	let eval = evaluate(&v1(), &answers(json!({ "analytics": "yes" })));
+fn tupaia_guidance_shows_at_backups() {
+	let eval = evaluate(&v1(), &answers(json!({ "tupaia": "yes" })));
 	assert!(
 		eval.guidance
 			.iter()

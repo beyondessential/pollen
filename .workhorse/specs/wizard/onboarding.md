@@ -59,7 +59,7 @@ A single choice may carry several.
 - **cost** — a relative magnitude tier, optionally with an indicative ballpark band (for example "on the order of hundreds per year" versus "thousands per year").
   Never a real quote; sales confirms actual figures.
 - **operational impact** — for example slower incident response, manual failover, reduced retention, extended upgrade downtime.
-- **capability loss** — for example no analytics integration, no clone-upgrade testing.
+- **capability loss** — for example no Tupaia connection, no clone-upgrade testing.
 - **support status** — supported, supported with special arrangement, or unsupported.
 
 ### Status

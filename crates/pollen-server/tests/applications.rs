@@ -24,11 +24,11 @@ async fn create_patch_finalise_fork_lifecycle() {
 		assert_eq!(created["update_available"], false);
 		let id = created["id"].as_str().unwrap().to_owned();
 
-		// A complete, blocking configuration: analytics on but backups disabled.
+		// A complete, blocking configuration: Tupaia on but backups disabled.
 		// Every visible question is answered (so finalise is allowed); platform,
 		// retention, and hosted-integration stay hidden here.
 		let answers = json!({
-			"analytics": "yes",
+			"tupaia": "yes",
 			"integrations": ["none"],
 			"catchment": "c0",
 			"facilities": "f0",
@@ -94,7 +94,7 @@ async fn create_patch_finalise_fork_lifecycle() {
 		assert_eq!(forked["migration"]["dropped"], json!([]));
 		assert_eq!(forked["migration"]["new_questions"], json!([]));
 		// Answers carry over to the new draft (not a zeroed plan).
-		assert_eq!(forked["answers"]["analytics"], "yes");
+		assert_eq!(forked["answers"]["tupaia"], "yes");
 		assert_eq!(forked["answers"]["central"], "bescloud");
 		assert_eq!(forked["evaluation"]["verdict"], "Blocking");
 	})
@@ -114,7 +114,7 @@ async fn fork_to_default_updates_a_stale_draft() {
 			.await
 			.unwrap();
 		let app =
-			Application::create_draft(&mut conn, stale_hash, None, &json!({ "analytics": "yes" }))
+			Application::create_draft(&mut conn, stale_hash, None, &json!({ "tupaia": "yes" }))
 				.await
 				.unwrap();
 		let id = app.id.to_string();
@@ -139,7 +139,7 @@ async fn fork_to_default_updates_a_stale_draft() {
 		assert_eq!(updated["parent_id"], id);
 		assert_eq!(updated["update_available"], false);
 		assert_ne!(updated["config_hash"], stale_hash);
-		assert_eq!(updated["answers"]["analytics"], "yes");
+		assert_eq!(updated["answers"]["tupaia"], "yes");
 	})
 	.await;
 }
@@ -156,7 +156,7 @@ async fn stale_finalised_plan_also_offers_an_update() {
 			.await
 			.unwrap();
 		let app =
-			Application::create_draft(&mut conn, stale_hash, None, &json!({ "analytics": "yes" }))
+			Application::create_draft(&mut conn, stale_hash, None, &json!({ "tupaia": "yes" }))
 				.await
 				.unwrap();
 		Application::finalise(&mut conn, app.id).await.unwrap();
@@ -185,7 +185,7 @@ async fn finalise_requires_all_questions_answered() {
 		// Only one of many visible questions answered.
 		server
 			.post("/api/applications/patch")
-			.json(&json!({ "id": id, "answers": { "analytics": "yes" } }))
+			.json(&json!({ "id": id, "answers": { "tupaia": "yes" } }))
 			.await
 			.assert_status_ok();
 
@@ -223,7 +223,7 @@ async fn invalid_answers_are_rejected() {
 		// A number is not a valid answer (option id or list of them).
 		server
 			.post("/api/applications/patch")
-			.json(&json!({ "id": id, "answers": { "analytics": 7 } }))
+			.json(&json!({ "id": id, "answers": { "tupaia": 7 } }))
 			.await
 			.assert_status(StatusCode::BAD_REQUEST);
 	})

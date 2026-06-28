@@ -17,6 +17,14 @@ pub struct Config {
 
 	/// Optional token to lift the source host's unauthenticated rate limit.
 	pub ruleset_repo_token: Option<String>,
+
+	/// The production branch the daemon tracks: when it carries a different,
+	/// valid ruleset than the bundled default, that becomes the live default.
+	pub ruleset_branch: String,
+
+	/// How often to poll the production branch, in seconds (the first check runs
+	/// at startup). `0` disables polling — the bundled default is used as-is.
+	pub ruleset_poll_secs: u64,
 }
 
 impl Config {
@@ -27,6 +35,11 @@ impl Config {
 				.map_err(|_| AppError::custom("DATABASE_URL must be set"))?,
 			ruleset_repo: std::env::var("RULESET_REPO").ok(),
 			ruleset_repo_token: std::env::var("RULESET_REPO_TOKEN").ok(),
+			ruleset_branch: std::env::var("RULESET_BRANCH").unwrap_or_else(|_| "main".to_string()),
+			ruleset_poll_secs: std::env::var("RULESET_POLL_SECS")
+				.ok()
+				.and_then(|s| s.parse().ok())
+				.unwrap_or(300),
 		})
 	}
 }

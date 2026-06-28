@@ -7,6 +7,7 @@
 
 use std::sync::Arc;
 
+use arc_swap::ArcSwap;
 use axum_test::TestServer;
 use diesel_async::{
 	AsyncConnection as _, AsyncMigrationHarness, AsyncPgConnection, SimpleAsyncConnection as _,
@@ -95,17 +96,33 @@ where
 			database_url: tdb.url.clone(),
 			ruleset_repo: None,
 			ruleset_repo_token: None,
+			ruleset_branch: "main".to_string(),
+			ruleset_poll_secs: 0,
 		}),
 		db: pollen_server::db::init(&tdb.url),
-		default_ruleset: Arc::new(
+		default_ruleset: Arc::new(ArcSwap::from_pointee(
 			ResolvedRuleset::from_ron(BUNDLED_RULESET).expect("bundled ruleset"),
-		),
+		)),
 		resolver: None,
 	};
 	let app = pollen_server::routes(state).expect("routes");
 	let server = TestServer::new(app);
 
 	let result = test(server, tdb.connect(false).await).await;
+	tdb.teardown().await;
+	result
+}
+
+/// Run a test against a fresh database, handed a connection pool (for code that
+/// takes one, like the production poller) plus a direct connection for assertions.
+pub async fn run_db<F, T, Fut>(test: F) -> T
+where
+	F: FnOnce(pollen_server::db::Db, AsyncPgConnection) -> Fut,
+	Fut: Future<Output = T>,
+{
+	let tdb = TestDb::init().await;
+	let db = pollen_server::db::init(&tdb.url);
+	let result = test(db, tdb.connect(false).await).await;
 	tdb.teardown().await;
 	result
 }

@@ -119,6 +119,13 @@ A ruleset is stored once and referenced by that hash; two identical rulesets sha
 An artifact records the user's answers together with the hash of the ruleset it is bound to.
 Finalising freezes that binding forever: the artifact always evaluates against the exact ruleset content identified by the bound hash, never against whatever the current rules happen to be.
 
+### Production ruleset over the bundled default
+
+The engine ships with a bundled copy of the ruleset, but the live default is whatever the configured repository's production branch (by default `main`) carries: the daemon checks that branch on startup and periodically, and when it holds a different, valid ruleset, adopts it as the default new drafts bind.
+So a ruleset change reaches production by merging to that branch — no engine rebuild or redeploy.
+The bundled copy is the fallback: if the branch is unreachable or its ruleset invalid, the current default stays in place.
+Finalised artifacts are unaffected — each stays frozen against its bound hash — and a newer default simply surfaces the "new version available" affordance on older plans.
+
 ### Preview against repository refs
 
 A change to the rules can be previewed against the live tool before it is merged, by naming a branch of the ruleset's source repository in the artifact's URL.

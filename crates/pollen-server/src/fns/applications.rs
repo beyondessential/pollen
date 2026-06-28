@@ -124,7 +124,7 @@ pub async fn create(
 		app,
 		&resolved.ruleset,
 		None,
-		&state.default_ruleset.hash,
+		&state.default_ruleset.load().hash,
 	)?))
 }
 
@@ -145,7 +145,7 @@ pub async fn get(
 		app,
 		&ruleset,
 		None,
-		&state.default_ruleset.hash,
+		&state.default_ruleset.load().hash,
 	)?))
 }
 
@@ -173,7 +173,7 @@ pub async fn patch(
 		app,
 		&ruleset,
 		None,
-		&state.default_ruleset.hash,
+		&state.default_ruleset.load().hash,
 	)?))
 }
 
@@ -214,7 +214,7 @@ pub async fn finalise(
 		app,
 		&ruleset,
 		None,
-		&state.default_ruleset.hash,
+		&state.default_ruleset.load().hash,
 	)?))
 }
 
@@ -241,7 +241,7 @@ pub async fn fork(
 	// stores) the previewed ruleset; otherwise keep the parent's binding
 	// (already in config_store).
 	let (new_hash, new_ruleset) = if args.to_default {
-		let resolved = (*state.default_ruleset).clone();
+		let resolved = (*state.default_ruleset.load_full()).clone();
 		store_config(&mut conn, &resolved).await?;
 		(resolved.hash, resolved.ruleset)
 	} else {
@@ -274,7 +274,7 @@ pub async fn fork(
 		app,
 		&new_ruleset,
 		Some(view),
-		&state.default_ruleset.hash,
+		&state.default_ruleset.load().hash,
 	)?))
 }
 
@@ -301,7 +301,7 @@ async fn resolve_config(state: &AppState, branch: Option<&str>) -> Result<Resolv
 				.resolve(branch)
 				.await
 		}
-		None => Ok((*state.default_ruleset).clone()),
+		None => Ok((*state.default_ruleset.load_full()).clone()),
 	}
 }
 

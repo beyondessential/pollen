@@ -7,6 +7,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
+arc-swap = "1.9.2"
 axum.workspace = true
 clap.workspace = true
 diesel.workspace = true

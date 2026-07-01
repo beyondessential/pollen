@@ -3,7 +3,7 @@
 A guided walkthrough of the technical details to specify, understand, and
 acknowledge before signing up a new Tamanu deployment.
 
-Pollen walks a BES team member and a prospective client through the technical
+Pollen walks a BES International team member and a prospective client through the technical
 decisions a deployment requires, surfaces the consequences of leaving the
 default supported path, and produces a permanent, shareable artifact that
 records the choices for the client's IT team, the BES technical team, and as a

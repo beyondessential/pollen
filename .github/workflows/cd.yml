@@ -82,7 +82,7 @@ jobs:
             type=raw,value=latest
             type=raw,value=${{ steps.tag.outputs.value }}
           labels: |
-            org.opencontainers.image.vendor=BES
+            org.opencontainers.image.vendor=BES International
             org.opencontainers.image.title=Pollen
             org.opencontainers.image.source=https://github.com/beyondessential/pollen/
             org.opencontainers.image.licenses=GPL-3.0-or-later

@@ -232,7 +232,7 @@
             label: "Remote access for managed servers",
             options: [
                 (id: "tailscale", label: "Tailscale", note: Some("Standard. Servers join BES's Tailscale network; only those servers need it allowed.")),
-                (id: "other", label: "Non-Tailscale arrangement", note: Some("Exceptional, adds significant cost.")),
+                (id: "other", label: "Non-Tailscale arrangement", note: Some("Exceptional, may add significant cost.")),
             ],
         ),
         (
@@ -596,7 +596,7 @@
                 types: [Cost, Support],
                 cost: Some((tier: "Exceptional ongoing cost", ballpark: Some("thousands / year"))),
                 title: "Non-Tailscale remote access",
-                detail: "An exceptional arrangement only. Anything other than Tailscale on BES-managed servers adds significant ongoing cost.",
+                detail: "An exceptional arrangement only. Anything other than Tailscale may add significant ongoing support cost.",
             ),
         ),
         // Only when the client has on-prem servers to configure — with

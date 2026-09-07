@@ -305,7 +305,7 @@
             options: [
                 (id: "release", label: "Every release", note: Some("Roughly fortnightly.")),
                 (id: "twomonths", label: "Every two months"),
-                (id: "lessoften", label: "Less often", warn: Some("BES supports the last 10 releases, which is about five months of them. We recommend updating at minimum every three months, to avoid ending up on an unsupported version of Tamanu.")),
+                (id: "lessoften", label: "Less often", warn: Some("BES supports the last 10 releases. We recommend updating at minimum every three months, to avoid ending up on an unsupported version of Tamanu.")),
             ],
         ),
         (

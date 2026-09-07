@@ -88,7 +88,7 @@
             help: Some("Provided by [Tupaia](https://tupaia.org). BES processes the data to do this, so it needs at least a short-retention backup."),
             default: Some("yes"),
             options: [
-                (id: "yes", label: "Yes, include dashboards and reporting", note: Some("Programme monitoring and routine indicators, without writing queries.")),
+                (id: "yes", label: "Yes, include dashboards and reporting", note: Some("Programme monitoring and routine indicators.")),
                 (id: "no", label: "No, Tamanu only"),
                 (id: "unsure", label: "I'm not sure", unsure: true),
             ],
@@ -184,8 +184,8 @@
             id: "iti_use",
             kind: Single,
             section: Some("hosting"),
-            label: "Will any of those sites use a Tamanu Iti appliance?",
-            help: Some("A small BES-managed appliance that plugs into the facility network."),
+            label: "Will any of those sites use a Tamanu Iti mini-server?",
+            help: Some("A mini-server, built by BES, that plugs into the facility network."),
             default: Some("none"),
             options: [
                 (id: "none", label: "No, they run their own servers"),
@@ -233,8 +233,7 @@
             default: Some("sydney"),
             options: [
                 (id: "sydney", label: "Sydney", note: Some("Standard.")),
-                (id: "zurich", label: "Zurich", note: Some("For Europe.")),
-                (id: "otheraws", label: "Another AWS region", note: Some("Supported, adds ongoing cost."), warn: Some("Running outside Sydney or Zurich is supported but adds ongoing cost.")),
+                (id: "otheraws", label: "Another AWS region", warn: Some("Supported, but adds ongoing cost. Sales confirms the figures.")),
             ],
             visible_if: Any([
                 Equals("central", "bescloud"),
@@ -243,7 +242,7 @@
             ]),
         ),
         // Only when a client-hosted server has an OS to choose. BES cloud and
-        // the Tamanu Iti appliance are fixed to Linux on ARM64.
+        // the Tamanu Iti mini-server are fixed to Linux on ARM64.
         (
             id: "platform",
             kind: Single,
@@ -292,7 +291,7 @@
             default: Some("full"),
             options: [
                 (id: "full", label: "Full retention", note: Some("The latest backup, a week of daily, a month of weekly, and six monthly.")),
-                (id: "low", label: "A few days only", note: Some("Long enough to feed dashboards and run upgrade tests.")),
+                (id: "low", label: "A few days only", note: Some("Long enough to feed dashboards and run upgrade tests."), warn: Some("Anything that goes wrong unnoticed for longer than a few days cannot be recovered, because there is no earlier backup to go back to.")),
             ],
             visible_if: Equals("backup_capability", "yes"),
         ),
@@ -301,13 +300,12 @@
             kind: Single,
             section: Some("advanced"),
             label: "How often do you intend to upgrade?",
-            help: Some("Planning only. Tamanu releases roughly fortnightly."),
+            help: Some("Tamanu releases a new version every two weeks. You don't need to upgrade with every release, most deployments skip a few and upgrade around once every two months."),
             default: Some("twomonths"),
             options: [
                 (id: "release", label: "Every release", note: Some("Roughly fortnightly.")),
                 (id: "twomonths", label: "Every two months"),
-                (id: "quarterly", label: "Quarterly"),
-                (id: "biannual", label: "Twice a year"),
+                (id: "lessoften", label: "Less often", warn: Some("BES supports the last 10 releases, which is about five months of them. Upgrading less often than that leaves the deployment on a version BES no longer supports.")),
             ],
         ),
         (
@@ -330,7 +328,7 @@
             label: "Which domain should be used?",
             default: Some("bes_subdomain"),
             options: [
-                (id: "bes_subdomain", label: "A name on BES's tamanu.app", note: Some("Recommended.")),
+                (id: "bes_subdomain", label: "A name on tamanu.app", note: Some("Recommended. For example vanuatu.tamanu.app.")),
                 (id: "bes_topdomain", label: "A dedicated domain BES owns", warn: Some("BES registers and runs a dedicated domain, which carries a small ongoing cost.")),
                 (id: "client_domain", label: "A domain the client buys, pointed at BES", warn: Some("The client purchases the domain and client IT points it at a BES-provisioned DNS zone.")),
                 (id: "client_subdomain", label: "A subdomain the client delegates to BES", warn: Some("Client IT allocates a subdomain and delegates it to BES with SOA records, a setup step on the client side.")),
@@ -481,7 +479,7 @@
                 types: [Cost],
                 cost: Some((tier: "Adds ongoing cost", ballpark: Some("hundreds to thousands per year"))),
                 title: "Non-standard AWS region",
-                detail: "Running outside the standard Sydney / Zurich regions is supported but adds ongoing cost. Sales confirms actual figures.",
+                detail: "Running outside the standard Sydney region is supported but adds ongoing cost. Sales confirms actual figures.",
             ),
         ),
 
@@ -571,8 +569,8 @@
             consequence: (
                 status: Requirement,
                 audience: Bes,
-                title: "Tamanu Iti appliance",
-                detail: "Tamanu Iti is a BES-built, BES-provisioned ARM64 Linux appliance. The client plugs it into their network; BES installs and manages the software.",
+                title: "Tamanu Iti mini-server",
+                detail: "Tamanu Iti is an ARM64 Linux mini-server, built by BES and provisioned by BES. The client plugs it into their network; BES installs and manages the software.",
             ),
         ),
         (
@@ -627,10 +625,12 @@
                 Equals("retention", "low"),
             ]),
             consequence: (
-                status: Advisory,
-                audience: Bes,
-                title: "Low retention: kept a few days",
-                detail: "Backups are kept just a few days, long enough to process data into Tupaia and run clone-upgrade tests, at minimum data cost.",
+                severity: NonDefault,
+                status: Requirement,
+                audience: Client,
+                types: [Operational, Capability],
+                title: "A few days of backups only",
+                detail: "A few days of retention covers feeding dashboards and running upgrade tests, but not recovery. Data lost or corrupted without anyone noticing for a week is gone, because there is no earlier backup to restore from. Full retention keeps a week of daily backups, a month of weekly, and six monthly for exactly that case.",
             ),
         ),
 
@@ -638,16 +638,14 @@
         (
             id: "cadence",
             source: "upgrades",
-            when: Any([
-                Equals("cadence", "quarterly"),
-                Equals("cadence", "biannual"),
-            ]),
+            when: Equals("cadence", "lessoften"),
             consequence: (
-                status: Advisory,
-                audience: Bes,
-                types: [Operational],
-                title: "Infrequent upgrades mean larger version jumps",
-                detail: "BES releases roughly fortnightly. Upgrading less often means jumping many versions at once: heavier migrations, more potential downtime, and stronger reliance on clone-upgrade testing, which requires backup capability.",
+                severity: NonDefault,
+                status: Requirement,
+                audience: Client,
+                types: [Support, Operational],
+                title: "Upgrading less often than support covers",
+                detail: "BES supports the last 10 releases. At a release every two weeks that is about five months, so upgrading less often than that means running a version BES no longer supports. It also means jumping many versions at once: heavier migrations, more potential downtime, and stronger reliance on upgrade testing against a copy of the data.",
             ),
         ),
 
@@ -687,8 +685,8 @@
             consequence: (
                 status: Requirement,
                 audience: Client,
-                title: "DNS: a name on BES's tamanu.app",
-                detail: "BES and the client agree on a name under BES's own tamanu.app domain. BES provisions and runs the DNS, and keeps TLS certificates renewed, so there is nothing for client IT to set up.",
+                title: "DNS: a name on tamanu.app",
+                detail: "BES and the client agree on a name under BES's own tamanu.app domain, for example vanuatu.tamanu.app. BES provisions and runs the DNS, and keeps TLS certificates renewed, so there is nothing for client IT to set up.",
             ),
         ),
         (

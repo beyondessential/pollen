@@ -62,7 +62,7 @@ fn canonical_hash_is_deterministic() {
 #[test]
 fn demo_config_is_blocking() {
 	// Tupaia on but backups disabled, Windows, another AWS region, a hybrid
-	// cloud/client-hosted/Iti split, infrequent upgrades.
+	// cloud/client-hosted/Iti split, upgrades slower than support covers.
 	let eval = evaluate(
 		&v1(),
 		&answers(json!({
@@ -80,7 +80,7 @@ fn demo_config_is_blocking() {
 			"region": "otheraws",
 			"platform": "windows",
 			"backup_capability": "no",
-			"cadence": "biannual",
+			"cadence": "lessoften",
 			"dns": "client",
 			"remote": "other",
 			"timesync": "outbound",
@@ -485,7 +485,7 @@ fn iti_is_asked_only_outside_bes_cloud_and_drives_its_own_rule() {
 		&with(sized(), json!({ "hosting_where": "allclient" }))
 	)));
 
-	// Defaulting to "none" must not assert that an appliance is in play.
+	// Defaulting to "none" must not assert that a mini-server is in play.
 	let none = evaluate(
 		&v1(),
 		&with(sized(), json!({ "hosting_where": "allclient" })),
@@ -504,8 +504,8 @@ fn iti_is_asked_only_outside_bes_cloud_and_drives_its_own_rule() {
 
 #[test]
 fn an_all_iti_deployment_has_no_os_to_choose() {
-	// Iti is a fixed ARM64 appliance, so when every site outside BES cloud runs
-	// one there is no operating system or provisioning decision left.
+	// Iti is a fixed ARM64 mini-server, so when every site outside BES cloud
+	// runs one there is no operating system or provisioning decision left.
 	let all_iti = evaluate(
 		&v1(),
 		&with(
@@ -516,10 +516,10 @@ fn an_all_iti_deployment_has_no_os_to_choose() {
 	for q in ["platform", "onprem_form"] {
 		assert!(
 			!all_iti.visible_questions.iter().any(|v| v == q),
-			"{q} should be hidden when every site runs an appliance"
+			"{q} should be hidden when every site runs a mini-server"
 		);
 	}
-	// The client still has a network to configure for those appliances.
+	// The client still has a network to configure for those mini-servers.
 	assert!(fired_ids(&all_iti).contains(&"onprem-network"));
 
 	// Some sites on their own servers keeps the questions.
@@ -650,4 +650,54 @@ fn tupaia_guidance_shows_at_backups() {
 			.iter()
 			.any(|g| g.at == "backup_capability" && g.message.contains("retention"))
 	);
+}
+
+#[test]
+fn short_retention_is_a_recovery_tradeoff() {
+	// Keeping a few days covers dashboards and upgrade tests but not recovery,
+	// so it has to read as a real choice rather than a neutral preference.
+	let short = evaluate(
+		&v1(),
+		&with(
+			sized(),
+			json!({ "backup_capability": "yes", "retention": "low", "tupaia": "no" }),
+		),
+	);
+	assert!(fired_ids(&short).contains(&"low-retention"));
+	assert_eq!(short.verdict, Verdict::NonDefault);
+
+	let full = evaluate(
+		&v1(),
+		&with(
+			sized(),
+			json!({ "backup_capability": "yes", "retention": "full", "tupaia": "no" }),
+		),
+	);
+	assert!(!fired_ids(&full).contains(&"low-retention"));
+}
+
+#[test]
+fn upgrading_slower_than_the_support_window_is_flagged() {
+	// BES supports the last 10 releases, so "less often" is the only cadence
+	// that can put a deployment on an unsupported version.
+	for ok in ["release", "twomonths"] {
+		let eval = evaluate(&v1(), &with(sized(), json!({ "cadence": ok })));
+		assert!(
+			!fired_ids(&eval).contains(&"cadence"),
+			"{ok} should not raise the support warning"
+		);
+	}
+	let slow = evaluate(&v1(), &with(sized(), json!({ "cadence": "lessoften" })));
+	assert!(fired_ids(&slow).contains(&"cadence"));
+	assert_eq!(slow.verdict, Verdict::NonDefault);
+}
+
+#[test]
+fn sydney_is_the_only_named_region() {
+	// BES serves Africa, the Middle East and Asia, so a second named region
+	// would have to be one of those; anything else is "another AWS region".
+	let region = v1().question("region").cloned().expect("region question");
+	let ids: Vec<&str> = region.options.iter().map(|o| o.id.as_str()).collect();
+	assert_eq!(ids, vec!["sydney", "otheraws"]);
+	assert_eq!(region.default.as_deref(), Some("sydney"));
 }

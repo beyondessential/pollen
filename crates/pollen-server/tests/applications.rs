@@ -279,3 +279,33 @@ async fn preview_without_a_configured_repo_is_rejected() {
 	})
 	.await;
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_ruleset_the_engine_cannot_read_is_a_conflict_not_a_crash() {
+	run_server(|server, mut conn| async move {
+		// The model is append-only precisely so this cannot happen (spec WIZ),
+		// but a public tool must not answer with an internal error if it ever
+		// does: the plan is intact, this build just cannot render it.
+		let content = json!({
+			"questions": [{
+				"id": "q1",
+				"kind": "SomethingThisEngineNeverKnew",
+				"label": "?",
+				"options": [],
+			}],
+			"rules": [],
+		});
+		let hash = "unreadable-ruleset-hash";
+		ConfigRow::upsert(&mut conn, hash, &content).await.unwrap();
+		let app = Application::create_draft(&mut conn, hash, None, &json!({}))
+			.await
+			.unwrap();
+
+		server
+			.post("/api/applications/get")
+			.json(&json!({ "id": app.id.to_string() }))
+			.await
+			.assert_status(StatusCode::CONFLICT);
+	})
+	.await;
+}

@@ -155,6 +155,15 @@ Binding the default ruleset — the common path, with no branch named — makes 
   If moving to a new ruleset dropped an answer or surfaced a newly-required question, auto-finalising would freeze an unreviewed guess.
   Landing as a draft flags the gaps for a human; a clean migration is then one extra step to re-finalise.
 
+### The engine's model is append-only
+
+A stored ruleset is frozen content, but the engine reads that content against its own model, so the model is part of what a binding depends on.
+Withdrawing a question kind, condition, or tag value the engine once accepted makes every artifact bound to a ruleset using it unreadable, including finalised ones that are guaranteed immutable.
+The stable-id discipline applied to questions and options therefore extends to the model itself.
+
+- [ ] Values the model accepts are added, never withdrawn or repurposed, so any ruleset the tool has ever stored still loads.
+- [ ] An artifact whose bound ruleset cannot be read reports that this version of the tool cannot render the plan, rather than failing as an internal error.
+
 ### Stable-id migration
 
 Every question and every option in the ruleset carries a permanent identifier that is never reused or repurposed, and answers are stored by that identifier, never by position or label.

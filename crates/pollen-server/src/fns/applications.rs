@@ -318,9 +318,20 @@ async fn store_config(
 	ConfigRow::upsert(conn, &resolved.hash, &content).await
 }
 
+/// Load the ruleset an artifact is bound to.
+///
+/// A stored ruleset is frozen content, so this can only fail to parse if the
+/// engine's own model has since withdrawn something that ruleset uses, which
+/// the model is not permitted to do (spec WIZ, the engine's model is
+/// append-only). Report it as a conflict rather than an internal error: the
+/// plan itself is intact, and this build simply cannot render it.
 async fn load_ruleset(conn: &mut diesel_async::AsyncPgConnection, hash: &str) -> Result<Ruleset> {
 	let row = ConfigRow::get(conn, hash).await?;
-	serde_json::from_value(row.content).map_err(AppError::custom)
+	serde_json::from_value(row.content).map_err(|e| {
+		AppError::Conflict(format!(
+			"this plan is bound to a ruleset that this version of the tool cannot read ({e})"
+		))
+	})
 }
 
 fn build_view(

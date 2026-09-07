@@ -156,3 +156,26 @@ Iti is a fixed ARM64 appliance. The client network requirements still apply.
 Copy: BES cloud is described as "hosted by BES in a secure AWS data centre"
 rather than by what BES manages, since BES often manages backups and monitoring
 for client-hosted deployments too.
+
+## The model schema is part of a binding
+
+Removing the `Mix` question kind broke every plan bound to a ruleset that used
+it, including a finalised one, with a 500 out of serde. The lesson is bigger
+than the fix: a stored ruleset is frozen content, but the engine reads it
+against its own model, so **the model is part of what a binding depends on**.
+Withdrawing a variant is the schema equivalent of reusing a stable id, and it
+breaks the immutability the artifact lifecycle promises.
+
+Written into the spec as "the engine's model is append-only", because the
+lifecycle guarantees depend on it and nothing recorded it.
+
+Two things changed in code:
+
+- A ruleset that will not parse now reports a conflict naming the problem,
+  rather than a 500 leaking serde internals out of a public-facing tool. It
+  should never fire; it exists because the consequence of it firing is bad.
+- A test covers that path with a deliberately unreadable stored ruleset.
+
+The eight already-unreadable dev plans were deleted, since no code path could
+load them. Pre-production, deleting `Mix` was still the right call; once the
+tool is live, that option closes.

@@ -130,3 +130,23 @@ A pass over everything on screen, keeping only what helps the reader decide.
 - **No em-dashes anywhere**, in copy or comments, and the en-dash cost ranges
   read as "hundreds to thousands per year". Each was rewritten in context
   rather than swapped for a single substitute.
+
+## Open: replacing the three-way percentage mix
+
+Three sliders that redistribute against each other are awkward to operate, and
+the two commonest answers (all cloud, all client hosted) should not require
+touching one at all. Mocked up at
+`.workhorse/design/mockups/c1/where-it-runs-options.html`:
+
+- **A.** Three presets, with a single two-ended slider revealed only for "a mix".
+- **B.** One row of five bands, no slider and nothing nested. Reuses the band
+  control the sizing questions already use.
+- **C.** A's presets, with the mix resolving to three discrete buttons.
+
+Any of them still produces a share per class, so the engine's `HasShare`
+conditions are unaffected and no rule changes.
+
+Splitting Tamanu Iti into its own question is the larger change: the mix drops
+to two classes, and the rules currently keyed on `HasShare("hosting_mix", "iti")`
+move to the new question. Iti is arguably not a proportion of the same axis
+anyway, since it is a way of running a facility site rather than a place.

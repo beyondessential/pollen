@@ -1,0 +1,316 @@
+<!-- spec: wizard/onboarding.md -->
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where it runs: three options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+	/* Tokens mirror web/src/app.css :root. */
+	:root {
+		--ink: #14222b;
+		--ink-soft: #485a63;
+		--ink-faint: #7e8c94;
+		--navy: #313f6a;
+		--navy-deep: #27325a;
+		--sky: #009cea;
+		--sky-deep: #0784c4;
+		--sky-tint: #e7f5fd;
+		--paper: #f4f6f8;
+		--surface: #ffffff;
+		--line: #e3e8eb;
+		--line-soft: #eef1f3;
+		--font-display: "Space Grotesk", system-ui, sans-serif;
+		--font-body: "Inter", system-ui, sans-serif;
+		--radius: 12px;
+		--radius-sm: 9px;
+	}
+	* { box-sizing: border-box; }
+	body {
+		margin: 0;
+		padding: 40px 24px 90px;
+		font-family: var(--font-body);
+		color: var(--ink);
+		background: var(--paper);
+		-webkit-font-smoothing: antialiased;
+	}
+	.page { max-width: 760px; margin: 0 auto; }
+	.page-title {
+		font-family: var(--font-display);
+		font-size: 24px; font-weight: 600; letter-spacing: -0.02em;
+		margin: 0 0 6px;
+	}
+	.page-lede {
+		font-size: 13.5px; color: var(--ink-soft); line-height: 1.55;
+		margin: 0 0 34px; max-width: 62ch;
+	}
+	.opt { margin-bottom: 40px; }
+	.opt-head {
+		display: flex; align-items: baseline; gap: 10px;
+		padding-bottom: 9px; margin-bottom: 14px;
+		border-bottom: 1px solid var(--line);
+	}
+	.opt-key {
+		font-family: var(--font-display); font-size: 12px; font-weight: 700;
+		color: var(--sky-deep);
+	}
+	.opt-name { font-family: var(--font-display); font-size: 15px; font-weight: 600; }
+	.opt-note { font-size: 12.5px; color: var(--ink-faint); margin-left: auto; }
+
+	/* ── Shipped components, reproduced verbatim ─────────────────────── */
+	.card {
+		background: var(--surface);
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		padding: 24px 26px;
+		margin-bottom: 16px;
+		box-shadow: 0 1px 2px rgba(20,34,43,.03), 0 12px 28px -22px rgba(20,34,43,.16);
+	}
+	.qtitle {
+		font-family: var(--font-display);
+		font-size: 17px; font-weight: 600; letter-spacing: -0.01em;
+		margin: 0 0 5px;
+	}
+	.qhelp { font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin: 0 0 14px; }
+	.choices { display: flex; flex-direction: column; gap: 8px; }
+	.choice {
+		display: flex; align-items: flex-start; gap: 12px;
+		width: 100%; text-align: left;
+		background: var(--surface); border: 1px solid var(--line);
+		border-radius: 11px; padding: 13px 15px;
+		cursor: pointer; font-family: inherit;
+		transition: border-color .14s, background .14s;
+	}
+	.choice:hover { border-color: #c4d0d6; background: #fbfdfe; }
+	.choice.on { border-color: var(--sky); background: var(--sky-tint); }
+	.choice-tick {
+		width: 18px; height: 18px; border-radius: 6px;
+		border: 1.5px solid var(--line); flex-shrink: 0; margin-top: 1px;
+		display: grid; place-items: center; color: #fff;
+	}
+	.choice.on .choice-tick { background: var(--sky); border-color: var(--sky); }
+	.choice-tick svg { display: none; }
+	.choice.on .choice-tick svg { display: block; }
+	.choice-title { display: block; font-size: 14px; font-weight: 500; }
+	.choice-note { display: block; font-size: 12px; color: var(--ink-faint); margin-top: 2px; line-height: 1.4; }
+	.bandrow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
+	.band {
+		padding: 11px 8px; border: 1px solid var(--line); border-radius: 10px;
+		background: var(--surface); font-family: inherit; font-size: 12.5px;
+		color: var(--ink-soft); cursor: pointer; transition: .14s;
+	}
+	.band:hover { border-color: #c4d0d6; }
+	.band.on { border-color: var(--navy); background: var(--navy); color: #fff; font-weight: 500; }
+
+	/* ── New: the mix controls under evaluation ──────────────────────── */
+	.reveal { margin-top: 14px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+	.reveal[hidden] { display: none; }
+
+	/* A: one slider between two named ends. */
+	.ratio-ends {
+		display: flex; justify-content: space-between;
+		font-size: 12px; color: var(--ink-faint); margin-bottom: 6px;
+	}
+	.ratio-range {
+		width: 100%; margin: 0; accent-color: var(--navy); cursor: pointer; display: block;
+	}
+	.ratio-read {
+		font-family: var(--font-display); font-size: 14px; font-weight: 600;
+		text-align: center; margin-top: 12px;
+	}
+	.ratio-read span { color: var(--ink-faint); font-weight: 400; }
+
+	/* C: discrete steps instead of a drag. */
+	.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+
+	.caption {
+		font-size: 12.5px; color: var(--ink-faint); line-height: 1.5;
+		margin: 10px 2px 0;
+	}
+	.shared {
+		margin-top: 46px; padding-top: 26px; border-top: 2px solid var(--line);
+	}
+</style>
+</head>
+<body>
+<div class="page">
+
+	<h1 class="page-title">Where it runs: three options</h1>
+	<p class="page-lede">
+		Three ways to capture the hosting split without three sliders. All of them feed the
+		same thing the engine needs: which classes are present, and roughly in what
+		proportion. Click through each one.
+	</p>
+
+	<!-- ── Option A ─────────────────────────────────────────────────── -->
+	<section class="opt">
+		<div class="opt-head">
+			<span class="opt-key">A</span>
+			<span class="opt-name">Preset, with a slider only for a mix</span>
+			<span class="opt-note">Two clicks for the common cases</span>
+		</div>
+
+		<div class="card">
+			<h3 class="qtitle">Where should the facility servers run?</h3>
+			<p class="qhelp">Most deployments are all one or all the other.</p>
+			<div class="choices" data-group="a">
+				<button type="button" class="choice on" data-pick="allbes">
+					<span class="choice-tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+					<span>
+						<span class="choice-title">All in BES cloud</span>
+						<span class="choice-note">BES runs the servers: backups, monitoring, upgrades and patching are handled for you.</span>
+					</span>
+				</button>
+				<button type="button" class="choice" data-pick="allclient">
+					<span class="choice-tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+					<span>
+						<span class="choice-title">All client hosted</span>
+						<span class="choice-note">On servers the client owns or rents. Keeps working when the internet link is down.</span>
+					</span>
+				</button>
+				<button type="button" class="choice" data-pick="mix">
+					<span class="choice-tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+					<span>
+						<span class="choice-title">A mix of both</span>
+					</span>
+				</button>
+			</div>
+
+			<div class="reveal" id="a-reveal" hidden>
+				<div class="ratio-ends"><span>All BES cloud</span><span>All client hosted</span></div>
+				<input class="ratio-range" type="range" min="10" max="90" step="10" value="50" id="a-range">
+				<p class="ratio-read"><span id="a-read">50% BES cloud, 50% client hosted</span></p>
+			</div>
+		</div>
+		<p class="caption">
+			Closest to what you described. The slider only appears for the case that actually
+			needs it, so the two common answers never touch one.
+		</p>
+	</section>
+
+	<!-- ── Option B ─────────────────────────────────────────────────── -->
+	<section class="opt">
+		<div class="opt-head">
+			<span class="opt-key">B</span>
+			<span class="opt-name">One row of bands, no slider at all</span>
+			<span class="opt-note">One click, always</span>
+		</div>
+
+		<div class="card">
+			<h3 class="qtitle">Where should the facility servers run?</h3>
+			<p class="qhelp">A rough split is enough.</p>
+			<div class="bandrow" data-group="b">
+				<button type="button" class="band on">All BES cloud</button>
+				<button type="button" class="band">Mostly BES cloud</button>
+				<button type="button" class="band">About half</button>
+				<button type="button" class="band">Mostly client hosted</button>
+				<button type="button" class="band">All client hosted</button>
+			</div>
+		</div>
+		<p class="caption">
+			Reuses the band control the three sizing questions already use, so the form has one
+			fewer kind of input. Nothing to drag, and nothing nested.
+		</p>
+	</section>
+
+	<!-- ── Option C ─────────────────────────────────────────────────── -->
+	<section class="opt">
+		<div class="opt-head">
+			<span class="opt-key">C</span>
+			<span class="opt-name">Preset, with discrete steps for a mix</span>
+			<span class="opt-note">Your structure, without the drag</span>
+		</div>
+
+		<div class="card">
+			<h3 class="qtitle">Where should the facility servers run?</h3>
+			<p class="qhelp">Most deployments are all one or all the other.</p>
+			<div class="choices" data-group="c">
+				<button type="button" class="choice on" data-pick="allbes">
+					<span class="choice-tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+					<span><span class="choice-title">All in BES cloud</span></span>
+				</button>
+				<button type="button" class="choice" data-pick="allclient">
+					<span class="choice-tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+					<span><span class="choice-title">All client hosted</span></span>
+				</button>
+				<button type="button" class="choice" data-pick="mix">
+					<span class="choice-tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+					<span><span class="choice-title">A mix of both</span></span>
+				</button>
+			</div>
+
+			<div class="reveal" id="c-reveal" hidden>
+				<div class="steps" data-group="c-step">
+					<button type="button" class="band on">Mostly BES cloud</button>
+					<button type="button" class="band">About half</button>
+					<button type="button" class="band">Mostly client hosted</button>
+				</div>
+			</div>
+		</div>
+		<p class="caption">
+			Same shape as A, but the mix resolves to three buttons rather than a drag. The
+			engine only reads presence and a rough proportion, so finer than this buys nothing.
+		</p>
+	</section>
+
+	<!-- ── The shared follow-up ─────────────────────────────────────── -->
+	<section class="opt shared">
+		<div class="opt-head">
+			<span class="opt-key">+</span>
+			<span class="opt-name">Tamanu Iti, asked separately</span>
+			<span class="opt-note">Hidden when everything is in BES cloud</span>
+		</div>
+
+		<div class="card">
+			<h3 class="qtitle">Will any of those sites use a Tamanu Iti appliance?</h3>
+			<p class="qhelp">A small BES-managed appliance that plugs into the facility network. No server hardware to buy or maintain.</p>
+			<div class="choices" data-group="iti">
+				<button type="button" class="choice on">
+					<span class="choice-tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+					<span><span class="choice-title">No, they run their own servers</span></span>
+				</button>
+				<button type="button" class="choice">
+					<span class="choice-tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+					<span><span class="choice-title">Yes, some of them</span></span>
+				</button>
+				<button type="button" class="choice">
+					<span class="choice-tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+					<span><span class="choice-title">Yes, all of them</span></span>
+				</button>
+			</div>
+		</div>
+		<p class="caption">
+			Works with any of the three. It appears only once something sits outside BES cloud,
+			which is also when the operating system and provisioning questions become relevant.
+		</p>
+	</section>
+
+</div>
+
+<script>
+	// Mockup only: enough interaction to judge the feel of each option.
+	document.querySelectorAll("[data-group]").forEach((group) => {
+		group.querySelectorAll("button").forEach((btn) => {
+			btn.addEventListener("click", () => {
+				group.querySelectorAll("button").forEach((b) => b.classList.remove("on"));
+				btn.classList.add("on");
+				const name = group.dataset.group;
+				if (name === "a" || name === "c") {
+					document.getElementById(name + "-reveal").hidden = btn.dataset.pick !== "mix";
+				}
+			});
+		});
+	});
+
+	const range = document.getElementById("a-range");
+	range.addEventListener("input", () => {
+		const bes = +range.value;
+		document.getElementById("a-read").textContent =
+			bes + "% BES cloud, " + (100 - bes) + "% client hosted";
+	});
+</script>
+</body>
+</html>

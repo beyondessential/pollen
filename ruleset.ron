@@ -24,27 +24,10 @@
 
 (
     sections: [
-        (
-            id: "essentials",
-            label: "Your health system",
-            blurb: Some("Three questions. Rough numbers are fine — they set the size of the deployment."),
-        ),
-        (
-            id: "intent",
-            label: "What you want Tamanu to do",
-            blurb: Some("Skip anything you're unsure of; it gets flagged for follow-up rather than guessed."),
-        ),
-        (
-            id: "hosting",
-            label: "Where it runs",
-            blurb: Some("A rough split is enough. This can change later without changing the estimate much."),
-        ),
-        (
-            id: "advanced",
-            label: "Technical details",
-            blurb: Some("For the client's IT team. Left alone, these take the standard supported setup."),
-            collapsed: true,
-        ),
+        (id: "essentials", label: "Your health system"),
+        (id: "intent", label: "What you want Tamanu to do"),
+        (id: "hosting", label: "Where it runs"),
+        (id: "advanced", label: "Technical details", collapsed: true),
     ],
 
     questions: [
@@ -58,7 +41,6 @@
             kind: Band,
             section: Some("essentials"),
             label: "How many people does the health system serve?",
-            help: Some("The total population covered. A rough band is all that's needed."),
             options: [
                 (id: "c0", label: "Under 1,000"),
                 (id: "c1", label: "1,000 - 10,000"),
@@ -71,7 +53,7 @@
             kind: Band,
             section: Some("essentials"),
             label: "How many facilities will use Tamanu?",
-            help: Some("Hospitals, clinics, and health posts — anywhere Tamanu will be used."),
+            help: Some("Hospitals, clinics, and health posts."),
             options: [
                 (id: "f0", label: "One"),
                 (id: "f1", label: "2 - 5"),
@@ -84,7 +66,7 @@
             kind: Band,
             section: Some("essentials"),
             label: "How many people will use Tamanu on a phone or tablet?",
-            help: Some("Community health workers and anyone else working away from a desk."),
+            help: Some("Community health workers, and anyone working away from a desk."),
             options: [
                 (id: "m0", label: "None"),
                 (id: "m1", label: "1 - 10"),
@@ -103,11 +85,11 @@
             kind: Single,
             section: Some("intent"),
             label: "Do you want dashboards and reporting?",
-            help: Some("Provided by [Tupaia](https://tupaia.org), which turns Tamanu data into dashboards and reports. BES processes the data to do this, which needs at minimum a low-retention backup."),
+            help: Some("Provided by [Tupaia](https://tupaia.org). BES processes the data to do this, so it needs at least a short-retention backup."),
             default: Some("yes"),
             options: [
-                (id: "yes", label: "Yes — include dashboards and reporting", note: Some("Programme monitoring, routine reporting, and indicators, without anyone writing queries by hand.")),
-                (id: "no", label: "No — Tamanu only", note: Some("Data stays in Tamanu; reporting is handled elsewhere.")),
+                (id: "yes", label: "Yes — include dashboards and reporting", note: Some("Programme monitoring and routine indicators, without writing queries.")),
+                (id: "no", label: "No — Tamanu only"),
                 (id: "unsure", label: "I'm not sure", unsure: true),
             ],
         ),
@@ -116,7 +98,7 @@
             kind: Multi,
             section: Some("intent"),
             label: "Does Tamanu need to connect to other systems?",
-            help: Some("Existing systems the health service already runs. Any connection sizes the central server up a little."),
+            help: Some("Existing systems the health service already runs."),
             options: [
                 (id: "lims", label: "Laboratory system", note: Some("SENAITE or another LIMS.")),
                 (id: "msupply", label: "Pharmacy or warehousing", note: Some("mSupply or another stock system.")),
@@ -132,11 +114,11 @@
             kind: Single,
             section: Some("intent"),
             label: "Who runs those other systems?",
-            help: Some("BES hosting them is possible, but is specced in a separate technical conversation — flagged here, not resolved here."),
+            help: Some("BES hosting them is possible, but is scoped in a separate conversation."),
             default: Some("no"),
             options: [
                 (id: "no", label: "The client runs them"),
-                (id: "yes", label: "BES should host them", note: Some("Flagged for a separate technical conversation.")),
+                (id: "yes", label: "BES should host them"),
             ],
             // Only when at least one connection is wanted.
             visible_if: Any([
@@ -160,12 +142,11 @@
             kind: Mix,
             section: Some("hosting"),
             label: "Roughly, where will Tamanu run?",
-            help: Some("A rough percentage split is fine. Most deployments are a mix."),
             default: Some("clienthosted"),
             options: [
-                (id: "bescloud", label: "BES cloud", note: Some("BES runs the servers. Backups, monitoring, upgrades and security patching are handled for you, and incidents get the fastest response. Nothing for the client's IT team to run.")),
-                (id: "clienthosted", label: "Client hosted", note: Some("Runs on servers the client owns or rents, on site or in their own cloud. Keeps everything on infrastructure the client controls, and keeps working when the internet link is down.")),
-                (id: "iti", label: "Tamanu Iti", note: Some("A small BES-built appliance that plugs into the facility network. BES installs and manages the software; no server hardware to buy, and nothing for facility staff to maintain.")),
+                (id: "bescloud", label: "BES cloud", note: Some("BES runs the servers: backups, monitoring, upgrades and patching are handled for you.")),
+                (id: "clienthosted", label: "Client hosted", note: Some("On servers the client owns or rents. Keeps working when the internet link is down.")),
+                (id: "iti", label: "Tamanu Iti", note: Some("A small BES-managed appliance for the facility network. No server hardware to buy or maintain.")),
             ],
         ),
         (
@@ -173,11 +154,11 @@
             kind: Single,
             section: Some("hosting"),
             label: "Where should the central server run?",
-            help: Some("The central server ties the facilities together. It is normally in BES cloud even when facilities run on site."),
+            help: Some("The central server ties the facilities together. Normally BES cloud, even when facilities run on site."),
             default: Some("bescloud"),
             options: [
-                (id: "bescloud", label: "BES cloud", note: Some("Recommended. Fully managed hosting; the client still gets full application access.")),
-                (id: "clienthosted", label: "Client hosted", note: Some("On the client's own servers or cloud."), warn: Some("Hosting the central server yourself means your IT team carries availability, backups, and upgrades for it, and BES incident response is slower.")),
+                (id: "bescloud", label: "BES cloud", note: Some("Recommended. Fully managed; the client still gets full application access.")),
+                (id: "clienthosted", label: "Client hosted", warn: Some("Hosting the central server yourself means your IT team carries availability, backups, and upgrades for it, and BES incident response is slower.")),
             ],
         ),
 
@@ -191,7 +172,7 @@
             kind: Single,
             section: Some("advanced"),
             label: "How are the client-hosted servers provided?",
-            help: Some("Bare metal and virtualised are provisioned differently, so the requirements differ."),
+            help: Some("The two are provisioned differently, so the requirements differ."),
             default: Some("virtualised"),
             options: [
                 (id: "virtualised", label: "Virtual machines"),
@@ -226,13 +207,13 @@
             kind: Single,
             section: Some("advanced"),
             label: "Operating system for the client-hosted servers",
-            help: Some("BES cloud and Tamanu Iti are fixed to Linux on ARM64. This is for servers the client provides."),
+            help: Some("BES cloud and Tamanu Iti are fixed to Linux on ARM64."),
             default: Some("linuxarm"),
             options: [
                 (id: "linuxarm", label: "Linux on ARM64", note: Some("Required for full support.")),
-                (id: "linuxamd", label: "Linux on AMD64", note: Some("Supported at a higher support cost."), warn: Some("ARM64 is the supported platform. AMD64 works, but carries a higher ongoing support and hosting cost.")),
-                (id: "windows", label: "Windows Server", note: Some("Being phased out."), warn: Some("Being phased out, and accepted only on strong insistence. The client licenses Windows, the application runs slower, and support and incident response are slower and less effective.")),
-                (id: "other", label: "Something else", note: Some("Red Hat, Kubernetes, or non-server Windows."), warn: Some("Unsupported. BES cannot access the system, so there is no support, no backups, no dashboards, and no upgrade testing.")),
+                (id: "linuxamd", label: "Linux on AMD64", warn: Some("ARM64 is the supported platform. AMD64 works, but carries a higher ongoing support and hosting cost.")),
+                (id: "windows", label: "Windows Server", warn: Some("Being phased out, and accepted only on strong insistence. The client licenses Windows, the application runs slower, and support and incident response are slower and less effective.")),
+                (id: "other", label: "Red Hat, Kubernetes, or non-server Windows", warn: Some("Unsupported. BES cannot access the system, so there is no support, no backups, no dashboards, and no upgrade testing.")),
             ],
             visible_if: Any([
                 Equals("central", "clienthosted"),
@@ -248,7 +229,7 @@
             kind: Single,
             section: Some("advanced"),
             label: "Can BES take backups of the data?",
-            help: Some("Separate from how long backups are kept. Testing an upgrade against a copy needs only the ability to take a one-off backup, even if nothing is retained."),
+            help: Some("Separate from how long they are kept. Upgrade testing needs only a one-off backup."),
             options: [
                 (id: "yes", label: "Yes — BES may take backups"),
                 (id: "no", label: "No — BES may not take backups", warn: Some("This removes BES-managed recovery, dashboards and reporting, and upgrade testing against a copy of the data.")),
@@ -262,7 +243,7 @@
             label: "How long should BES keep backups?",
             default: Some("full"),
             options: [
-                (id: "full", label: "Full retention", note: Some("Standard — the latest backup, a week of daily backups, a month of weekly, and six monthly.")),
+                (id: "full", label: "Full retention", note: Some("The latest backup, a week of daily, a month of weekly, and six monthly.")),
                 (id: "low", label: "A few days only", note: Some("Long enough to feed dashboards and run upgrade tests.")),
             ],
             visible_if: Equals("backup_capability", "yes"),
@@ -272,7 +253,7 @@
             kind: Single,
             section: Some("advanced"),
             label: "How often do you intend to upgrade?",
-            help: Some("Planning data only — not binding. Tamanu releases roughly fortnightly."),
+            help: Some("Planning only. Tamanu releases roughly fortnightly."),
             default: Some("asneeded"),
             options: [
                 (id: "release", label: "Every release", note: Some("Roughly fortnightly.")),
@@ -286,9 +267,9 @@
             kind: Single,
             section: Some("advanced"),
             label: "Who should manage the web addresses and certificates?",
-            help: Some("Tamanu needs domain names and TLS certificates. BES managing them is the arrangement with nothing for client IT to run."),
+            help: Some("Tamanu needs domain names and TLS certificates."),
             options: [
-                (id: "bes", label: "BES manages them", note: Some("Recommended. BES provisions the names and keeps certificates renewed.")),
+                (id: "bes", label: "BES manages them", note: Some("Recommended. Nothing for client IT to run.")),
                 (id: "client", label: "The client's IT team manages them", warn: Some("The client must support automatic ACME certificate issuance, and keep every deployment domain under a common stem.")),
                 (id: "local", label: "No web addresses — local network only", warn: Some("Servers reach each other over plain HTTP: no certificates, no encryption in transit. Supported, but an operational and security risk.")),
                 (id: "unsure", label: "I'm not sure", unsure: true),
@@ -299,11 +280,10 @@
             kind: Single,
             section: Some("advanced"),
             label: "Which domain should be used?",
-            help: Some("Who owns the domain, and how it reaches BES's DNS."),
             default: Some("bes_subdomain"),
             options: [
-                (id: "bes_subdomain", label: "A name on BES's tamanu.app", note: Some("Recommended. BES owns and runs it; nothing for client IT to set up.")),
-                (id: "bes_topdomain", label: "A dedicated domain BES owns", note: Some("Small ongoing registration cost."), warn: Some("BES registers and runs a dedicated domain, which carries a small ongoing cost.")),
+                (id: "bes_subdomain", label: "A name on BES's tamanu.app", note: Some("Recommended.")),
+                (id: "bes_topdomain", label: "A dedicated domain BES owns", warn: Some("BES registers and runs a dedicated domain, which carries a small ongoing cost.")),
                 (id: "client_domain", label: "A domain the client buys, pointed at BES", warn: Some("The client purchases the domain and client IT points it at a BES-provisioned DNS zone.")),
                 (id: "client_subdomain", label: "A subdomain the client delegates to BES", warn: Some("Client IT allocates a subdomain and delegates it to BES with SOA records — a setup step on the client side.")),
             ],
@@ -314,10 +294,9 @@
             kind: Single,
             section: Some("advanced"),
             label: "How does BES reach the servers it manages?",
-            help: Some("Tailscale is required for BES to support managed servers."),
             default: Some("tailscale"),
             options: [
-                (id: "tailscale", label: "Tailscale", note: Some("Required. Servers join BES's Tailscale network; only those servers need it allowed.")),
+                (id: "tailscale", label: "Tailscale", note: Some("Required. Only the managed servers need it allowed, not the whole network.")),
                 (id: "other", label: "Some other arrangement", warn: Some("Tailscale is what BES supports. Anything else is exceptional and may add significant ongoing cost.")),
             ],
         ),
@@ -326,10 +305,10 @@
             kind: Single,
             section: Some("advanced"),
             label: "How do the servers keep accurate time?",
-            help: Some("Tamanu needs synchronised clocks; drift breaks it."),
+            help: Some("Clock drift breaks Tamanu."),
             default: Some("outbound"),
             options: [
-                (id: "outbound", label: "Public time servers", note: Some("Standard — allow outbound traffic to pool.ntp.org.")),
+                (id: "outbound", label: "Public time servers", note: Some("Allow outbound traffic to pool.ntp.org.")),
                 (id: "internal", label: "An internal time server", note: Some("The client provides the IP.")),
             ],
         ),
@@ -338,7 +317,7 @@
             kind: Single,
             section: Some("advanced"),
             label: "Can the servers send operational telemetry to BES?",
-            help: Some("Telemetry is operational data only — no patient, clinical, or otherwise sensitive data is ever transmitted. It is what lets BES support the deployment, back it up, and keep mobile working."),
+            help: Some("Operational data only — never patient, clinical, or sensitive data. It is what lets BES support the deployment, back it up, and keep mobile working."),
             options: [
                 (id: "yes", label: "Yes, allow telemetry"),
                 (id: "no", label: "No telemetry", warn: Some("This opts the deployment out of BES tech support, managed backups, and mobile support.")),

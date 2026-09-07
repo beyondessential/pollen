@@ -134,8 +134,6 @@ pub struct Opt {
 pub struct Section {
 	pub id: String,
 	pub label: String,
-	#[serde(default)]
-	pub blurb: Option<String>,
 	/// Collapsed on arrival, for sections a non-technical user can skip.
 	#[serde(default)]
 	pub collapsed: bool,

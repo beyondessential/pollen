@@ -11,7 +11,7 @@ import {
 	type QuestionView,
 	type Section,
 } from "../types";
-import { Check, ConsequenceCard, VerdictBanner } from "./visuals";
+import { Check } from "./visuals";
 
 export default function Wizard({
 	view,
@@ -28,28 +28,24 @@ export default function Wizard({
 
 	const answers = view.answers as unknown as Record<string, AnswerValue>;
 	const ev = view.evaluation;
-	const started = Object.values(answers).some(isAnswered);
 	const byId = new Map(view.questions.map((q) => [q.id, q]));
 	const assumedBy = new Map(ev.assumed.map((a) => [a.question, a.option]));
-	const openItems = new Set(ev.open_items);
-	const offDefault = ev.consequences.filter(
-		(c) => c.consequence.severity === "NonDefault",
-	).length;
-	const blocking = ev.consequences.filter((c) => c.consequence.severity === "Blocking").length;
 	const guidanceFor = (qid: string) => ev.guidance.find((g) => g.at === qid)?.message;
 
-	// Most-severe first in the ledger; stable within a severity (ruleset order).
-	const severityRank = { Blocking: 0, NonDefault: 1, Default: 2 };
-	const ledger = [...ev.consequences].sort(
-		(a, b) => severityRank[a.consequence.severity] - severityRank[b.consequence.severity],
-	);
+	// The rail reports only what the user has steered off the standard path.
+	// Everything else — the ordinary requirements that follow from a supported
+	// setup — belongs on the finalised artifact, not in the way of answering.
+	const rank = { Blocking: 0, NonDefault: 1, Default: 2 };
+	const flagged = ev.consequences
+		.filter((c) => c.consequence.severity !== "Default")
+		.sort((a, b) => rank[a.consequence.severity] - rank[b.consequence.severity]);
 
 	// Group the visible questions into their sections, keeping ruleset order
 	// within each. A question naming no section falls into the first one.
 	const grouped = useMemo(() => {
 		const sections: Section[] = view.sections.length
 			? view.sections
-			: [{ id: "", label: "", blurb: null, collapsed: false }];
+			: [{ id: "", label: "", collapsed: false }];
 		const fallback = sections[0].id;
 		return sections
 			.map((section) => ({
@@ -92,60 +88,37 @@ export default function Wizard({
 	return (
 		<div className="frame">
 			<aside className="rail">
-				<VerdictBanner
-					verdict={ev.verdict}
-					offDefault={offDefault}
-					blocking={blocking}
-					openItems={ev.open_items.length}
-					started={started}
-				/>
-				<div className="meters">
-					<div className="meter">
-						<span className="meter-k">Size</span>
-						<span className="meter-v">{ev.derived["size"] ?? "—"}</span>
-					</div>
-					<div className="meter">
-						<span className="meter-k">Custom</span>
-						<span className="meter-v" style={{ color: offDefault ? "var(--offdef)" : undefined }}>
-							{offDefault}
-						</span>
-					</div>
-					<div className="meter">
-						<span className="meter-k">Open</span>
-						<span className="meter-v" style={{ color: interim ? "var(--open)" : undefined }}>
-							{ev.open_items.length}
-						</span>
-					</div>
-					<div className="meter">
-						<span className="meter-k">Blocking</span>
-						<span className="meter-v" style={{ color: blocking ? "var(--block)" : undefined }}>
-							{blocking}
-						</span>
-					</div>
+				<div className="stat">
+					<span className="stat-k">Size</span>
+					<span className="stat-v">{ev.derived["size"] ?? "—"}</span>
 				</div>
-				<div className="rail-section-h">Consequences</div>
-				<div className="ledger">
-					{ledger.length === 0 ? (
-						<p className="ledger-empty">Nothing yet.</p>
-					) : (
-						ledger.map((c) => <ConsequenceCard key={c.id} c={c.consequence} />)
-					)}
-				</div>
+
+				{flagged.length > 0 && (
+					<>
+						<div className="rail-section-h">Off the standard path</div>
+						<div className="flags">
+							{flagged.map((c) => (
+								<div
+									key={c.id}
+									className={`flag${c.consequence.severity === "Blocking" ? " flag-block" : ""}`}
+								>
+									<span className="flag-dot" />
+									<span>{c.consequence.title}</span>
+								</div>
+							))}
+						</div>
+					</>
+				)}
 			</aside>
 
 			<main className="main">
 				{grouped.map(({ section, questions }) => {
 					const isOpen = opened[section.id] ?? !section.collapsed;
-					const assumedHere = questions.filter((q) => assumedBy.has(q.id)).length;
-					const openHere = questions.filter((q) => openItems.has(q.id)).length;
 					return (
 						<section className="qsection" key={section.id || "all"}>
 							{section.label && (
 								<div className="qsection-head">
-									<div>
-										<h2 className="qsection-title">{section.label}</h2>
-										{section.blurb && <p className="qsection-blurb">{section.blurb}</p>}
-									</div>
+									<h2 className="qsection-title">{section.label}</h2>
 									{section.collapsed && (
 										<button
 											type="button"
@@ -157,38 +130,25 @@ export default function Wizard({
 									)}
 								</div>
 							)}
-							{!isOpen ? (
-								<p className="qsection-summary">
-									{assumedHere > 0 && `${assumedHere} taking the standard setup`}
-									{assumedHere > 0 && openHere > 0 && " · "}
-									{openHere > 0 && `${openHere} left for BES to confirm`}
-								</p>
-							) : (
+							{isOpen &&
 								questions.map((q) => (
 									<QuestionCard
 										key={q.id}
 										q={q}
 										value={answers[q.id]}
 										assumed={assumedBy.get(q.id)}
-										open={openItems.has(q.id)}
 										guidance={guidanceFor(q.id)}
 										onChange={(v) => change(q.id, v)}
 									/>
-								))
-							)}
+								))}
 						</section>
 					);
 				})}
 
 				<div className="actions">
-					{missing.length > 0 ? (
+					{missing.length > 0 && (
 						<span className="actions-hint">Still needed: {missing.join(", ")}.</span>
-					) : interim ? (
-						<span className="actions-hint">
-							{ev.open_items.length} question{ev.open_items.length === 1 ? "" : "s"} left open —
-							this finalises as an interim plan you can complete later.
-						</span>
-					) : null}
+					)}
 					<button
 						type="button"
 						className="btn primary"
@@ -207,20 +167,17 @@ function QuestionCard({
 	q,
 	value,
 	assumed,
-	open,
 	guidance,
 	onChange,
 }: {
 	q: QuestionView;
 	value: AnswerValue | undefined;
-	/// The option the engine filled in because this was left blank.
+	/// The option the engine filled in because this was left blank. Shown as
+	/// chosen but muted, so it reads as the tool's guess rather than an answer.
 	assumed: string | undefined;
-	/// Whether this is recorded as an open item rather than answered.
-	open: boolean;
 	guidance: string | undefined;
 	onChange: (v: AnswerValue) => void;
 }) {
-	// What's effectively chosen: the user's answer, or the assumed default.
 	const effective = isAnswered(value) ? value : assumed;
 	const selectedIds = new Set(
 		Array.isArray(effective)
@@ -232,11 +189,10 @@ function QuestionCard({
 	const warning = q.options.find((o) => selectedIds.has(o.id) && o.warn)?.warn;
 
 	return (
-		<div className={`card${open ? " card-open" : ""}`}>
+		<div className="card">
 			<div className="qhead">
 				<h3 className="qtitle">{q.label}</h3>
-				{assumed && <span className="qflag qflag-assumed">Assumed</span>}
-				{open && <span className="qflag qflag-open">For BES to confirm</span>}
+				{assumed && <span className="qflag">Assumed</span>}
 			</div>
 			{q.help && (
 				<p className="qhelp">
@@ -257,9 +213,7 @@ function QuestionCard({
 						<button
 							type="button"
 							key={o.id}
-							className={`band${selectedIds.has(o.id) ? (assumed ? " on faint" : " on") : ""}${
-								o.unsure ? " band-unsure" : ""
-							}`}
+							className={`band${selectedIds.has(o.id) ? (assumed ? " on faint" : " on") : ""}`}
 							onClick={() => onChange(o.id)}
 						>
 							{o.label}
@@ -274,9 +228,7 @@ function QuestionCard({
 							<button
 								type="button"
 								key={o.id}
-								className={`choice${selected ? (assumed ? " on faint" : " on") : ""}${
-									o.unsure ? " choice-unsure" : ""
-								}`}
+								className={`choice${selected ? (assumed ? " on faint" : " on") : ""}`}
 								onClick={() => onChange(q.kind === "Multi" ? toggleMulti(q, value, o) : o.id)}
 							>
 								<span className="choice-tick">{selected && <Check size={13} />}</span>
@@ -298,11 +250,6 @@ function QuestionCard({
 				<div className="warn">
 					<Markup text={warning} />
 				</div>
-			)}
-			{assumed && (
-				<p className="qassumed">
-					Left blank, so the standard setup is assumed. Change it if that's wrong.
-				</p>
 			)}
 		</div>
 	);

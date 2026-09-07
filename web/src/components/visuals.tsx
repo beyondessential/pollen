@@ -95,84 +95,35 @@ export function ConsequenceCard({ c }: { c: Consequence }) {
 }
 
 type VerdictMeta = { color: string; bg: string; title: string };
-function verdictMeta(verdict: Verdict): VerdictMeta {
-	switch (verdict) {
-		case "Blocking":
-			return {
-				color: "var(--block)",
-				bg: "var(--block-bg)",
-				title: "Not possible as specified",
-			};
-		case "NonDefault":
-			return {
-				color: "var(--offdef)",
-				bg: "var(--offdef-bg)",
-				title: "Possible, with acknowledged off-default choices",
-			};
-		default:
-			return {
-				color: "var(--clear)",
-				bg: "var(--clear-bg)",
-				title: "On the default, supported path",
-			};
-	}
-}
 
+/// The viability callout. It exists to flag a configuration that will not work,
+/// so it renders nothing when there is nothing to say — a banner announcing that
+/// all is well is noise on every artifact that has no problem.
 export function VerdictBanner({
 	verdict,
 	offDefault,
 	blocking,
-	openItems = 0,
-	started = true,
-	big = false,
 }: {
 	verdict: Verdict;
 	offDefault: number;
 	blocking: number;
-	/// Questions left unanswered on purpose. The verdict still stands on what
-	/// *was* answered, but it is provisional until these are settled.
-	openItems?: number;
-	/// Whether any choice has been made yet. Before then there's no verdict to
-	/// report — only an empty form.
-	started?: boolean;
-	big?: boolean;
 }) {
-	if (!started) {
-		return (
-			<div
-				className={`verdict${big ? " verdict-big" : ""}`}
-				style={{ background: "var(--line-soft)", color: "var(--ink-soft)" }}
-			>
-				<div>
-					<div className="verdict-t">Nothing recorded yet</div>
-					<div className="verdict-s">Make a choice and its consequences appear here.</div>
-				</div>
-			</div>
-		);
-	}
-	const m = verdictMeta(verdict);
-	const subtitle =
+	if (verdict === "Clear") return null;
+	const m: VerdictMeta =
 		verdict === "Blocking"
-			? `${blocking} blocking conflict${blocking === 1 ? "" : "s"} — something must change.`
-			: verdict === "NonDefault"
-				? `${offDefault} choice${offDefault === 1 ? "" : "s"} off the default path. This will be harder to support.`
-				: "No off-default choices recorded.";
-	const provisional =
-		openItems > 0
-			? ` Provisional: ${openItems} question${openItems === 1 ? "" : "s"} still open.`
-			: "";
+			? {
+					color: "var(--block)",
+					bg: "var(--block-bg)",
+					title: `${blocking} blocking conflict${blocking === 1 ? "" : "s"} — this will not work as specified`,
+				}
+			: {
+					color: "var(--offdef)",
+					bg: "var(--offdef-bg)",
+					title: `${offDefault} choice${offDefault === 1 ? "" : "s"} off the standard path`,
+				};
 	return (
-		<div
-			className={`verdict${big ? " verdict-big" : ""}`}
-			style={{ background: m.bg, color: m.color }}
-		>
-			<div>
-				<div className="verdict-t">{m.title}</div>
-				<div className="verdict-s">
-					{subtitle}
-					{provisional}
-				</div>
-			</div>
+		<div className="verdict verdict-big" style={{ background: m.bg, color: m.color }}>
+			<div className="verdict-t">{m.title}</div>
 		</div>
 	);
 }

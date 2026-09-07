@@ -292,38 +292,6 @@ body {
 	color: var(--ink-faint);
 	margin: 0 0 9px;
 }
-.meters {
-	display: flex;
-	gap: 6px;
-	margin: 16px 0 20px;
-}
-.meter {
-	flex: 1;
-	background: var(--paper);
-	border: 1px solid var(--line-soft);
-	border-radius: var(--radius-sm);
-	padding: 9px 8px;
-	text-align: center;
-}
-.meter-k {
-	display: block;
-	font-size: 9.5px;
-	letter-spacing: 0.07em;
-	text-transform: uppercase;
-	color: var(--ink-faint);
-}
-.meter-v {
-	display: block;
-	font-family: var(--font-display);
-	font-weight: 600;
-	font-size: 18px;
-	margin-top: 2px;
-}
-.ledger {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-}
 .cons {
 	display: flex;
 	background: var(--surface);
@@ -414,12 +382,6 @@ body {
 }
 .verdict-big .verdict-t {
 	font-size: 16px;
-}
-.verdict-s {
-	font-size: 11.5px;
-	opacity: 0.85;
-	line-height: 1.4;
-	margin-top: 3px;
 }
 .verdict-big .verdict-s {
 	font-size: 13px;
@@ -715,21 +677,6 @@ body {
 	color: var(--navy);
 	margin: 0 0 4px;
 }
-.qsection-blurb {
-	font-size: 13px;
-	color: var(--ink-soft);
-	line-height: 1.5;
-	margin: 0;
-	max-width: 62ch;
-}
-.qsection-summary {
-	font-size: 13px;
-	color: var(--ink-faint);
-	background: var(--line-soft);
-	border-radius: var(--radius-sm);
-	padding: 12px 16px;
-	margin: 0;
-}
 
 /* ── Question state flags ────────────────────────────────────────────── */
 .qhead {
@@ -745,32 +692,14 @@ body {
 	border-radius: 6px;
 	padding: 3px 7px;
 	white-space: nowrap;
-}
-.qflag-assumed {
 	color: var(--ink-faint);
 	background: var(--line-soft);
-}
-.qflag-open {
-	color: var(--open);
-	background: var(--open-bg);
-}
-.card-open {
-	border-color: #ccd3e8;
-}
-.qassumed {
-	font-size: 12px;
-	color: var(--ink-faint);
-	margin: 12px 0 0;
 }
 /* An assumed answer is shown as chosen, but muted: it is the tool's guess,
    not the user's. */
 .choice.on.faint,
 .band.on.faint {
 	opacity: 0.62;
-}
-.choice-unsure,
-.band-unsure {
-	border-style: dashed;
 }
 
 /* ── Off-the-blessed-path warning, shown at the point of choice ──────── */
@@ -846,16 +775,58 @@ body {
 	border-radius: 6px;
 	padding: 4px 9px;
 }
-.section-lede {
-	font-size: 13px;
-	color: var(--ink-soft);
-	line-height: 1.55;
-	margin: 0 0 14px;
-	max-width: 70ch;
-}
 .record-open span:last-child {
 	color: var(--open);
 }
 .record-assumed span:last-child {
 	color: var(--ink-faint);
+}
+
+/* ── Rail ────────────────────────────────────────────────────────────── */
+/* Just the derived size, and anything steered off the standard path. The
+   full set of requirements belongs on the artifact, not beside the form. */
+.stat {
+	margin-bottom: 26px;
+}
+.stat-k {
+	display: block;
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--ink-faint);
+}
+.stat-v {
+	display: block;
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: 27px;
+	letter-spacing: -0.02em;
+	margin-top: 3px;
+}
+.flags {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.flag {
+	display: flex;
+	align-items: baseline;
+	gap: 9px;
+	font-size: 12.5px;
+	line-height: 1.45;
+	color: var(--ink-soft);
+}
+.flag-dot {
+	flex: none;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--offdef);
+	transform: translateY(-1px);
+}
+.flag-block {
+	color: var(--block);
+}
+.flag-block .flag-dot {
+	background: var(--block);
 }

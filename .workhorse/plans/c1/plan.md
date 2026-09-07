@@ -82,3 +82,25 @@ Two things this machine needed before the project would build and run:
   `DATABASE_URL=postgres://edwin@127.0.0.1:5433/pollen`.
 - `PORT` is set in the shell environment and the server rejects it alongside
   `BIND_ADDRESS`, so the API is started with `env -u PORT`.
+
+## Cutting the noise
+
+A pass over everything on screen, keeping only what helps the reader decide.
+
+- **The rail carries a size and nothing else** until a choice goes off the
+  standard path. It used to show a verdict banner, four counters, and the full
+  consequence ledger — nine cards before a single question was answered. The
+  ordinary requirements that follow from a supported setup belong on the
+  artifact, not beside the form.
+- **The verdict renders only when there is a problem.** A banner announcing that
+  all is well is noise on every artifact that has no problem, and it was doubling
+  its own message in a subtitle.
+- **One signal per state.** An assumed answer showed a chip, a muted tick, and a
+  sentence of explanation; it now shows the muted tick and the word "Assumed".
+  The "For BES to confirm" chip is gone — the artifact lists the open items.
+- **Section blurbs are gone**, and the `blurb` field with them, so nothing
+  carries dead data. Headings group the questions on their own.
+- **Ruleset copy trimmed.** Help text that restated its own label, notes that
+  duplicated the option's warning, and reassurance ("rough numbers are fine")
+  are cut. Where a note and a warning said the same thing, the warning stays,
+  because it appears at the point of choice.

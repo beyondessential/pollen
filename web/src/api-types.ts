@@ -308,7 +308,6 @@ export interface components {
         };
         /** @description A named group of questions, presented together. */
         Section: {
-            blurb?: string | null;
             /** @description Collapsed on arrival, for sections a non-technical user can skip. */
             collapsed?: boolean;
             id: string;

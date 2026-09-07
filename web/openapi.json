@@ -701,12 +701,6 @@
           "label"
         ],
         "properties": {
-          "blurb": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
           "collapsed": {
             "type": "boolean",
             "description": "Collapsed on arrival, for sections a non-technical user can skip."

@@ -24,9 +24,10 @@ async fn create_patch_finalise_fork_lifecycle() {
 		assert_eq!(created["update_available"], false);
 		let id = created["id"].as_str().unwrap().to_owned();
 
-		// A complete, blocking configuration: Tupaia on but backups disabled.
-		// Every visible question is answered (so finalise is allowed); platform,
-		// retention, and hosted-integration stay hidden here.
+		// A complete, blocking configuration: dashboards on but backups disabled.
+		// Every visible question is answered, so nothing is assumed and nothing
+		// is left open; platform, on-prem form, retention, and hosted-integration
+		// stay hidden with an all-cloud mix and backups declined.
 		let answers = json!({
 			"tupaia": "yes",
 			"integrations": ["none"],
@@ -34,7 +35,7 @@ async fn create_patch_finalise_fork_lifecycle() {
 			"facilities": "f0",
 			"mobile": "m0",
 			"central": "bescloud",
-			"facility_mix": ["bescloud"],
+			"hosting_mix": { "bescloud": 100 },
 			"region": "sydney",
 			"backup_capability": "no",
 			"cadence": "release",
@@ -51,6 +52,9 @@ async fn create_patch_finalise_fork_lifecycle() {
 			.json();
 		assert_eq!(patched["status"], "draft");
 		assert_eq!(patched["evaluation"]["verdict"], "Blocking");
+		// Answered outright: this is a complete plan, not an interim one.
+		assert_eq!(patched["evaluation"]["open_items"], json!([]));
+		assert_eq!(patched["evaluation"]["assumed"], json!([]));
 
 		// Get round-trips the same state.
 		let fetched: Value = server
@@ -173,7 +177,7 @@ async fn stale_finalised_plan_also_offers_an_update() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn finalise_requires_all_questions_answered() {
+async fn finalise_requires_only_the_sizing_questions() {
 	run_server(|server, _conn| async move {
 		let created: Value = server
 			.post("/api/applications/create")
@@ -182,19 +186,51 @@ async fn finalise_requires_all_questions_answered() {
 			.json();
 		let id = created["id"].as_str().unwrap().to_owned();
 
-		// Only one of many visible questions answered.
+		// The sizing questions have no blessed default, so they still gate
+		// finalising however much else is filled in.
 		server
 			.post("/api/applications/patch")
 			.json(&json!({ "id": id, "answers": { "tupaia": "yes" } }))
 			.await
 			.assert_status_ok();
-
-		// Finalising an incomplete plan is rejected.
 		server
 			.post("/api/applications/finalise")
 			.json(&json!({ "id": id }))
 			.await
 			.assert_status(StatusCode::BAD_REQUEST);
+
+		// With those answered, the plan finalises even though the technical
+		// questions were never opened: the rest is assumed or left open.
+		let patched: Value = server
+			.post("/api/applications/patch")
+			.json(&json!({
+				"id": id,
+				"answers": { "catchment": "c1", "facilities": "f1" },
+			}))
+			.await
+			.json();
+		assert_eq!(patched["evaluation"]["required"], json!([]));
+		assert!(
+			!patched["evaluation"]["open_items"]
+				.as_array()
+				.unwrap()
+				.is_empty(),
+			"the untouched policy questions should be open items"
+		);
+		assert!(
+			!patched["evaluation"]["assumed"]
+				.as_array()
+				.unwrap()
+				.is_empty(),
+			"the untouched technical questions should take their defaults"
+		);
+
+		let finalised: Value = server
+			.post("/api/applications/finalise")
+			.json(&json!({ "id": id }))
+			.await
+			.json();
+		assert_eq!(finalised["status"], "finalised");
 	})
 	.await;
 }

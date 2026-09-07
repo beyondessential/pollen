@@ -137,10 +137,13 @@ export interface components {
             /** Format: uuid */
             parent_id?: string | null;
             questions: components["schemas"]["QuestionView"][];
+            /** @description The flow's sections, in presentation order. */
+            sections: components["schemas"]["Section"][];
             status: components["schemas"]["ApplicationStatus"];
             /**
-             * @description True for a draft bound to a ruleset other than the current bundled
-             *     default — i.e. a newer default is available to update to.
+             * @description True when the plan is bound to a ruleset other than the current bundled
+             *     default — a newer default is available. A draft updates in place; a
+             *     finalised plan spawns a new draft on the new ruleset.
              */
             update_available: boolean;
         };
@@ -149,6 +152,11 @@ export interface components {
          * @enum {string}
          */
         ApplicationStatus: "draft" | "finalised";
+        /** @description A default the engine applied because the question was left unanswered. */
+        Assumed: {
+            option: string;
+            question: string;
+        };
         /**
          * @description Which reader a consequence is grouped under in the by-audience view.
          * @enum {string}
@@ -177,6 +185,11 @@ export interface components {
             config_branch?: string | null;
         };
         Evaluation: {
+            /**
+             * @description Visible questions left unanswered whose blessed-path default the engine
+             *     applied on the user's behalf (spec WIZ, assumed defaults).
+             */
+            assumed: components["schemas"]["Assumed"][];
             /** @description Every triggered consequence, in ruleset order. */
             consequences: components["schemas"]["TriggeredConsequence"][];
             /** @description Derived values keyed by derivation id (e.g. `size` → `Medium`). */
@@ -185,6 +198,16 @@ export interface components {
             };
             /** @description Guidance whose condition currently holds. */
             guidance: components["schemas"]["TriggeredGuidance"][];
+            /**
+             * @description Visible questions the user marked unsure, or left blank where an unsure
+             *     option was available. These make the artifact interim.
+             */
+            open_items: string[];
+            /**
+             * @description Visible questions that must be answered: no default to fall back on and
+             *     no unsure option to decline with. These block finalising.
+             */
+            required: string[];
             verdict: components["schemas"]["Verdict"];
             /**
              * @description The ids of questions currently shown, in ruleset order (spec WIZ,
@@ -225,6 +248,16 @@ export interface components {
             id: string;
             label: string;
             note?: string | null;
+            /**
+             * @description This option means "I don't know". Choosing it assumes nothing and
+             *     records the question as an open item (spec WIZ, open items).
+             */
+            unsure?: boolean;
+            /**
+             * @description Shown inline when this option is selected, so the cost of leaving the
+             *     blessed path lands at the point of choice.
+             */
+            warn?: string | null;
         };
         PatchArgs: {
             /** @description Answers keyed by question id; each value is an option id or a list of them. */
@@ -258,17 +291,28 @@ export interface components {
             type: string;
         };
         /** @enum {string} */
-        QuestionKind: "Single" | "Multi" | "Band";
+        QuestionKind: "Single" | "Multi" | "Band" | "Mix";
         /**
          * @description A question's render metadata (the engine decides visibility; see
          *     `Evaluation::visible_questions`).
          */
         QuestionView: {
+            /** @description The option assumed when this is left blank, if any. */
+            default?: string | null;
             help?: string | null;
             id: string;
             kind: components["schemas"]["QuestionKind"];
             label: string;
             options: components["schemas"]["Opt"][];
+            section?: string | null;
+        };
+        /** @description A named group of questions, presented together. */
+        Section: {
+            blurb?: string | null;
+            /** @description Collapsed on arrival, for sections a non-technical user can skip. */
+            collapsed?: boolean;
+            id: string;
+            label: string;
         };
         /**
          * @description The viability axis (spec WIZ, Severity).

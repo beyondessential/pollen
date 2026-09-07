@@ -23,6 +23,8 @@
 	--offdef-bg: #fbf1dc;
 	--block: #b23a3a;
 	--block-bg: #f7e4e1;
+	--open: #5a6b9a;
+	--open-bg: #eceffa;
 
 	--font-display: "Space Grotesk", system-ui, sans-serif;
 	--font-body: "Inter", system-ui, sans-serif;
@@ -689,4 +691,171 @@ body {
 		color: inherit;
 		text-decoration: none;
 	}
+}
+
+/* ── Question sections ───────────────────────────────────────────────── */
+/* The flow is grouped so a non-technical reader can stop after the
+   essentials; the technical group arrives collapsed. */
+.qsection {
+	margin-bottom: 30px;
+}
+.qsection-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	margin: 0 2px 14px;
+}
+.qsection-title {
+	font-family: var(--font-display);
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--navy);
+	margin: 0 0 4px;
+}
+.qsection-blurb {
+	font-size: 13px;
+	color: var(--ink-soft);
+	line-height: 1.5;
+	margin: 0;
+	max-width: 62ch;
+}
+.qsection-summary {
+	font-size: 13px;
+	color: var(--ink-faint);
+	background: var(--line-soft);
+	border-radius: var(--radius-sm);
+	padding: 12px 16px;
+	margin: 0;
+}
+
+/* ── Question state flags ────────────────────────────────────────────── */
+.qhead {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+.qflag {
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	border-radius: 6px;
+	padding: 3px 7px;
+	white-space: nowrap;
+}
+.qflag-assumed {
+	color: var(--ink-faint);
+	background: var(--line-soft);
+}
+.qflag-open {
+	color: var(--open);
+	background: var(--open-bg);
+}
+.card-open {
+	border-color: #ccd3e8;
+}
+.qassumed {
+	font-size: 12px;
+	color: var(--ink-faint);
+	margin: 12px 0 0;
+}
+/* An assumed answer is shown as chosen, but muted: it is the tool's guess,
+   not the user's. */
+.choice.on.faint,
+.band.on.faint {
+	opacity: 0.62;
+}
+.choice-unsure,
+.band-unsure {
+	border-style: dashed;
+}
+
+/* ── Off-the-blessed-path warning, shown at the point of choice ──────── */
+.warn {
+	display: flex;
+	gap: 9px;
+	padding: 11px 14px;
+	margin-top: 14px;
+	background: var(--offdef-bg);
+	border: 1px solid #ecd9ae;
+	border-radius: 10px;
+	font-size: 13px;
+	color: #7d5312;
+	line-height: 1.45;
+}
+
+/* ── Percentage mix ──────────────────────────────────────────────────── */
+.mix {
+	display: grid;
+	gap: 14px;
+}
+.mix-row {
+	border: 1px solid var(--line);
+	border-radius: 11px;
+	padding: 13px 15px;
+	background: var(--surface);
+	transition: border-color 0.14s;
+}
+.mix-row.on {
+	border-color: var(--navy);
+}
+.mix-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+}
+.mix-label {
+	font-size: 13.5px;
+	font-weight: 500;
+}
+.mix-pct {
+	font-family: var(--font-mono);
+	font-size: 13px;
+	color: var(--ink-soft);
+}
+.mix-range {
+	width: 100%;
+	margin: 10px 0 0;
+	accent-color: var(--navy);
+	cursor: pointer;
+}
+.mix-note {
+	font-size: 12.5px;
+	color: var(--ink-soft);
+	line-height: 1.5;
+	margin: 8px 0 0;
+}
+
+/* ── Interim artifact ────────────────────────────────────────────────── */
+.badge-interim {
+	display: inline-block;
+	vertical-align: middle;
+	margin-left: 12px;
+	font-family: var(--font-body);
+	font-size: 11.5px;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--open);
+	background: var(--open-bg);
+	border: 1px solid #ccd3e8;
+	border-radius: 6px;
+	padding: 4px 9px;
+}
+.section-lede {
+	font-size: 13px;
+	color: var(--ink-soft);
+	line-height: 1.55;
+	margin: 0 0 14px;
+	max-width: 70ch;
+}
+.record-open span:last-child {
+	color: var(--open);
+}
+.record-assumed span:last-child {
+	color: var(--ink-faint);
 }

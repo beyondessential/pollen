@@ -7,6 +7,8 @@ import {
 	type AppView,
 	AUDIENCE_LABEL,
 	type Audience,
+	asShares,
+	isAnswered,
 	type QuestionView,
 	TOPIC_LABEL,
 	TOPIC_ORDER,
@@ -32,9 +34,13 @@ export default function Artifact({ view }: { view: AppView }) {
 		(c) => c.consequence.severity === "NonDefault",
 	).length;
 	const blocking = ev.consequences.filter((c) => c.consequence.severity === "Blocking").length;
-	const started = Object.values(answers).some((v) =>
-		Array.isArray(v) ? v.length > 0 : v != null && v !== "",
-	);
+	const started = Object.values(answers).some(isAnswered);
+	const byId = new Map(view.questions.map((q) => [q.id, q]));
+	const assumedBy = new Map(ev.assumed.map((a) => [a.question, a.option]));
+	// An artifact is interim when questions were deliberately left open. It is a
+	// normal finalised artifact in every other respect — the gaps are recorded
+	// rather than guessed, and completing it is a new version.
+	const interim = ev.open_items.length > 0;
 
 	const groups = useMemo(() => {
 		const q = query.trim().toLowerCase();
@@ -83,7 +89,10 @@ export default function Artifact({ view }: { view: AppView }) {
 		<div className="sheet">
 			<div className="sheet-head">
 				<div>
-					<h2 className="sheet-title">{ev.derived["size"] ?? "Unsized"} deployment</h2>
+					<h2 className="sheet-title">
+						{ev.derived["size"] ?? "Unsized"} deployment
+						{interim && <span className="badge-interim">Interim</span>}
+					</h2>
 					<div className="sheet-facts">
 						<span>{topology(view.questions, answers)}</span>
 						{regionLabel(view.questions, answers) && (
@@ -102,10 +111,29 @@ export default function Artifact({ view }: { view: AppView }) {
 					verdict={ev.verdict}
 					offDefault={offDefault}
 					blocking={blocking}
+					openItems={ev.open_items.length}
 					started={started}
 					big
 				/>
 			</div>
+
+			{interim && (
+				<section className="sheet-section" id="s-open">
+					<h3 className="sheet-section-title">To confirm with BES</h3>
+					<p className="section-lede">
+						These were left open rather than guessed. Everything below is sound on what was
+						answered; settling these produces the complete version.
+					</p>
+					<div className="record">
+						{ev.open_items.map((qid) => (
+							<div className="record-row record-open" key={qid}>
+								<span>{byId.get(qid)?.label ?? qid}</span>
+								<span className="mono">Not yet decided</span>
+							</div>
+						))}
+					</div>
+				</section>
+			)}
 
 			<div className="sheet-controls">
 				<div className="tg-group">
@@ -139,7 +167,7 @@ export default function Artifact({ view }: { view: AppView }) {
 						Download PDF
 					</button>
 					<button type="button" className="btn ghost" disabled={busy} onClick={makeNewVersion}>
-						Make changes
+						{interim ? "Complete this plan" : "Make changes"}
 					</button>
 				</div>
 			</div>
@@ -159,13 +187,39 @@ export default function Artifact({ view }: { view: AppView }) {
 				))
 			)}
 
+			{ev.assumed.length > 0 && (
+				<section className="sheet-section" id="s-assumed">
+					<h3 className="sheet-section-title">Assumptions</h3>
+					<p className="section-lede">
+						Left blank, so the standard supported setup was taken. Correct any of these in a new
+						version.
+					</p>
+					<div className="record">
+						{ev.assumed.map((a) => (
+							<div className="record-row record-assumed" key={a.question}>
+								<span>{byId.get(a.question)?.label ?? a.question}</span>
+								<span className="mono">{optionLabel(byId.get(a.question), a.option)}</span>
+							</div>
+						))}
+					</div>
+				</section>
+			)}
+
 			<section className="sheet-section">
 				<h3 className="sheet-section-title">Full decision record</h3>
 				<div className="record">
 					{view.questions.map((q) => (
 						<div className="record-row" key={q.id}>
 							<span>{q.label}</span>
-							<span className="mono">{answerLabel(q, answers[q.id])}</span>
+							<span className="mono">
+								{isAnswered(answers[q.id])
+									? answerLabel(q, answers[q.id])
+									: assumedBy.has(q.id)
+										? `${optionLabel(q, assumedBy.get(q.id) ?? "")} (assumed)`
+										: ev.open_items.includes(q.id)
+											? "Not yet decided"
+											: "—"}
+							</span>
 						</div>
 					))}
 				</div>
@@ -192,16 +246,27 @@ function groupConsequences(items: TriggeredConsequence[], grouping: Grouping): G
 	}));
 }
 
+function optionLabel(q: QuestionView | undefined, id: string): string {
+	return q?.options.find((o) => o.id === id)?.label ?? id;
+}
+
 function answerLabel(q: QuestionView, value: AnswerValue | undefined): string {
-	if (value == null || (Array.isArray(value) && value.length === 0)) return "—";
-	const label = (id: string) => q.options.find((o) => o.id === id)?.label ?? id;
-	return Array.isArray(value) ? value.map(label).join(", ") : label(value);
+	if (!isAnswered(value)) return "—";
+	if (Array.isArray(value)) return value.map((id) => optionLabel(q, id)).join(", ");
+	if (typeof value === "object") {
+		// A mix reads as the classes actually present, with their shares.
+		return Object.entries(asShares(value))
+			.filter(([, share]) => share > 0)
+			.map(([id, share]) => `${optionLabel(q, id)} ${share}%`)
+			.join(" · ");
+	}
+	return optionLabel(q, value);
 }
 
 function topology(questions: QuestionView[], answers: Record<string, AnswerValue>): string {
 	const central = answerLabel(byId(questions, "central"), answers["central"]);
-	const mix = answerLabel(byId(questions, "facility_mix"), answers["facility_mix"]);
-	return `Central: ${central} · Facilities: ${mix}`;
+	const mix = answerLabel(byId(questions, "hosting_mix"), answers["hosting_mix"]);
+	return `Central: ${central} · Hosting: ${mix}`;
 }
 
 function regionLabel(
@@ -221,6 +286,8 @@ function byId(questions: QuestionView[], id: string): QuestionView {
 			label: id,
 			help: null,
 			options: [],
+			section: null,
+			default: null,
 		}
 	);
 }

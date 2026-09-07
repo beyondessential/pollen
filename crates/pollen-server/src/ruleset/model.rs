@@ -10,6 +10,10 @@ use super::condition::Condition;
 /// rules that fire requirements and consequences, and forward guidance.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Ruleset {
+	/// The flow's sections, in presentation order. Questions name one via
+	/// `Question::section` (spec WIZ, Question flow).
+	#[serde(default)]
+	pub sections: Vec<Section>,
 	pub questions: Vec<Question>,
 	#[serde(default)]
 	pub derivations: Vec<Derivation>,
@@ -71,6 +75,14 @@ pub struct Question {
 	pub help: Option<String>,
 	#[serde(default)]
 	pub options: Vec<Opt>,
+	/// Which section of the flow this question sits in. Unset means the first.
+	#[serde(default)]
+	pub section: Option<String>,
+	/// The option id assumed when the question is visible but left unanswered
+	/// (spec WIZ, assumed defaults). A question with no default and no `unsure`
+	/// option must be answered.
+	#[serde(default)]
+	pub default: Option<String>,
 	/// Shown only when this holds; otherwise hidden (spec WIZ, visibility).
 	#[serde(default = "Condition::always")]
 	pub visible_if: Condition,
@@ -92,6 +104,9 @@ pub enum QuestionKind {
 	Multi,
 	/// Pick one option from an ordered set of bands (low to high).
 	Band,
+	/// Split a rough percentage across the options (they sum to 100). A class
+	/// is present when its share is above zero.
+	Mix,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
@@ -104,6 +119,26 @@ pub struct Opt {
 	/// any other clears this one (e.g. a "none of these" choice).
 	#[serde(default)]
 	pub exclusive: bool,
+	/// This option means "I don't know". Choosing it assumes nothing and
+	/// records the question as an open item (spec WIZ, open items).
+	#[serde(default)]
+	pub unsure: bool,
+	/// Shown inline when this option is selected, so the cost of leaving the
+	/// blessed path lands at the point of choice.
+	#[serde(default)]
+	pub warn: Option<String>,
+}
+
+/// A named group of questions, presented together.
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
+pub struct Section {
+	pub id: String,
+	pub label: String,
+	#[serde(default)]
+	pub blurb: Option<String>,
+	/// Collapsed on arrival, for sections a non-technical user can skip.
+	#[serde(default)]
+	pub collapsed: bool,
 }
 
 /// A value derived from answers, surfaced in the artifact (e.g. the size band).

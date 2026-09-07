@@ -122,12 +122,16 @@ export function VerdictBanner({
 	verdict,
 	offDefault,
 	blocking,
+	openItems = 0,
 	started = true,
 	big = false,
 }: {
 	verdict: Verdict;
 	offDefault: number;
 	blocking: number;
+	/// Questions left unanswered on purpose. The verdict still stands on what
+	/// *was* answered, but it is provisional until these are settled.
+	openItems?: number;
 	/// Whether any choice has been made yet. Before then there's no verdict to
 	/// report — only an empty form.
 	started?: boolean;
@@ -153,6 +157,10 @@ export function VerdictBanner({
 			: verdict === "NonDefault"
 				? `${offDefault} choice${offDefault === 1 ? "" : "s"} off the default path. This will be harder to support.`
 				: "No off-default choices recorded.";
+	const provisional =
+		openItems > 0
+			? ` Provisional: ${openItems} question${openItems === 1 ? "" : "s"} still open.`
+			: "";
 	return (
 		<div
 			className={`verdict${big ? " verdict-big" : ""}`}
@@ -160,7 +168,10 @@ export function VerdictBanner({
 		>
 			<div>
 				<div className="verdict-t">{m.title}</div>
-				<div className="verdict-s">{subtitle}</div>
+				<div className="verdict-s">
+					{subtitle}
+					{provisional}
+				</div>
 			</div>
 		</div>
 	);

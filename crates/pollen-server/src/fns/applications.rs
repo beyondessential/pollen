@@ -14,7 +14,8 @@ use uuid::Uuid;
 use crate::db::{Application, ApplicationStatus, ConfigRow};
 use crate::error::{AppError, Result};
 use crate::ruleset::{
-	Answers, Evaluation, Opt, Question, QuestionKind, ResolvedRuleset, Ruleset, evaluate, migrate,
+	Answers, Evaluation, Opt, Question, QuestionKind, ResolvedRuleset, Ruleset, Section, evaluate,
+	migrate,
 };
 use crate::state::AppState;
 
@@ -33,6 +34,8 @@ pub struct AppView {
 	/// default — a newer default is available. A draft updates in place; a
 	/// finalised plan spawns a new draft on the new ruleset.
 	pub update_available: bool,
+	/// The flow's sections, in presentation order.
+	pub sections: Vec<Section>,
 	pub questions: Vec<QuestionView>,
 	pub answers: Value,
 	pub evaluation: Evaluation,
@@ -48,6 +51,9 @@ pub struct QuestionView {
 	pub label: String,
 	pub help: Option<String>,
 	pub options: Vec<Opt>,
+	pub section: Option<String>,
+	/// The option assumed when this is left blank, if any.
+	pub default: Option<String>,
 }
 
 impl From<&Question> for QuestionView {
@@ -58,6 +64,8 @@ impl From<&Question> for QuestionView {
 			label: q.label.clone(),
 			help: q.help.clone(),
 			options: q.options.clone(),
+			section: q.section.clone(),
+			default: q.default.clone(),
 		}
 	}
 }
@@ -198,15 +206,12 @@ pub async fn finalise(
 	let ruleset = load_ruleset(&mut conn, &app.config_hash).await?;
 	let answers: Answers = serde_json::from_value(app.answers.clone()).map_err(AppError::custom)?;
 	let evaluation = evaluate(&ruleset, &answers);
-	// Every visible question must be answered; answering can reveal more, so
-	// "all visible answered" means the form is complete.
-	if evaluation
-		.visible_questions
-		.iter()
-		.any(|qid| !answers.answered(qid))
-	{
+	// Only questions with no default and no way to decline block finalising.
+	// Anything the user marked unsure finalises as an interim artifact, with
+	// the gap recorded as an open item (spec WIZ, interim artifacts).
+	if !evaluation.required.is_empty() {
 		return Err(AppError::BadRequest(
-			"answer every question before finalising".into(),
+			"answer the required questions before finalising".into(),
 		));
 	}
 	let app = Application::finalise(&mut conn, args.id).await?;
@@ -337,6 +342,7 @@ fn build_view(
 		finalised_at: app.finalised_at,
 		config_hash: app.config_hash,
 		update_available,
+		sections: ruleset.sections.clone(),
 		questions: ruleset.questions.iter().map(QuestionView::from).collect(),
 		answers: app.answers,
 		evaluation,

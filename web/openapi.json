@@ -231,6 +231,7 @@
           "created_at",
           "config_hash",
           "update_available",
+          "sections",
           "questions",
           "answers",
           "evaluation"
@@ -281,12 +282,19 @@
               "$ref": "#/components/schemas/QuestionView"
             }
           },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Section"
+            },
+            "description": "The flow's sections, in presentation order."
+          },
           "status": {
             "$ref": "#/components/schemas/ApplicationStatus"
           },
           "update_available": {
             "type": "boolean",
-            "description": "True for a draft bound to a ruleset other than the current bundled\ndefault — i.e. a newer default is available to update to."
+            "description": "True when the plan is bound to a ruleset other than the current bundled\ndefault — a newer default is available. A draft updates in place; a\nfinalised plan spawns a new draft on the new ruleset."
           }
         }
       },
@@ -297,6 +305,22 @@
           "draft",
           "finalised"
         ]
+      },
+      "Assumed": {
+        "type": "object",
+        "description": "A default the engine applied because the question was left unanswered.",
+        "required": [
+          "question",
+          "option"
+        ],
+        "properties": {
+          "option": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string"
+          }
+        }
       },
       "Audience": {
         "type": "string",
@@ -395,9 +419,19 @@
           "visible_questions",
           "consequences",
           "guidance",
+          "assumed",
+          "open_items",
+          "required",
           "verdict"
         ],
         "properties": {
+          "assumed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Assumed"
+            },
+            "description": "Visible questions left unanswered whose blessed-path default the engine\napplied on the user's behalf (spec WIZ, assumed defaults)."
+          },
           "consequences": {
             "type": "array",
             "items": {
@@ -421,6 +455,20 @@
               "$ref": "#/components/schemas/TriggeredGuidance"
             },
             "description": "Guidance whose condition currently holds."
+          },
+          "open_items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Visible questions the user marked unsure, or left blank where an unsure\noption was available. These make the artifact interim."
+          },
+          "required": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Visible questions that must be answered: no default to fall back on and\nno unsure option to decline with. These block finalising."
           },
           "verdict": {
             "$ref": "#/components/schemas/Verdict"
@@ -525,6 +573,17 @@
               "string",
               "null"
             ]
+          },
+          "unsure": {
+            "type": "boolean",
+            "description": "This option means \"I don't know\". Choosing it assumes nothing and\nrecords the question as an open item (spec WIZ, open items)."
+          },
+          "warn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Shown inline when this option is selected, so the cost of leaving the\nblessed path lands at the point of choice."
           }
         }
       },
@@ -584,7 +643,8 @@
         "enum": [
           "Single",
           "Multi",
-          "Band"
+          "Band",
+          "Mix"
         ]
       },
       "QuestionView": {
@@ -597,6 +657,13 @@
           "options"
         ],
         "properties": {
+          "default": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The option assumed when this is left blank, if any."
+          },
           "help": {
             "type": [
               "string",
@@ -617,6 +684,38 @@
             "items": {
               "$ref": "#/components/schemas/Opt"
             }
+          },
+          "section": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Section": {
+        "type": "object",
+        "description": "A named group of questions, presented together.",
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "blurb": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "collapsed": {
+            "type": "boolean",
+            "description": "Collapsed on arrival, for sections a non-technical user can skip."
+          },
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
           }
         }
       },

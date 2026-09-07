@@ -10,12 +10,14 @@ use serde::{Deserialize, Serialize};
 #[serde(transparent)]
 pub struct Answers(pub BTreeMap<String, Answer>);
 
-/// A single-select / band answer is one option id; a multi-select is many.
+/// A single-select / band answer is one option id; a multi-select is many; a
+/// mix is a percentage share per option id.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Answer {
 	One(String),
 	Many(Vec<String>),
+	Mix(BTreeMap<String, u32>),
 }
 
 impl Answers {
@@ -35,12 +37,27 @@ impl Answers {
 		}
 	}
 
+	/// The percentage share an option holds in a mix question (0 when absent).
+	pub fn share(&self, question: &str, option: &str) -> u32 {
+		match self.0.get(question) {
+			Some(Answer::Mix(m)) => m.get(option).copied().unwrap_or(0),
+			_ => 0,
+		}
+	}
+
 	/// Whether the question has any answer at all.
 	pub fn answered(&self, question: &str) -> bool {
 		match self.0.get(question) {
 			Some(Answer::One(v)) => !v.is_empty(),
 			Some(Answer::Many(v)) => !v.is_empty(),
+			// A mix with every share at zero says nothing, so it isn't an answer.
+			Some(Answer::Mix(m)) => m.values().any(|v| *v > 0),
 			None => false,
 		}
+	}
+
+	/// Record an answer, used to apply assumed defaults before evaluation.
+	pub fn set(&mut self, question: &str, answer: Answer) {
+		self.0.insert(question.to_string(), answer);
 	}
 }

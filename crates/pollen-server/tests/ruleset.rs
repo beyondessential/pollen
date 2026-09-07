@@ -1,5 +1,8 @@
 //! The v1 ruleset parses, validates, hashes deterministically, and evaluates to
-//! the expected verdicts/consequences for representative configurations.
+//! the expected verdicts/consequences for representative configurations —
+//! including the escape hatches a non-technical user relies on: assumed
+//! defaults, "I'm not sure" open items, and the questions that still must be
+//! answered.
 
 use pollen_server::ruleset::{
 	Answers, Ruleset, Verdict, evaluate,
@@ -19,6 +22,21 @@ fn answers(value: serde_json::Value) -> Answers {
 
 fn fired_ids(eval: &pollen_server::ruleset::Evaluation) -> Vec<&str> {
 	eval.consequences.iter().map(|c| c.id.as_str()).collect()
+}
+
+/// The three sizing bands, so a test can focus on what it's actually asserting
+/// without leaving the required questions unanswered.
+fn sized() -> serde_json::Value {
+	json!({ "catchment": "c0", "facilities": "f0", "mobile": "m0" })
+}
+
+/// Merge extra answers over a base object.
+fn with(base: serde_json::Value, extra: serde_json::Value) -> Answers {
+	let mut base = base.as_object().cloned().expect("object");
+	for (k, v) in extra.as_object().expect("object") {
+		base.insert(k.clone(), v.clone());
+	}
+	answers(serde_json::Value::Object(base))
 }
 
 #[test]
@@ -43,8 +61,8 @@ fn canonical_hash_is_deterministic() {
 
 #[test]
 fn demo_config_is_blocking() {
-	// The prototype's demo config: Tupaia on, backups disabled, Windows,
-	// other AWS region, hybrid cloud + on-prem, infrequent upgrades.
+	// Tupaia on but backups disabled, Windows, another AWS region, a hybrid
+	// cloud/client-hosted/Iti split, infrequent upgrades.
 	let eval = evaluate(
 		&v1(),
 		&answers(json!({
@@ -55,7 +73,8 @@ fn demo_config_is_blocking() {
 			"facilities": "f2",
 			"mobile": "m2",
 			"central": "bescloud",
-			"facility_mix": ["bescloud", "baremetal", "iti"],
+			"hosting_mix": { "bescloud": 40, "clienthosted": 40, "iti": 20 },
+			"onprem_form": "baremetal",
 			"region": "otheraws",
 			"platform": "windows",
 			"backup_capability": "no",
@@ -63,6 +82,7 @@ fn demo_config_is_blocking() {
 			"dns": "client",
 			"remote": "other",
 			"timesync": "outbound",
+			"telemetry": "yes",
 		})),
 	);
 
@@ -91,9 +111,9 @@ fn demo_config_is_blocking() {
 			"expected {expected} to fire; got {ids:?}"
 		);
 	}
-	// Not fired: the client hosts integrations; no virtualized facilities.
+	// Not fired: the client hosts integrations; the servers aren't virtualised.
 	assert!(!ids.contains(&"int-hosted"));
-	assert!(!ids.contains(&"prov-virtualized"));
+	assert!(!ids.contains(&"prov-virtualised"));
 }
 
 #[test]
@@ -119,7 +139,7 @@ fn default_path_is_clear() {
 			"facilities": "f0",
 			"mobile": "m0",
 			"central": "bescloud",
-			"facility_mix": ["bescloud"],
+			"hosting_mix": { "bescloud": 100 },
 			"region": "sydney",
 			"backup_capability": "yes",
 			"retention": "full",
@@ -128,6 +148,7 @@ fn default_path_is_clear() {
 			"dns_arrangement": "bes_subdomain",
 			"remote": "tailscale",
 			"timesync": "internal",
+			"telemetry": "yes",
 		})),
 	);
 
@@ -137,13 +158,173 @@ fn default_path_is_clear() {
 	assert!(ids.contains(&"dns-bes-subdomain"));
 	assert!(!ids.contains(&"region-other"));
 	assert!(!ids.contains(&"plat-windows"));
+	// Nothing was guessed and nothing is outstanding.
+	assert!(eval.assumed.is_empty(), "assumed: {:?}", eval.assumed);
+	assert!(eval.open_items.is_empty());
+	assert!(eval.required.is_empty());
 }
+
+// ── The escape hatches ──────────────────────────────────────────────────────
+
+#[test]
+fn only_the_sizing_bands_must_be_answered() {
+	// An empty plan: catchment and facilities are the whole of what's required,
+	// so a non-technical user is never blocked on a question they can't answer.
+	let eval = evaluate(&v1(), &answers(json!({})));
+	assert_eq!(eval.required, vec!["catchment", "facilities"]);
+
+	// Once those two are given, nothing blocks finalising.
+	let eval = evaluate(
+		&v1(),
+		&answers(json!({ "catchment": "c1", "facilities": "f1" })),
+	);
+	assert!(
+		eval.required.is_empty(),
+		"still required: {:?}",
+		eval.required
+	);
+}
+
+#[test]
+fn unanswered_questions_take_their_blessed_default() {
+	// Answer only the essentials; everything with a default is filled in.
+	let eval = evaluate(&v1(), &answers(sized()));
+	let assumed: Vec<(&str, &str)> = eval
+		.assumed
+		.iter()
+		.map(|a| (a.question.as_str(), a.option.as_str()))
+		.collect();
+
+	for expected in [
+		("tupaia", "yes"),
+		("hosting_mix", "clienthosted"),
+		("central", "bescloud"),
+		("platform", "linuxarm"),
+		("remote", "tailscale"),
+		("timesync", "outbound"),
+		("cadence", "asneeded"),
+	] {
+		assert!(
+			assumed.contains(&expected),
+			"expected {expected:?} to be assumed; got {assumed:?}"
+		);
+	}
+	// The assumptions are live: the blessed platform's consequence fires.
+	assert!(fired_ids(&eval).contains(&"plat-image"));
+}
+
+#[test]
+fn a_default_can_reveal_a_question_that_is_itself_defaulted() {
+	// hosting_mix defaults to client-hosted, which reveals the provisioning and
+	// OS questions, which have defaults of their own. A single pass would miss
+	// them, so the engine runs defaults to a fixed point.
+	let eval = evaluate(&v1(), &answers(sized()));
+	let assumed: Vec<&str> = eval.assumed.iter().map(|a| a.question.as_str()).collect();
+	assert!(assumed.contains(&"hosting_mix"));
+	assert!(
+		assumed.contains(&"onprem_form"),
+		"a question revealed by an assumption should be assumed too; got {assumed:?}"
+	);
+	assert!(assumed.contains(&"platform"));
+}
+
+#[test]
+fn policy_questions_are_never_guessed() {
+	// Backups, DNS and telemetry would materially misstate the estimate if
+	// guessed wrong, so they record as open items instead of taking a default.
+	let eval = evaluate(&v1(), &answers(sized()));
+	for q in ["backup_capability", "dns", "telemetry"] {
+		assert!(
+			eval.open_items.iter().any(|o| o == q),
+			"{q} should be an open item; got {:?}",
+			eval.open_items
+		);
+		assert!(
+			!eval.assumed.iter().any(|a| a.question == q),
+			"{q} should never be assumed"
+		);
+	}
+}
+
+#[test]
+fn choosing_unsure_records_an_open_item_and_asserts_nothing() {
+	let eval = evaluate(&v1(), &with(sized(), json!({ "telemetry": "unsure" })));
+	assert!(eval.open_items.iter().any(|o| o == "telemetry"));
+	// Neither the "allowed" nor the "declined" consequence may fire off an unknown.
+	let ids = fired_ids(&eval);
+	assert!(!ids.contains(&"telemetry-off"));
+	assert!(!ids.contains(&"telemetry-on"));
+}
+
+#[test]
+fn an_unsure_multi_select_is_an_open_item() {
+	// The unsure detection has to reach into multi-selects, not just single ones.
+	let eval = evaluate(&v1(), &with(sized(), json!({ "integrations": ["unsure"] })));
+	assert!(eval.open_items.iter().any(|o| o == "integrations"));
+	assert!(!fired_ids(&eval).contains(&"int-capacity"));
+}
+
+#[test]
+fn an_unsure_band_does_not_size_the_deployment() {
+	// "I'm not sure" sits last in the option list, so a naive ordinal read would
+	// make it the highest band and either inflate or wipe the size.
+	let eval = evaluate(
+		&v1(),
+		&answers(json!({ "catchment": "c1", "facilities": "f0", "mobile": "m_unsure" })),
+	);
+	assert_eq!(eval.derived.get("size").map(String::as_str), Some("Small"));
+	assert!(eval.open_items.iter().any(|o| o == "mobile"));
+}
+
+#[test]
+fn an_unsure_answer_hides_the_questions_it_gates() {
+	// Declining the DNS question suppresses the follow-up rather than asking it
+	// against an unknown.
+	let asked = evaluate(&v1(), &with(sized(), json!({ "dns": "bes" })));
+	assert!(
+		asked
+			.visible_questions
+			.iter()
+			.any(|q| q == "dns_arrangement")
+	);
+
+	let unsure = evaluate(&v1(), &with(sized(), json!({ "dns": "unsure" })));
+	assert!(
+		!unsure
+			.visible_questions
+			.iter()
+			.any(|q| q == "dns_arrangement")
+	);
+	assert!(
+		!unsure
+			.assumed
+			.iter()
+			.any(|a| a.question == "dns_arrangement")
+	);
+}
+
+#[test]
+fn an_unsure_mobile_count_does_not_assert_mobile_clients() {
+	// Rules keyed on "mobile is in play" must not fire off an unknown.
+	let eval = evaluate(
+		&v1(),
+		&with(
+			sized(),
+			json!({ "mobile": "m_unsure", "telemetry": "no", "tupaia": "no", "central": "clienthosted" }),
+		),
+	);
+	let ids = fired_ids(&eval);
+	assert!(!ids.contains(&"block-telemetry-mobile"));
+	assert!(!ids.contains(&"mobile-public-ip"));
+}
+
+// ── Consequences ────────────────────────────────────────────────────────────
 
 #[test]
 fn non_fhir_integration_adds_cost_without_blocking() {
 	let eval = evaluate(
 		&v1(),
-		&answers(json!({ "integrations": ["other_nonfhir"] })),
+		&with(sized(), json!({ "integrations": ["other_nonfhir"] })),
 	);
 	let ids = fired_ids(&eval);
 	assert!(ids.contains(&"int-nonfhir-cost"));
@@ -189,8 +370,26 @@ fn integrations_bump_the_size() {
 
 #[test]
 fn no_dns_is_an_off_default_risk() {
-	let eval = evaluate(&v1(), &answers(json!({ "dns": "local" })));
+	let eval = evaluate(&v1(), &with(sized(), json!({ "dns": "local" })));
 	assert!(fired_ids(&eval).contains(&"dns-local"));
+	assert_eq!(eval.verdict, Verdict::NonDefault);
+}
+
+#[test]
+fn amd64_is_supported_but_carries_a_penalty() {
+	// ARM64 is what BES supports; AMD64 is allowed but must read as off-default.
+	let arm = evaluate(&v1(), &with(sized(), json!({ "platform": "linuxarm" })));
+	assert!(!fired_ids(&arm).contains(&"plat-amd64"));
+
+	let amd = evaluate(&v1(), &with(sized(), json!({ "platform": "linuxamd" })));
+	assert!(fired_ids(&amd).contains(&"plat-amd64"));
+	assert_eq!(amd.verdict, Verdict::NonDefault);
+}
+
+#[test]
+fn client_hosted_central_is_off_default() {
+	let eval = evaluate(&v1(), &with(sized(), json!({ "central": "clienthosted" })));
+	assert!(fired_ids(&eval).contains(&"central-clienthosted"));
 	assert_eq!(eval.verdict, Verdict::NonDefault);
 }
 
@@ -200,7 +399,7 @@ fn self_hosted_central_with_mobile_needs_public_ip() {
 	// BES hosts Central, and not when there are no mobile clients.
 	let onprem = evaluate(
 		&v1(),
-		&answers(json!({ "central": "onprem", "mobile": "m2" })),
+		&answers(json!({ "central": "clienthosted", "mobile": "m2" })),
 	);
 	assert!(fired_ids(&onprem).contains(&"mobile-public-ip"));
 
@@ -212,30 +411,57 @@ fn self_hosted_central_with_mobile_needs_public_ip() {
 
 	let no_mobile = evaluate(
 		&v1(),
-		&answers(json!({ "central": "onprem", "mobile": "m0" })),
+		&answers(json!({ "central": "clienthosted", "mobile": "m0" })),
 	);
 	assert!(!fired_ids(&no_mobile).contains(&"mobile-public-ip"));
 }
 
 #[test]
 fn on_prem_requires_network_setup() {
-	let onprem = evaluate(&v1(), &answers(json!({ "facility_mix": ["baremetal"] })));
+	let onprem = evaluate(
+		&v1(),
+		&with(sized(), json!({ "hosting_mix": { "clienthosted": 100 } })),
+	);
 	assert!(fired_ids(&onprem).contains(&"onprem-network"));
 
-	let cloud = evaluate(&v1(), &answers(json!({ "facility_mix": ["bescloud"] })));
+	let cloud = evaluate(
+		&v1(),
+		&with(
+			sized(),
+			json!({ "central": "bescloud", "hosting_mix": { "bescloud": 100 } }),
+		),
+	);
 	assert!(!fired_ids(&cloud).contains(&"onprem-network"));
 }
 
 #[test]
+fn a_zero_share_is_not_a_presence() {
+	// A class explicitly set to nothing must not bring in its requirements.
+	let eval = evaluate(
+		&v1(),
+		&with(
+			sized(),
+			json!({ "central": "bescloud", "hosting_mix": { "bescloud": 100, "clienthosted": 0, "iti": 0 } }),
+		),
+	);
+	let ids = fired_ids(&eval);
+	assert!(!ids.contains(&"onprem-network"));
+	assert!(!ids.contains(&"iti-note"));
+}
+
+#[test]
 fn declining_telemetry_is_an_off_default_opt_out() {
-	let off = evaluate(&v1(), &answers(json!({ "telemetry": "no" })));
+	let off = evaluate(
+		&v1(),
+		&with(sized(), json!({ "telemetry": "no", "tupaia": "no" })),
+	);
 	assert!(fired_ids(&off).contains(&"telemetry-off"));
 	assert_eq!(off.verdict, Verdict::NonDefault);
 
-	// The outbound allowance only applies when there are on-prem servers.
+	// The outbound allowance only applies when the client hosts servers.
 	let on = evaluate(
 		&v1(),
-		&answers(json!({ "telemetry": "yes", "central": "onprem" })),
+		&answers(json!({ "telemetry": "yes", "central": "clienthosted" })),
 	);
 	let ids = fired_ids(&on);
 	assert!(ids.contains(&"telemetry-on"));
@@ -244,23 +470,26 @@ fn declining_telemetry_is_an_off_default_opt_out() {
 
 #[test]
 fn client_network_items_need_on_prem() {
-	let common = |facility: &str| {
+	let common = |mix: serde_json::Value| {
 		json!({
+			"catchment": "c0",
+			"facilities": "f0",
+			"mobile": "m0",
 			"central": "bescloud",
-			"facility_mix": [facility],
+			"hosting_mix": mix,
 			"remote": "tailscale",
 			"timesync": "outbound",
 			"telemetry": "yes",
 		})
 	};
 	// All-cloud: the client-side network allowances don't apply.
-	let cloud = evaluate(&v1(), &answers(common("bescloud")));
+	let cloud = evaluate(&v1(), &answers(common(json!({ "bescloud": 100 }))));
 	let cloud_ids = fired_ids(&cloud);
 	for id in ["remote-tailscale", "time-outbound", "telemetry-on"] {
 		assert!(!cloud_ids.contains(&id), "{id} should not fire all-cloud");
 	}
-	// With an on-prem facility, they do.
-	let onprem = evaluate(&v1(), &answers(common("baremetal")));
+	// With client-hosted facilities, they do.
+	let onprem = evaluate(&v1(), &answers(common(json!({ "clienthosted": 100 }))));
 	let onprem_ids = fired_ids(&onprem);
 	for id in ["remote-tailscale", "time-outbound", "telemetry-on"] {
 		assert!(onprem_ids.contains(&id), "{id} should fire with on-prem");
@@ -278,64 +507,77 @@ fn declining_telemetry_blocks_tupaia_and_mobile() {
 
 	let mobile = evaluate(
 		&v1(),
-		&answers(json!({ "telemetry": "no", "mobile": "m2" })),
+		&answers(json!({ "telemetry": "no", "tupaia": "no", "mobile": "m2" })),
 	);
 	assert!(fired_ids(&mobile).contains(&"block-telemetry-mobile"));
 	assert_eq!(mobile.verdict, Verdict::Blocking);
 }
 
 #[test]
-fn iti_only_hides_the_on_prem_os_question() {
+fn iti_only_hides_the_client_os_question() {
 	let shows = |eval: &pollen_server::ruleset::Evaluation| {
 		eval.visible_questions.iter().any(|q| q == "platform")
 	};
-	// BES cloud + ITI only: both are fixed to Linux/ARM64, so no OS to choose.
+	// BES cloud + Iti only: both are fixed to Linux/ARM64, so no OS to choose.
 	let iti = evaluate(
 		&v1(),
-		&answers(json!({ "central": "bescloud", "facility_mix": ["bescloud", "iti"] })),
+		&with(
+			sized(),
+			json!({ "central": "bescloud", "hosting_mix": { "bescloud": 50, "iti": 50 } }),
+		),
 	);
 	assert!(!shows(&iti));
-	// A bare-metal facility does have an OS to choose.
-	let baremetal = evaluate(
+	// Client-hosted servers do have an OS to choose.
+	let clienthosted = evaluate(
 		&v1(),
-		&answers(json!({ "central": "bescloud", "facility_mix": ["baremetal"] })),
+		&with(
+			sized(),
+			json!({ "central": "bescloud", "hosting_mix": { "clienthosted": 100 } }),
+		),
 	);
-	assert!(shows(&baremetal));
+	assert!(shows(&clienthosted));
 }
 
 #[test]
 fn windows_requires_time_sync_setup() {
 	// Windows servers don't get time sync for free the way the Linux servers do,
 	// so choosing Windows always raises the requirement to configure it.
-	let eval = evaluate(&v1(), &answers(json!({ "platform": "windows" })));
+	let eval = evaluate(&v1(), &with(sized(), json!({ "platform": "windows" })));
 	assert!(fired_ids(&eval).contains(&"time-windows"));
 }
 
 #[test]
 fn dns_arrangement_targets_the_consequence() {
-	// Each arrangement fires its own consequence. Only the SOA-delegated client
-	// subdomain reads as off-default; the rest stay on the default path.
+	// Each arrangement fires its own consequence. Only the BES subdomain — where
+	// BES owns the domain and the certificates outright — stays on the default
+	// path; the rest each add a cost or a client-side step.
 	let subdomain = evaluate(
 		&v1(),
-		&answers(json!({ "dns": "bes", "dns_arrangement": "bes_subdomain" })),
+		&with(
+			sized(),
+			json!({ "dns": "bes", "dns_arrangement": "bes_subdomain", "telemetry": "yes", "backup_capability": "yes" }),
+		),
 	);
 	assert!(fired_ids(&subdomain).contains(&"dns-bes-subdomain"));
-	assert_eq!(subdomain.verdict, Verdict::Clear);
 
-	// A client-owned domain pointed at BES is targeted but not off-default.
 	let client_domain = evaluate(
 		&v1(),
-		&answers(json!({ "dns": "bes", "dns_arrangement": "client_domain" })),
+		&with(
+			sized(),
+			json!({ "dns": "bes", "dns_arrangement": "client_domain" }),
+		),
 	);
 	let ids = fired_ids(&client_domain);
 	assert!(ids.contains(&"dns-bes-client-domain"));
 	assert!(!ids.contains(&"dns-bes-subdomain"));
-	assert_eq!(client_domain.verdict, Verdict::Clear);
+	assert_eq!(client_domain.verdict, Verdict::NonDefault);
 
-	// Only the SOA delegation is off-default.
 	let soa = evaluate(
 		&v1(),
-		&answers(json!({ "dns": "bes", "dns_arrangement": "client_subdomain" })),
+		&with(
+			sized(),
+			json!({ "dns": "bes", "dns_arrangement": "client_subdomain" }),
+		),
 	);
 	assert!(fired_ids(&soa).contains(&"dns-bes-client-subdomain"));
 	assert_eq!(soa.verdict, Verdict::NonDefault);
@@ -347,6 +589,6 @@ fn tupaia_guidance_shows_at_backups() {
 	assert!(
 		eval.guidance
 			.iter()
-			.any(|g| g.at == "backup_capability" && g.message.contains("low-retention"))
+			.any(|g| g.at == "backup_capability" && g.message.contains("retention"))
 	);
 }

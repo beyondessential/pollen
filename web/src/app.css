@@ -1,4 +1,4 @@
-/* New Tamanu — BES-branded design tokens and components.
+/* New Tamanu: BES-branded design tokens and components.
    Brand: BES navy #313f6a (structure) + sky #009cea (interaction). */
 
 :root {
@@ -661,12 +661,36 @@ body {
 .qsection {
 	margin-bottom: 30px;
 }
-.qsection-head {
+/* The one collapsible section: a full-width control, so the offer to answer
+   more reads as something you can open rather than a heading. */
+.qexpand {
 	display: flex;
-	align-items: flex-start;
-	justify-content: space-between;
-	gap: 16px;
-	margin: 0 2px 14px;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	text-align: left;
+	font-family: var(--font-display);
+	font-size: 14.5px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	color: var(--navy);
+	background: var(--sky-tint);
+	border: 1px solid #bfe4f8;
+	border-radius: var(--radius-sm);
+	padding: 14px 16px;
+	margin-bottom: 14px;
+	cursor: pointer;
+	transition: background 0.14s;
+}
+.qexpand:hover {
+	background: #daeffc;
+}
+.qexpand svg {
+	flex: none;
+	transition: transform 0.16s;
+}
+.qexpand.on svg {
+	transform: rotate(180deg);
 }
 .qsection-title {
 	font-family: var(--font-display);
@@ -675,32 +699,10 @@ body {
 	letter-spacing: 0.02em;
 	text-transform: uppercase;
 	color: var(--navy);
-	margin: 0 0 4px;
+	margin: 0 0 14px;
 }
 
 /* ── Question state flags ────────────────────────────────────────────── */
-.qhead {
-	display: flex;
-	align-items: baseline;
-	gap: 10px;
-	flex-wrap: wrap;
-}
-.qflag {
-	font-size: 11px;
-	font-weight: 500;
-	letter-spacing: 0.02em;
-	border-radius: 6px;
-	padding: 3px 7px;
-	white-space: nowrap;
-	color: var(--ink-faint);
-	background: var(--line-soft);
-}
-/* An assumed answer is shown as chosen, but muted: it is the tool's guess,
-   not the user's. */
-.choice.on.faint,
-.band.on.faint {
-	opacity: 0.62;
-}
 
 /* ── Off-the-blessed-path warning, shown at the point of choice ──────── */
 .warn {

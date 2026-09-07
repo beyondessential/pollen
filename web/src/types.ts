@@ -118,8 +118,8 @@ export const STATUS_LABEL: Record<Status, string> = {
 };
 
 export const AUDIENCE_LABEL: Record<Audience, string> = {
-	Client: "Client IT — required actions",
-	Bes: "BES technical — setup",
+	Client: "Client IT: required actions",
+	Bes: "BES technical: setup",
 	Record: "Record & acknowledgements",
 };
 

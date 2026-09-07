@@ -5,7 +5,7 @@
 //! answered.
 
 use pollen_server::ruleset::{
-	Answers, Ruleset, Verdict, evaluate,
+	Answers, Ruleset, Severity, Verdict, evaluate,
 	normalize::{canonical_json, content_hash},
 };
 use serde_json::json;
@@ -202,7 +202,9 @@ fn unanswered_questions_take_their_blessed_default() {
 		("platform", "linuxarm"),
 		("remote", "tailscale"),
 		("timesync", "outbound"),
-		("cadence", "asneeded"),
+		("cadence", "twomonths"),
+		("backup_capability", "yes"),
+		("telemetry", "yes"),
 	] {
 		assert!(
 			assumed.contains(&expected),
@@ -229,21 +231,33 @@ fn a_default_can_reveal_a_question_that_is_itself_defaulted() {
 }
 
 #[test]
-fn policy_questions_are_never_guessed() {
-	// Backups, DNS and telemetry would materially misstate the estimate if
-	// guessed wrong, so they record as open items instead of taking a default.
+fn dns_ownership_is_never_guessed() {
+	// Who owns the domain varies too much between clients to assume, so it
+	// records as an open item rather than taking a default.
 	let eval = evaluate(&v1(), &answers(sized()));
-	for q in ["backup_capability", "dns", "telemetry"] {
-		assert!(
-			eval.open_items.iter().any(|o| o == q),
-			"{q} should be an open item; got {:?}",
-			eval.open_items
-		);
-		assert!(
-			!eval.assumed.iter().any(|a| a.question == q),
-			"{q} should never be assumed"
-		);
-	}
+	assert!(
+		eval.open_items.iter().any(|o| o == "dns"),
+		"dns should be an open item; got {:?}",
+		eval.open_items
+	);
+	assert!(!eval.assumed.iter().any(|a| a.question == "dns"));
+}
+
+#[test]
+fn the_untouched_default_path_raises_nothing() {
+	// Answering only the essentials must not produce a callout: everything
+	// assumed is on the blessed path, so the rail stays empty.
+	let eval = evaluate(&v1(), &answers(sized()));
+	assert_eq!(eval.verdict, Verdict::Clear);
+	let flagged: Vec<&str> = eval
+		.consequences
+		.iter()
+		.filter(|c| c.consequence.severity != Severity::Default)
+		.map(|c| c.id.as_str())
+		.collect();
+	assert!(flagged.is_empty(), "unexpected callouts: {flagged:?}");
+	// The upgrade advisory is for cadences slower than the default.
+	assert!(!fired_ids(&eval).contains(&"cadence"));
 }
 
 #[test]

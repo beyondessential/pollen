@@ -104,3 +104,29 @@ A pass over everything on screen, keeping only what helps the reader decide.
   duplicated the option's warning, and reassurance ("rough numbers are fine")
   are cut. Where a note and a warning said the same thing, the warning stays,
   because it appears at the point of choice.
+
+## Second simplification pass
+
+- **Backups and telemetry are now assumed**, joining the other blessed-path
+  defaults. DNS is the only question left that is never guessed: who owns the
+  domain varies too much between clients. Answering the two sizing questions
+  now yields 12 assumptions and 3 open items.
+- **Assumed answers render exactly like chosen ones.** No chip, no muting, no
+  "(assumed)" suffix in the record. The default is the answer unless the user
+  changes it; the artifact's Assumptions section keeps the record of which were
+  filled in.
+- **Central server is asked before the facility split**, and the split is
+  labelled as being about facility servers so the two do not read as the same
+  question.
+- **Unsupported platforms are no longer offered.** The "something else" OS
+  option and its blocking rule are gone; a configuration BES cannot support is
+  not something the tool should invite.
+- **Upgrade cadence** drops the vague "as needed" and defaults to every two
+  months. The "infrequent upgrades" advisory now fires only for cadences slower
+  than the default, so the blessed path raises no callout at all.
+- **The technical section is a full-width control** with a chevron, reading
+  "Answer more for a more accurate plan", rather than a heading with a small
+  Show button beside it.
+- **No em-dashes anywhere**, in copy or comments, and the en-dash cost ranges
+  read as "hundreds to thousands per year". Each was rewritten in context
+  rather than swapped for a single substitute.

@@ -38,15 +38,15 @@ function Loaded({ initial }: { initial: AppView }) {
 	);
 	const size = view.evaluation.derived["size"] ?? null;
 
-	// The most recent *other* plan, captured once on mount — before we record
-	// this one below — so a freshly-started plan can offer to resume it.
+	// The most recent *other* plan, captured once on mount, before we record
+	// this one below, so a freshly-started plan can offer to resume it.
 	const [previous] = useState<RecentPlan | undefined>(() =>
 		listRecentPlans().find((p) => p.id !== initial.id),
 	);
 
 	// Remember a plan once it carries a decision (or is finalised), so it's the
 	// one we'd resume next time. A brand-new, untouched draft is deliberately not
-	// recorded — otherwise it would propose resuming itself.
+	// recorded, otherwise it would propose resuming itself.
 	useEffect(() => {
 		if (view.status === "finalised" || started) {
 			recordRecentPlan({ id: view.id, status: view.status, size });

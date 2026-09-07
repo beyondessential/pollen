@@ -29,6 +29,9 @@ function Icon({ paths, size = 16 }: { paths: string; size?: number }) {
 	);
 }
 export const Check = (p: { size?: number }) => <Icon paths='<path d="M20 6 9 17l-5-5"/>' {...p} />;
+export const Chevron = (p: { size?: number }) => (
+	<Icon paths='<path d="m6 9 6 6 6-6"/>' {...p} />
+);
 
 type SevMeta = { color: string; bg: string; dot: string };
 const SEVERITY: Record<Severity, SevMeta> = {
@@ -97,7 +100,7 @@ export function ConsequenceCard({ c }: { c: Consequence }) {
 type VerdictMeta = { color: string; bg: string; title: string };
 
 /// The viability callout. It exists to flag a configuration that will not work,
-/// so it renders nothing when there is nothing to say — a banner announcing that
+/// so it renders nothing when there is nothing to say. A banner announcing that
 /// all is well is noise on every artifact that has no problem.
 export function VerdictBanner({
 	verdict,
@@ -114,7 +117,7 @@ export function VerdictBanner({
 			? {
 					color: "var(--block)",
 					bg: "var(--block-bg)",
-					title: `${blocking} blocking conflict${blocking === 1 ? "" : "s"} — this will not work as specified`,
+					title: `${blocking} blocking conflict${blocking === 1 ? "" : "s"}: this will not work as specified`,
 				}
 			: {
 					color: "var(--offdef)",

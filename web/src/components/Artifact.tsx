@@ -37,7 +37,7 @@ export default function Artifact({ view }: { view: AppView }) {
 	const byId = new Map(view.questions.map((q) => [q.id, q]));
 	const assumedBy = new Map(ev.assumed.map((a) => [a.question, a.option]));
 	// An artifact is interim when questions were deliberately left open. It is a
-	// normal finalised artifact in every other respect — the gaps are recorded
+	// normal finalised artifact in every other respect: the gaps are recorded
 	// rather than guessed, and completing it is a new version.
 	const interim = ev.open_items.length > 0;
 
@@ -201,10 +201,8 @@ export default function Artifact({ view }: { view: AppView }) {
 								{isAnswered(answers[q.id])
 									? answerLabel(q, answers[q.id])
 									: assumedBy.has(q.id)
-										? `${optionLabel(q, assumedBy.get(q.id) ?? "")} (assumed)`
-										: ev.open_items.includes(q.id)
-											? "Not yet decided"
-											: "—"}
+										? optionLabel(q, assumedBy.get(q.id) ?? "")
+										: "Not yet decided"}
 							</span>
 						</div>
 					))}
@@ -237,7 +235,7 @@ function optionLabel(q: QuestionView | undefined, id: string): string {
 }
 
 function answerLabel(q: QuestionView, value: AnswerValue | undefined): string {
-	if (!isAnswered(value)) return "—";
+	if (!isAnswered(value)) return "Not answered";
 	if (Array.isArray(value)) return value.map((id) => optionLabel(q, id)).join(", ");
 	if (typeof value === "object") {
 		// A mix reads as the classes actually present, with their shares.

@@ -35,7 +35,7 @@ export function recordRecentPlan(plan: Omit<RecentPlan, "savedAt">): void {
 		].slice(0, MAX);
 		localStorage.setItem(KEY, JSON.stringify(next));
 	} catch {
-		// localStorage unavailable or full — resume is a convenience, so skip it.
+		// localStorage unavailable or full; resume is a convenience, so skip it.
 	}
 }
 

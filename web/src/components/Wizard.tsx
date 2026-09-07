@@ -11,7 +11,7 @@ import {
 	type QuestionView,
 	type Section,
 } from "../types";
-import { Check } from "./visuals";
+import { Check, Chevron } from "./visuals";
 
 export default function Wizard({
 	view,
@@ -33,8 +33,8 @@ export default function Wizard({
 	const guidanceFor = (qid: string) => ev.guidance.find((g) => g.at === qid)?.message;
 
 	// The rail reports only what the user has steered off the standard path.
-	// Everything else — the ordinary requirements that follow from a supported
-	// setup — belongs on the finalised artifact, not in the way of answering.
+	// Everything else, the ordinary requirements that follow from a supported
+	// setup, belongs on the finalised artifact rather than in the way of answering.
 	const rank = { Blocking: 0, NonDefault: 1, Default: 2 };
 	const flagged = ev.consequences
 		.filter((c) => c.consequence.severity !== "Default")
@@ -90,7 +90,7 @@ export default function Wizard({
 			<aside className="rail">
 				<div className="stat">
 					<span className="stat-k">Size</span>
-					<span className="stat-v">{ev.derived["size"] ?? "—"}</span>
+					<span className="stat-v">{ev.derived["size"] ?? "Not sized"}</span>
 				</div>
 
 				{flagged.length > 0 && (
@@ -116,19 +116,18 @@ export default function Wizard({
 					const isOpen = opened[section.id] ?? !section.collapsed;
 					return (
 						<section className="qsection" key={section.id || "all"}>
-							{section.label && (
-								<div className="qsection-head">
-									<h2 className="qsection-title">{section.label}</h2>
-									{section.collapsed && (
-										<button
-											type="button"
-											className="btn ghost"
-											onClick={() => setOpened({ ...opened, [section.id]: !isOpen })}
-										>
-											{isOpen ? "Hide" : "Show"}
-										</button>
-									)}
-								</div>
+							{section.collapsed ? (
+								<button
+									type="button"
+									className={`qexpand${isOpen ? " on" : ""}`}
+									aria-expanded={isOpen}
+									onClick={() => setOpened({ ...opened, [section.id]: !isOpen })}
+								>
+									<Chevron size={17} />
+									<span>{section.label}</span>
+								</button>
+							) : (
+								section.label && <h2 className="qsection-title">{section.label}</h2>
 							)}
 							{isOpen &&
 								questions.map((q) => (
@@ -190,10 +189,7 @@ function QuestionCard({
 
 	return (
 		<div className="card">
-			<div className="qhead">
-				<h3 className="qtitle">{q.label}</h3>
-				{assumed && <span className="qflag">Assumed</span>}
-			</div>
+			<h3 className="qtitle">{q.label}</h3>
 			{q.help && (
 				<p className="qhelp">
 					<Markup text={q.help} />
@@ -213,7 +209,7 @@ function QuestionCard({
 						<button
 							type="button"
 							key={o.id}
-							className={`band${selectedIds.has(o.id) ? (assumed ? " on faint" : " on") : ""}`}
+							className={`band${selectedIds.has(o.id) ? " on" : ""}`}
 							onClick={() => onChange(o.id)}
 						>
 							{o.label}
@@ -228,7 +224,7 @@ function QuestionCard({
 							<button
 								type="button"
 								key={o.id}
-								className={`choice${selected ? (assumed ? " on faint" : " on") : ""}`}
+								className={`choice${selected ? " on" : ""}`}
 								onClick={() => onChange(q.kind === "Multi" ? toggleMulti(q, value, o) : o.id)}
 							>
 								<span className="choice-tick">{selected && <Check size={13} />}</span>

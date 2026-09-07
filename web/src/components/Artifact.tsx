@@ -11,6 +11,7 @@ import {
 	type QuestionView,
 	type TriggeredConsequence,
 } from "../types";
+import { listDone, recordDone } from "../doneItems";
 import { Chevron, ConsequenceCard, VerdictBanner } from "./visuals";
 
 const AUDIENCE_ORDER: Audience[] = ["Client", "Bes", "Record"];
@@ -25,6 +26,14 @@ export default function Artifact({ view }: { view: AppView }) {
 	// Groups open on arrival; collapsing is for skipping past the ones addressed
 	// to someone else, never for hiding content from a reader who has not looked.
 	const [shut, setShut] = useState<Record<string, boolean>>({});
+	// Ticked-off actions, this reader's own and kept on this device only.
+	const [done, setDone] = useState<string[]>(() => listDone(view.id));
+
+	function toggleDone(id: string) {
+		const next = done.includes(id) ? done.filter((d) => d !== id) : [...done, id];
+		setDone(next);
+		recordDone(view.id, next);
+	}
 
 	const answers = view.answers as unknown as Record<string, AnswerValue>;
 	const ev = view.evaluation;
@@ -38,6 +47,12 @@ export default function Artifact({ view }: { view: AppView }) {
 	// normal finalised artifact in every other respect: the gaps are recorded
 	// rather than guessed, and completing it is a new version.
 	const interim = ev.open_items.length > 0;
+	// What took the plan off the standard path, worst first, for the verdict.
+	const rank = { Blocking: 0, NonDefault: 1, Default: 2 };
+	const offStandard = ev.consequences
+		.filter((c) => c.consequence.severity !== "Default")
+		.sort((a, b) => rank[a.consequence.severity] - rank[b.consequence.severity])
+		.map((c) => c.consequence.title);
 
 	const groups = useMemo(() => {
 		const q = query.trim().toLowerCase();
@@ -113,7 +128,12 @@ export default function Artifact({ view }: { view: AppView }) {
 
 			{ev.verdict !== "Clear" && (
 				<div style={{ padding: "22px 30px 0" }}>
-					<VerdictBanner verdict={ev.verdict} offDefault={offDefault} blocking={blocking} />
+					<VerdictBanner
+						verdict={ev.verdict}
+						offDefault={offDefault}
+						blocking={blocking}
+						choices={offStandard}
+					/>
 				</div>
 			)}
 
@@ -169,7 +189,12 @@ export default function Artifact({ view }: { view: AppView }) {
 							    whole record however the reader reached the print dialog. */}
 							<div className={`items${open ? "" : " shut"}`}>
 								{g.items.map((c) => (
-									<ConsequenceCard key={c.id} c={c.consequence} />
+									<ConsequenceCard
+										key={c.id}
+										c={c.consequence}
+										done={done.includes(c.id)}
+										onToggle={isAction(c) ? () => toggleDone(c.id) : undefined}
+									/>
 								))}
 							</div>
 						</section>
@@ -210,6 +235,12 @@ export default function Artifact({ view }: { view: AppView }) {
 			</section>
 		</div>
 	);
+}
+
+/// Whether an item is something the client's IT team has to do, as opposed to
+/// information or an acknowledgement of a choice. Only these get a tick box.
+function isAction(c: TriggeredConsequence): boolean {
+	return c.consequence.status === "Requirement" && c.consequence.audience === "Client";
 }
 
 /// Consequences grouped by the reader they are addressed to, in reading order.

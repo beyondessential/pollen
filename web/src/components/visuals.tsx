@@ -1,13 +1,6 @@
-import type { ReactNode } from "react";
+import { useState } from "react";
 
-import {
-	CONSEQUENCE_TYPE_LABEL,
-	type Consequence,
-	type ConsequenceType,
-	STATUS_LABEL,
-	type Severity,
-	type Verdict,
-} from "../types";
+import { type Consequence, type Severity, type Verdict } from "../types";
 import { Markup } from "../markup";
 
 // Minimal inline icons (lucide-style paths), so nothing is fetched at runtime.
@@ -40,68 +33,47 @@ const SEVERITY: Record<Severity, SevMeta> = {
 	Blocking: { color: "var(--block)", bg: "var(--block-bg)", dot: "var(--block)" },
 };
 
-const TYPE_COLOR: Record<ConsequenceType, { color: string; bg: string }> = {
-	Cost: { color: "#9a6a00", bg: "#fbf1dc" },
-	Operational: { color: "#1f5fa6", bg: "#e6eff8" },
-	Capability: { color: "#8a2e2e", bg: "#f7e4e1" },
-	Support: { color: "#6b3a8a", bg: "#efe6f6" },
-};
-
-export function Tag({
-	children,
-	color,
-	bg,
+/// One consequence. An item the client's IT team must act on carries a box the
+/// reader ticks off as they work through the list; everything else is
+/// information and carries none. Severity shows as a coloured edge rather than
+/// a badge.
+export function ConsequenceCard({
+	c,
+	done,
+	onToggle,
 }: {
-	children: ReactNode;
-	color: string;
-	bg: string;
+	c: Consequence;
+	done?: boolean;
+	/// Set only for an action. Its absence is what makes an item read as
+	/// information rather than something to do.
+	onToggle?: () => void;
 }) {
-	return (
-		<span className="tag" style={{ color, background: bg }}>
-			{children}
-		</span>
-	);
-}
-
-/// One consequence, read as an item on a list of things this deployment entails.
-/// Built from the same vocabulary as the form's choices (white surface, hairline
-/// border, a leading marker) so the artifact and the questionnaire read as one
-/// system. The marker carries severity; an ordinary requirement is left neutral.
-export function ConsequenceCard({ c }: { c: Consequence }) {
 	const sev = SEVERITY[c.severity];
+	const edge = c.severity === "Default" ? undefined : { borderLeftColor: sev.dot };
 	return (
-		<div className="item">
-			<span
-				className="item-mark"
-				style={
-					c.severity === "Default"
-						? undefined
-						: { background: sev.dot, borderColor: sev.dot, color: "#fff" }
-				}
-			>
-				{c.severity !== "Default" && <Check size={12} />}
-			</span>
+		<div className={`item${c.severity === "Default" ? "" : " item-flagged"}`} style={edge}>
+			{onToggle && (
+				<button
+					type="button"
+					className={`item-check${done ? " on" : ""}`}
+					aria-pressed={done}
+					aria-label={done ? `Mark "${c.title}" not done` : `Mark "${c.title}" done`}
+					onClick={onToggle}
+				>
+					{done && <Check size={12} />}
+				</button>
+			)}
 			<div className="item-body">
-				<h4 className="item-title">{c.title}</h4>
+				<h4 className={`item-title${done ? " item-done" : ""}`}>{c.title}</h4>
 				<p className="item-detail">
 					<Markup text={c.detail} />
 				</p>
-				<div className="item-tags">
-					{c.types.map((t) => (
-						<Tag key={t} color={TYPE_COLOR[t].color} bg={TYPE_COLOR[t].bg}>
-							{CONSEQUENCE_TYPE_LABEL[t]}
-						</Tag>
-					))}
-					<Tag color="#3a4750" bg="#eaedee">
-						{STATUS_LABEL[c.status]}
-					</Tag>
-					{c.cost && (
-						<span className="cost-note">
-							{c.cost.tier}
-							{c.cost.ballpark ? ` · ${c.cost.ballpark}` : ""}
-						</span>
-					)}
-				</div>
+				{c.cost && (
+					<p className="cost-note">
+						{c.cost.tier}
+						{c.cost.ballpark ? ` · ${c.cost.ballpark}` : ""}
+					</p>
+				)}
 			</div>
 		</div>
 	);
@@ -116,11 +88,16 @@ export function VerdictBanner({
 	verdict,
 	offDefault,
 	blocking,
+	choices,
 }: {
 	verdict: Verdict;
 	offDefault: number;
 	blocking: number;
+	/// What took the plan off the standard path, so a reader can see which
+	/// choices rather than only how many.
+	choices: string[];
 }) {
+	const [open, setOpen] = useState(false);
 	if (verdict === "Clear") return null;
 	const m: VerdictMeta =
 		verdict === "Blocking"
@@ -136,7 +113,21 @@ export function VerdictBanner({
 				};
 	return (
 		<div className="verdict verdict-big" style={{ background: m.bg, color: m.color }}>
-			<div className="verdict-t">{m.title}</div>
+			<button
+				type="button"
+				className={`verdict-toggle${open ? " on" : ""}`}
+				aria-expanded={open}
+				onClick={() => setOpen(!open)}
+			>
+				<Chevron size={16} />
+				<span className="verdict-t">{m.title}</span>
+			</button>
+			{/* Always rendered, hidden with CSS, so it prints whole. */}
+			<ul className={`verdict-list${open ? "" : " shut"}`}>
+				{choices.map((title) => (
+					<li key={title}>{title}</li>
+				))}
+			</ul>
 		</div>
 	);
 }

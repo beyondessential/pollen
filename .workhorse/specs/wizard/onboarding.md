@@ -219,6 +219,11 @@ This comparison is the "what changed" summary the user sees on update: newly-req
 The canonical artifact is a live page.
 It presents every consequence in full, grouped by the reader it is addressed to, and supports searching and deep-linking to a section.
 Each group can be collapsed, so a reader can skip past the groups addressed to someone else.
+The viability callout names the choices that took the plan off the standard path, not only how many there were.
+
+An item the client's IT team must act on carries a box the reader ticks off as the work is done; an item that records information or acknowledges a choice carries none, because there is nothing to do about it.
+Ticking is the reader's own progress, held in their browser and never against the artifact: a finalised artifact is immutable, and its link is held by several people who are not working through the same list.
+The printed record omits the boxes for the same reason.
 
 An interim artifact is marked as interim, and lists its open questions before the detail, so a reader meets what is still unsettled before reading what was decided.
 Every assumed answer is listed too, so a reader can see what the tool filled in on their behalf and correct any of it in a new version.
@@ -246,6 +251,8 @@ Its sections, in order:
 The tool stores only structured answers and the ruleset hash they are bound against.
 It stores no free text, no client or deployment name, no health data, and no personal data.
 Identifying information, meaning whose deployment an artifact describes, is supplied out of band, in the correspondence that carries the link or PDF, and never enters the stored artifact.
+
+A reader's progress through the required actions is held in their own browser and never sent to the tool, so it is not part of the artifact and not shared by its link.
 
 Because no stored field can carry sensitive or identifying data, a leaked artifact URL exposes only a non-attributable technical configuration.
 Names, notes, client self-editing, and authentication move together: none can be added without reconsidering this property.

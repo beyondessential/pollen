@@ -310,12 +310,6 @@ body {
 	font-family: var(--font-mono);
 	font-size: 0.9em;
 }
-.tag {
-	font-size: 10.5px;
-	font-weight: 500;
-	padding: 2px 8px;
-	border-radius: 99px;
-}
 .cost-note {
 	font-size: 11px;
 	color: var(--ink-faint);
@@ -567,6 +561,13 @@ body {
 	.items.shut {
 		display: flex;
 	}
+	.verdict-list.shut {
+		display: block;
+	}
+	/* Ticking off is the reader's own progress, not part of the record. */
+	.item-check {
+		display: none;
+	}
 	.qexpand svg {
 		display: none;
 	}
@@ -764,15 +765,39 @@ body {
 	border-radius: 11px;
 	padding: 15px 17px;
 }
-.item-mark {
-	width: 18px;
-	height: 18px;
+/* Severity as a coloured edge: semantic, and quieter than a pill. */
+.item-flagged {
+	border-left-width: 3px;
+	border-left-style: solid;
+}
+/* A real control: the reader ticks these off as the work gets done. */
+.item-check {
+	width: 20px;
+	height: 20px;
 	border-radius: 6px;
 	border: 1.5px solid var(--line);
+	background: var(--surface);
 	flex-shrink: 0;
-	margin-top: 2px;
+	margin-top: 1px;
 	display: grid;
 	place-items: center;
+	cursor: pointer;
+	color: #fff;
+	padding: 0;
+	transition:
+		background 0.14s,
+		border-color 0.14s;
+}
+.item-check:hover {
+	border-color: #c4d0d6;
+}
+.item-check.on {
+	background: var(--sky);
+	border-color: var(--sky);
+}
+.item-done {
+	color: var(--ink-faint);
+	text-decoration: line-through;
 }
 .item-body {
 	min-width: 0;
@@ -790,10 +815,34 @@ body {
 	margin: 6px 0 0;
 	max-width: 70ch;
 }
-.item-tags {
+
+/* ── Verdict, expandable to name the choices behind the count ────────── */
+.verdict-toggle {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 6px;
 	align-items: center;
-	margin-top: 11px;
+	gap: 9px;
+	width: 100%;
+	text-align: left;
+	background: none;
+	border: none;
+	padding: 0;
+	font-family: inherit;
+	color: inherit;
+	cursor: pointer;
+}
+.verdict-toggle svg {
+	flex: none;
+	transition: transform 0.16s;
+}
+.verdict-toggle.on svg {
+	transform: rotate(180deg);
+}
+.verdict-list {
+	margin: 12px 0 0 25px;
+	padding: 0;
+	font-size: 13px;
+	line-height: 1.7;
+}
+.verdict-list.shut {
+	display: none;
 }

@@ -59,6 +59,10 @@ been run; an unticked one is a scenario still owed, not one decided against.
 - [ ] The PDF export places open questions directly after the verdict, and prints no buttons.
 - [ ] Printing with a group collapsed still carries that group's items, by the button and by the browser's own print command.
 - [ ] Audience groups arrive open, and collapsing one leaves the others alone.
+- [ ] Only the client's required actions carry a tick box; acknowledgements and advisories carry none.
+- [ ] A tick survives a reload of the same artifact, and does not appear on a different one.
+- [ ] Tick state never reaches the server, and the printed record shows no boxes.
+- [ ] The viability callout expands to name the choices behind its count, and prints expanded.
 - [ ] Finalising lands the reader at the top of the artifact, and a link naming a section still reaches it.
 - [ ] Search appears only on an artifact long enough to need it.
 - [ ] The balance question renders as one row of three, matching the sizing bands.

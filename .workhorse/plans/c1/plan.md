@@ -252,3 +252,37 @@ hiding content from a reader who has not looked yet.
 A collapsed group is hidden with CSS rather than left unrendered, so printing
 carries the whole record however the reader reached the print dialog. The
 browser's own print command is as valid a route as the button.
+
+## The tick box is a real control
+
+The marker on each item was a severity indicator wearing the shape of a
+checkbox, which invited exactly the wrong reading. It is now what it looks like:
+the reader ticks an item off as the work gets done.
+
+Where the state lives follows from the artifact being immutable and its link
+being held by several people at once. Progress is the reader's own, so it is
+kept in their browser, never stored against the artifact, and never sent to the
+tool. The printed record omits the boxes: the PDF is the record, not a snapshot
+of someone's progress.
+
+**Only actions get a box.** An item qualifies when it is a requirement addressed
+to the client's IT team, which is what "required actions" means. That exposed
+six consequences tagged as client requirements that are nothing of the kind:
+they describe what a choice costs rather than something anyone does. Retagged as
+acknowledgements, so they sit under the record rather than in a list of work:
+
+- Client hosts the central server
+- A few days of backups only
+- Upgrading less often than support covers
+- No DNS: all-local, plain HTTP
+- No telemetry: support, backups, and mobile are opted out
+- DNS: a dedicated BES-owned domain
+
+Two more moved for the same reason: `dns-bes-subdomain` says outright that there
+is nothing for client IT to set up, so it is advice to BES rather than a client
+action.
+
+Severity now shows as a coloured left edge instead of a pill. The type and
+status badges are gone entirely, along with the label maps and the shared tag
+component that only they used. The viability callout expands to name the choices
+behind its count.

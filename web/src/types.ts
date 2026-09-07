@@ -96,20 +96,7 @@ export function isAnswered(value: AnswerValue | undefined): value is AnswerValue
 	return value !== "";
 }
 
-// UI-only label/colour maps.
-export const CONSEQUENCE_TYPE_LABEL: Record<ConsequenceType, string> = {
-	Cost: "Cost",
-	Operational: "Operational",
-	Capability: "Capability loss",
-	Support: "Support",
-};
-
-export const STATUS_LABEL: Record<Status, string> = {
-	Requirement: "Requirement",
-	Advisory: "Advisory",
-	Referral: "Referral",
-};
-
+// UI-only label maps.
 export const AUDIENCE_LABEL: Record<Audience, string> = {
 	Client: "Client IT: required actions",
 	Bes: "BES technical: setup",

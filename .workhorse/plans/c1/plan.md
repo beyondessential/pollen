@@ -131,22 +131,28 @@ A pass over everything on screen, keeping only what helps the reader decide.
   read as "hundreds to thousands per year". Each was rewritten in context
   rather than swapped for a single substitute.
 
-## Open: replacing the three-way percentage mix
+## Hosting: presets instead of a percentage mix
 
-Three sliders that redistribute against each other are awkward to operate, and
-the two commonest answers (all cloud, all client hosted) should not require
-touching one at all. Mocked up at
-`.workhorse/design/mockups/c1/where-it-runs-options.html`:
+Three sliders redistributing against each other were awkward, and the two
+commonest answers should not require touching one at all. Settled on presets
+with a discrete follow-up:
 
-- **A.** Three presets, with a single two-ended slider revealed only for "a mix".
-- **B.** One row of five bands, no slider and nothing nested. Reuses the band
-  control the sizing questions already use.
-- **C.** A's presets, with the mix resolving to three discrete buttons.
+- **`hosting_where`** asks all BES cloud, all client hosted, or a mix.
+- **`hosting_balance`** appears only for a mix, as three ordered bands (mostly
+  BES cloud, about half, mostly client hosted). The engine reads presence and a
+  rough proportion, so finer resolution than this buys nothing.
+- **`iti_use`** is its own question, appearing once something sits outside BES
+  cloud. Iti is a way of running a facility site rather than a place, so
+  modelling it as a third slice of the same axis conflated two things.
 
-Any of them still produces a share per class, so the engine's `HasShare`
-conditions are unaffected and no rule changes.
+The `Mix` question kind, the `Answer::Mix` variant, the `HasShare` condition and
+the slider control are all deleted rather than left unused. Presence is now
+expressed with `Equals` against the preset.
 
-Splitting Tamanu Iti into its own question is the larger change: the mix drops
-to two classes, and the rules currently keyed on `HasShare("hosting_mix", "iti")`
-move to the new question. Iti is arguably not a proportion of the same axis
-anyway, since it is a way of running a facility site rather than a place.
+**Sites on an appliance have nothing to provision.** When every non-cloud site
+runs an Iti, the operating system and provisioning questions disappear, because
+Iti is a fixed ARM64 appliance. The client network requirements still apply.
+
+Copy: BES cloud is described as "hosted by BES in a secure AWS data centre"
+rather than by what BES manages, since BES often manages backups and monitoring
+for client-hosted deployments too.

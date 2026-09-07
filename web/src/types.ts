@@ -85,21 +85,14 @@ export type Verdict = Solidify<Schemas["Verdict"]>;
 export type Section = Solidify<Schemas["Section"]>;
 export type Assumed = Solidify<Schemas["Assumed"]>;
 
-/// An answer value: one option id (single/band), several (multi), or a
-/// percentage share per option id (mix).
-export type AnswerValue = string | string[] | Record<string, number>;
-
-/// Narrow an answer to a mix question's shares.
-export function asShares(value: AnswerValue | undefined): Record<string, number> {
-	return value != null && !Array.isArray(value) && typeof value === "object" ? value : {};
-}
+/// An answer value: one option id (single/band) or several (multi).
+export type AnswerValue = string | string[];
 
 /// Whether a question has been given an answer of any kind. A type guard, so
 /// callers narrow away `undefined` at the same time.
 export function isAnswered(value: AnswerValue | undefined): value is AnswerValue {
 	if (value == null) return false;
 	if (Array.isArray(value)) return value.length > 0;
-	if (typeof value === "object") return Object.values(value).some((n) => n > 0);
 	return value !== "";
 }
 

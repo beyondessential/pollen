@@ -5,7 +5,6 @@ import { Markup } from "../markup";
 import {
 	type AnswerValue,
 	type AppView,
-	asShares,
 	isAnswered,
 	type Opt,
 	type QuestionView,
@@ -201,9 +200,7 @@ function QuestionCard({
 				</div>
 			)}
 
-			{q.kind === "Mix" ? (
-				<MixControl q={q} value={value} assumed={assumed} onChange={onChange} />
-			) : q.kind === "Band" ? (
+			{q.kind === "Band" ? (
 				<div className="bandrow">
 					{q.options.map((o) => (
 						<button
@@ -249,85 +246,6 @@ function QuestionCard({
 			)}
 		</div>
 	);
-}
-
-/// A rough percentage split across the options. Moving one share redistributes
-/// the remainder across the others in proportion, so the total always reads 100.
-function MixControl({
-	q,
-	value,
-	assumed,
-	onChange,
-}: {
-	q: QuestionView;
-	value: AnswerValue | undefined;
-	assumed: string | undefined;
-	onChange: (v: AnswerValue) => void;
-}) {
-	const shares = isAnswered(value)
-		? asShares(value)
-		: Object.fromEntries(q.options.map((o) => [o.id, o.id === assumed ? 100 : 0]));
-
-	return (
-		<div className="mix">
-			{q.options.map((o) => {
-				const share = shares[o.id] ?? 0;
-				return (
-					<div className={`mix-row${share > 0 ? " on" : ""}`} key={o.id}>
-						<div className="mix-head">
-							<span className="mix-label">{o.label}</span>
-							<span className="mix-pct">{share}%</span>
-						</div>
-						<input
-							className="mix-range"
-							type="range"
-							min={0}
-							max={100}
-							step={5}
-							value={share}
-							aria-label={o.label}
-							onChange={(e) => onChange(redistribute(q.options, shares, o.id, +e.target.value))}
-						/>
-						{o.note && (
-							<p className="mix-note">
-								<Markup text={o.note} />
-							</p>
-						)}
-					</div>
-				);
-			})}
-		</div>
-	);
-}
-
-/// Set one option's share and spread the remaining percentage over the others,
-/// in proportion to what they already hold (evenly, when they hold nothing).
-/// The last option absorbs the rounding so the shares total exactly 100.
-function redistribute(
-	options: Opt[],
-	shares: Record<string, number>,
-	id: string,
-	raw: number,
-): Record<string, number> {
-	const value = Math.max(0, Math.min(100, Math.round(raw)));
-	const others = options.filter((o) => o.id !== id);
-	const next: Record<string, number> = { [id]: value };
-	if (others.length === 0) return { [id]: 100 };
-
-	const remaining = 100 - value;
-	const total = others.reduce((sum, o) => sum + (shares[o.id] ?? 0), 0);
-	let allocated = 0;
-	others.forEach((o, i) => {
-		const last = i === others.length - 1;
-		const portion = last
-			? remaining - allocated
-			: total === 0
-				? Math.round(remaining / others.length)
-				: Math.round(((shares[o.id] ?? 0) / total) * remaining);
-		next[o.id] = Math.max(0, portion);
-		allocated += next[o.id];
-	});
-	return next;
 }
 
 // Toggle an option in a multi-select, honouring exclusivity: an exclusive

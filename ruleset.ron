@@ -144,23 +144,58 @@
                 (id: "clienthosted", label: "Client hosted", warn: Some("Hosting the central server yourself means your IT team carries availability, backups, and upgrades for it, and BES incident response is slower.")),
             ],
         ),
-        // A rough split rather than a facility-by-facility map: the tool works
-        // at planning grain (spec WIZ), so the presence of a class is what
-        // brings in its requirements, and the percentages are recorded for
-        // planning. Client cloud and true on-prem behaved identically in every
-        // rule, so they are one option here; how those servers are provisioned
-        // is asked further down, where it actually differs.
+        // Planning grain (spec WIZ): the tool records which classes are present
+        // and a rough balance between them, never a facility-by-facility map.
+        // Client cloud and true on-prem behaved identically in every rule, so
+        // they are one option here; how those servers are provisioned is asked
+        // further down, where it actually differs.
+        //
+        // Most deployments are all one or all the other, so the balance is a
+        // follow-up rather than something everyone has to set.
         (
-            id: "hosting_mix",
-            kind: Mix,
+            id: "hosting_where",
+            kind: Single,
             section: Some("hosting"),
-            label: "Roughly, where will the facility servers run?",
-            default: Some("clienthosted"),
+            label: "Where should the facility servers run?",
+            default: Some("allclient"),
             options: [
-                (id: "bescloud", label: "BES cloud", note: Some("BES runs the servers: backups, monitoring, upgrades and patching are handled for you.")),
-                (id: "clienthosted", label: "Client hosted", note: Some("On servers the client owns or rents. Keeps working when the internet link is down.")),
-                (id: "iti", label: "Tamanu Iti", note: Some("A small BES-managed appliance for the facility network. No server hardware to buy or maintain.")),
+                (id: "allbes", label: "All in BES cloud", note: Some("Hosted by BES in a secure AWS data centre.")),
+                (id: "allclient", label: "All client hosted", note: Some("On servers the client owns or rents. Keeps working when the internet link is down.")),
+                (id: "mix", label: "A mix of both"),
             ],
+        ),
+        (
+            id: "hosting_balance",
+            kind: Band,
+            section: Some("hosting"),
+            label: "Roughly what balance?",
+            default: Some("half"),
+            options: [
+                (id: "mostlybes", label: "Mostly BES cloud"),
+                (id: "half", label: "About half"),
+                (id: "mostlyclient", label: "Mostly client hosted"),
+            ],
+            visible_if: Equals("hosting_where", "mix"),
+        ),
+        // Tamanu Iti is a way of running a facility site, not a place, so it is
+        // asked separately once something sits outside BES cloud. Sites running
+        // Iti have no operating system or provisioning to choose.
+        (
+            id: "iti_use",
+            kind: Single,
+            section: Some("hosting"),
+            label: "Will any of those sites use a Tamanu Iti appliance?",
+            help: Some("A small BES-managed appliance that plugs into the facility network."),
+            default: Some("none"),
+            options: [
+                (id: "none", label: "No, they run their own servers"),
+                (id: "some", label: "Yes, some of them"),
+                (id: "all", label: "Yes, all of them"),
+            ],
+            visible_if: Any([
+                Equals("hosting_where", "allclient"),
+                Equals("hosting_where", "mix"),
+            ]),
         ),
         // ── Technical details ───────────────────────────────────────────────
         // Every question below declares a blessed-path default, so a user who
@@ -181,7 +216,13 @@
             ],
             visible_if: Any([
                 Equals("central", "clienthosted"),
-                HasShare("hosting_mix", "clienthosted"),
+                All([
+                    Any([
+                        Equals("hosting_where", "allclient"),
+                        Equals("hosting_where", "mix"),
+                    ]),
+                    Not(Equals("iti_use", "all")),
+                ]),
             ]),
         ),
         (
@@ -197,7 +238,8 @@
             ],
             visible_if: Any([
                 Equals("central", "bescloud"),
-                HasShare("hosting_mix", "bescloud"),
+                Equals("hosting_where", "allbes"),
+                Equals("hosting_where", "mix"),
             ]),
         ),
         // Only when a client-hosted server has an OS to choose. BES cloud and
@@ -216,7 +258,13 @@
             ],
             visible_if: Any([
                 Equals("central", "clienthosted"),
-                HasShare("hosting_mix", "clienthosted"),
+                All([
+                    Any([
+                        Equals("hosting_where", "allclient"),
+                        Equals("hosting_where", "mix"),
+                    ]),
+                    Not(Equals("iti_use", "all")),
+                ]),
             ]),
         ),
 
@@ -421,7 +469,8 @@
             when: All([
                 Any([
                     Equals("central", "bescloud"),
-                    HasShare("hosting_mix", "bescloud"),
+                    Equals("hosting_where", "allbes"),
+                    Equals("hosting_where", "mix"),
                 ]),
                 Equals("region", "otheraws"),
             ]),
@@ -515,7 +564,10 @@
         (
             id: "iti-note",
             source: "topology",
-            when: HasShare("hosting_mix", "iti"),
+            when: Any([
+                Equals("iti_use", "some"),
+                Equals("iti_use", "all"),
+            ]),
             consequence: (
                 status: Requirement,
                 audience: Bes,
@@ -700,8 +752,8 @@
                 Equals("remote", "tailscale"),
                 Any([
                     Equals("central", "clienthosted"),
-                    HasShare("hosting_mix", "clienthosted"),
-                    HasShare("hosting_mix", "iti"),
+                    Equals("hosting_where", "allclient"),
+                    Equals("hosting_where", "mix"),
                 ]),
             ]),
             consequence: (
@@ -720,8 +772,8 @@
                 Equals("timesync", "internal"),
                 Any([
                     Equals("central", "clienthosted"),
-                    HasShare("hosting_mix", "clienthosted"),
-                    HasShare("hosting_mix", "iti"),
+                    Equals("hosting_where", "allclient"),
+                    Equals("hosting_where", "mix"),
                 ]),
             ]),
             consequence: (
@@ -738,8 +790,8 @@
                 Equals("timesync", "outbound"),
                 Any([
                     Equals("central", "clienthosted"),
-                    HasShare("hosting_mix", "clienthosted"),
-                    HasShare("hosting_mix", "iti"),
+                    Equals("hosting_where", "allclient"),
+                    Equals("hosting_where", "mix"),
                 ]),
             ]),
             consequence: (
@@ -768,8 +820,8 @@
             id: "dns-partition",
             source: "network",
             when: Any([
-                HasShare("hosting_mix", "clienthosted"),
-                HasShare("hosting_mix", "iti"),
+                Equals("hosting_where", "allclient"),
+                Equals("hosting_where", "mix"),
             ]),
             consequence: (
                 status: Advisory,
@@ -784,8 +836,8 @@
             when: All([
                 Equals("central", "bescloud"),
                 Any([
-                    HasShare("hosting_mix", "clienthosted"),
-                    HasShare("hosting_mix", "iti"),
+                    Equals("hosting_where", "allclient"),
+                    Equals("hosting_where", "mix"),
                 ]),
             ]),
             consequence: (
@@ -822,8 +874,8 @@
             source: "network",
             when: Any([
                 Equals("central", "clienthosted"),
-                HasShare("hosting_mix", "clienthosted"),
-                HasShare("hosting_mix", "iti"),
+                Equals("hosting_where", "allclient"),
+                Equals("hosting_where", "mix"),
             ]),
             consequence: (
                 status: Requirement,
@@ -857,8 +909,8 @@
                 Equals("telemetry", "yes"),
                 Any([
                     Equals("central", "clienthosted"),
-                    HasShare("hosting_mix", "clienthosted"),
-                    HasShare("hosting_mix", "iti"),
+                    Equals("hosting_where", "allclient"),
+                    Equals("hosting_where", "mix"),
                 ]),
             ]),
             consequence: (

@@ -7,7 +7,6 @@ import {
 	type AppView,
 	AUDIENCE_LABEL,
 	type Audience,
-	asShares,
 	isAnswered,
 	type QuestionView,
 	TOPIC_LABEL,
@@ -237,20 +236,13 @@ function optionLabel(q: QuestionView | undefined, id: string): string {
 function answerLabel(q: QuestionView, value: AnswerValue | undefined): string {
 	if (!isAnswered(value)) return "Not answered";
 	if (Array.isArray(value)) return value.map((id) => optionLabel(q, id)).join(", ");
-	if (typeof value === "object") {
-		// A mix reads as the classes actually present, with their shares.
-		return Object.entries(asShares(value))
-			.filter(([, share]) => share > 0)
-			.map(([id, share]) => `${optionLabel(q, id)} ${share}%`)
-			.join(" · ");
-	}
 	return optionLabel(q, value);
 }
 
 function topology(questions: QuestionView[], answers: Record<string, AnswerValue>): string {
 	const central = answerLabel(byId(questions, "central"), answers["central"]);
-	const mix = answerLabel(byId(questions, "hosting_mix"), answers["hosting_mix"]);
-	return `Central: ${central} · Hosting: ${mix}`;
+	const where = answerLabel(byId(questions, "hosting_where"), answers["hosting_where"]);
+	return `Central: ${central} · Facilities: ${where}`;
 }
 
 function regionLabel(

@@ -1,5 +1,5 @@
 //! The v1 ruleset parses, validates, hashes deterministically, and evaluates to
-//! the expected verdicts/consequences for representative configurations —
+//! the expected verdicts/consequences for representative configurations,
 //! including the escape hatches a non-technical user relies on: assumed
 //! defaults, "I'm not sure" open items, and the questions that still must be
 //! answered.
@@ -73,7 +73,9 @@ fn demo_config_is_blocking() {
 			"facilities": "f2",
 			"mobile": "m2",
 			"central": "bescloud",
-			"hosting_mix": { "bescloud": 40, "clienthosted": 40, "iti": 20 },
+			"hosting_where": "mix",
+			"hosting_balance": "half",
+			"iti_use": "some",
 			"onprem_form": "baremetal",
 			"region": "otheraws",
 			"platform": "windows",
@@ -139,7 +141,7 @@ fn default_path_is_clear() {
 			"facilities": "f0",
 			"mobile": "m0",
 			"central": "bescloud",
-			"hosting_mix": { "bescloud": 100 },
+			"hosting_where": "allbes",
 			"region": "sydney",
 			"backup_capability": "yes",
 			"retention": "full",
@@ -197,7 +199,7 @@ fn unanswered_questions_take_their_blessed_default() {
 
 	for expected in [
 		("tupaia", "yes"),
-		("hosting_mix", "clienthosted"),
+		("hosting_where", "allclient"),
 		("central", "bescloud"),
 		("platform", "linuxarm"),
 		("remote", "tailscale"),
@@ -217,12 +219,12 @@ fn unanswered_questions_take_their_blessed_default() {
 
 #[test]
 fn a_default_can_reveal_a_question_that_is_itself_defaulted() {
-	// hosting_mix defaults to client-hosted, which reveals the provisioning and
-	// OS questions, which have defaults of their own. A single pass would miss
-	// them, so the engine runs defaults to a fixed point.
+	// hosting_where defaults to all client hosted, which reveals the Iti,
+	// provisioning and OS questions, which have defaults of their own. A single
+	// pass would miss them, so the engine runs defaults to a fixed point.
 	let eval = evaluate(&v1(), &answers(sized()));
 	let assumed: Vec<&str> = eval.assumed.iter().map(|a| a.question.as_str()).collect();
-	assert!(assumed.contains(&"hosting_mix"));
+	assert!(assumed.contains(&"hosting_where"));
 	assert!(
 		assumed.contains(&"onprem_form"),
 		"a question revealed by an assumption should be assumed too; got {assumed:?}"
@@ -434,7 +436,7 @@ fn self_hosted_central_with_mobile_needs_public_ip() {
 fn on_prem_requires_network_setup() {
 	let onprem = evaluate(
 		&v1(),
-		&with(sized(), json!({ "hosting_mix": { "clienthosted": 100 } })),
+		&with(sized(), json!({ "hosting_where": "allclient" })),
 	);
 	assert!(fired_ids(&onprem).contains(&"onprem-network"));
 
@@ -442,25 +444,93 @@ fn on_prem_requires_network_setup() {
 		&v1(),
 		&with(
 			sized(),
-			json!({ "central": "bescloud", "hosting_mix": { "bescloud": 100 } }),
+			json!({ "central": "bescloud", "hosting_where": "allbes" }),
 		),
 	);
 	assert!(!fired_ids(&cloud).contains(&"onprem-network"));
 }
 
 #[test]
-fn a_zero_share_is_not_a_presence() {
-	// A class explicitly set to nothing must not bring in its requirements.
+fn an_all_cloud_deployment_asks_nothing_about_client_servers() {
+	// With everything in BES cloud there is no Iti question, no OS to choose,
+	// and none of the client-network requirements.
 	let eval = evaluate(
 		&v1(),
 		&with(
 			sized(),
-			json!({ "central": "bescloud", "hosting_mix": { "bescloud": 100, "clienthosted": 0, "iti": 0 } }),
+			json!({ "central": "bescloud", "hosting_where": "allbes" }),
 		),
 	);
+	for q in ["iti_use", "onprem_form", "platform"] {
+		assert!(
+			!eval.visible_questions.iter().any(|v| v == q),
+			"{q} should be hidden when everything is in BES cloud"
+		);
+	}
 	let ids = fired_ids(&eval);
 	assert!(!ids.contains(&"onprem-network"));
 	assert!(!ids.contains(&"iti-note"));
+}
+
+#[test]
+fn iti_is_asked_only_outside_bes_cloud_and_drives_its_own_rule() {
+	let shows =
+		|e: &pollen_server::ruleset::Evaluation| e.visible_questions.iter().any(|q| q == "iti_use");
+	assert!(!shows(&evaluate(
+		&v1(),
+		&with(sized(), json!({ "hosting_where": "allbes" }))
+	)));
+	assert!(shows(&evaluate(
+		&v1(),
+		&with(sized(), json!({ "hosting_where": "allclient" }))
+	)));
+
+	// Defaulting to "none" must not assert that an appliance is in play.
+	let none = evaluate(
+		&v1(),
+		&with(sized(), json!({ "hosting_where": "allclient" })),
+	);
+	assert!(!fired_ids(&none).contains(&"iti-note"));
+
+	let some = evaluate(
+		&v1(),
+		&with(
+			sized(),
+			json!({ "hosting_where": "allclient", "iti_use": "some" }),
+		),
+	);
+	assert!(fired_ids(&some).contains(&"iti-note"));
+}
+
+#[test]
+fn an_all_iti_deployment_has_no_os_to_choose() {
+	// Iti is a fixed ARM64 appliance, so when every site outside BES cloud runs
+	// one there is no operating system or provisioning decision left.
+	let all_iti = evaluate(
+		&v1(),
+		&with(
+			sized(),
+			json!({ "central": "bescloud", "hosting_where": "allclient", "iti_use": "all" }),
+		),
+	);
+	for q in ["platform", "onprem_form"] {
+		assert!(
+			!all_iti.visible_questions.iter().any(|v| v == q),
+			"{q} should be hidden when every site runs an appliance"
+		);
+	}
+	// The client still has a network to configure for those appliances.
+	assert!(fired_ids(&all_iti).contains(&"onprem-network"));
+
+	// Some sites on their own servers keeps the questions.
+	let some_iti = evaluate(
+		&v1(),
+		&with(
+			sized(),
+			json!({ "central": "bescloud", "hosting_where": "allclient", "iti_use": "some" }),
+		),
+	);
+	assert!(some_iti.visible_questions.iter().any(|v| v == "platform"));
 }
 
 #[test]
@@ -484,26 +554,26 @@ fn declining_telemetry_is_an_off_default_opt_out() {
 
 #[test]
 fn client_network_items_need_on_prem() {
-	let common = |mix: serde_json::Value| {
+	let common = |where_: &str| {
 		json!({
 			"catchment": "c0",
 			"facilities": "f0",
 			"mobile": "m0",
 			"central": "bescloud",
-			"hosting_mix": mix,
+			"hosting_where": where_,
 			"remote": "tailscale",
 			"timesync": "outbound",
 			"telemetry": "yes",
 		})
 	};
 	// All-cloud: the client-side network allowances don't apply.
-	let cloud = evaluate(&v1(), &answers(common(json!({ "bescloud": 100 }))));
+	let cloud = evaluate(&v1(), &answers(common("allbes")));
 	let cloud_ids = fired_ids(&cloud);
 	for id in ["remote-tailscale", "time-outbound", "telemetry-on"] {
 		assert!(!cloud_ids.contains(&id), "{id} should not fire all-cloud");
 	}
 	// With client-hosted facilities, they do.
-	let onprem = evaluate(&v1(), &answers(common(json!({ "clienthosted": 100 }))));
+	let onprem = evaluate(&v1(), &answers(common("allclient")));
 	let onprem_ids = fired_ids(&onprem);
 	for id in ["remote-tailscale", "time-outbound", "telemetry-on"] {
 		assert!(onprem_ids.contains(&id), "{id} should fire with on-prem");
@@ -528,31 +598,6 @@ fn declining_telemetry_blocks_tupaia_and_mobile() {
 }
 
 #[test]
-fn iti_only_hides_the_client_os_question() {
-	let shows = |eval: &pollen_server::ruleset::Evaluation| {
-		eval.visible_questions.iter().any(|q| q == "platform")
-	};
-	// BES cloud + Iti only: both are fixed to Linux/ARM64, so no OS to choose.
-	let iti = evaluate(
-		&v1(),
-		&with(
-			sized(),
-			json!({ "central": "bescloud", "hosting_mix": { "bescloud": 50, "iti": 50 } }),
-		),
-	);
-	assert!(!shows(&iti));
-	// Client-hosted servers do have an OS to choose.
-	let clienthosted = evaluate(
-		&v1(),
-		&with(
-			sized(),
-			json!({ "central": "bescloud", "hosting_mix": { "clienthosted": 100 } }),
-		),
-	);
-	assert!(shows(&clienthosted));
-}
-
-#[test]
 fn windows_requires_time_sync_setup() {
 	// Windows servers don't get time sync for free the way the Linux servers do,
 	// so choosing Windows always raises the requirement to configure it.
@@ -562,8 +607,8 @@ fn windows_requires_time_sync_setup() {
 
 #[test]
 fn dns_arrangement_targets_the_consequence() {
-	// Each arrangement fires its own consequence. Only the BES subdomain — where
-	// BES owns the domain and the certificates outright — stays on the default
+	// Each arrangement fires its own consequence. Only the BES subdomain, where
+	// BES owns the domain and the certificates outright, stays on the default
 	// path; the rest each add a cost or a client-side step.
 	let subdomain = evaluate(
 		&v1(),

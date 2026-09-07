@@ -224,7 +224,7 @@
     "schemas": {
       "AppView": {
         "type": "object",
-        "description": "The full state of an application: its lifecycle fields, the questions to\nrender, the current answers, the evaluation (consequences, verdict, derived\nvalues, visible questions, guidance), and — on a fork — what changed.",
+        "description": "The full state of an application: its lifecycle fields, the questions to\nrender, the current answers, the evaluation (consequences, verdict, derived\nvalues, visible questions, guidance), and, on a fork, what changed.",
         "required": [
           "id",
           "status",
@@ -294,7 +294,7 @@
           },
           "update_available": {
             "type": "boolean",
-            "description": "True when the plan is bound to a ruleset other than the current bundled\ndefault — a newer default is available. A draft updates in place; a\nfinalised plan spawns a new draft on the new ruleset."
+            "description": "True when the plan is bound to a ruleset other than the current bundled\ndefault, meaning a newer default is available. A draft updates in place; a\nfinalised plan spawns a new draft on the new ruleset."
           }
         }
       },
@@ -643,8 +643,7 @@
         "enum": [
           "Single",
           "Multi",
-          "Band",
-          "Mix"
+          "Band"
         ]
       },
       "QuestionView": {

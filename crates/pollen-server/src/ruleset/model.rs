@@ -104,9 +104,6 @@ pub enum QuestionKind {
 	Multi,
 	/// Pick one option from an ordered set of bands (low to high).
 	Band,
-	/// Split a rough percentage across the options (they sum to 100). A class
-	/// is present when its share is above zero.
-	Mix,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]

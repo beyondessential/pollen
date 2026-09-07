@@ -23,7 +23,7 @@ pub struct Config {
 	pub ruleset_branch: String,
 
 	/// How often to poll the production branch, in seconds (the first check runs
-	/// at startup). `0` disables polling — the bundled default is used as-is.
+	/// at startup). `0` disables polling; the bundled default is used as-is.
 	pub ruleset_poll_secs: u64,
 }
 

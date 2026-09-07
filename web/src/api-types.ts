@@ -121,7 +121,7 @@ export interface components {
         /**
          * @description The full state of an application: its lifecycle fields, the questions to
          *     render, the current answers, the evaluation (consequences, verdict, derived
-         *     values, visible questions, guidance), and — on a fork — what changed.
+         *     values, visible questions, guidance), and, on a fork, what changed.
          */
         AppView: {
             answers: unknown;
@@ -142,7 +142,7 @@ export interface components {
             status: components["schemas"]["ApplicationStatus"];
             /**
              * @description True when the plan is bound to a ruleset other than the current bundled
-             *     default — a newer default is available. A draft updates in place; a
+             *     default, meaning a newer default is available. A draft updates in place; a
              *     finalised plan spawns a new draft on the new ruleset.
              */
             update_available: boolean;
@@ -291,7 +291,7 @@ export interface components {
             type: string;
         };
         /** @enum {string} */
-        QuestionKind: "Single" | "Multi" | "Band" | "Mix";
+        QuestionKind: "Single" | "Multi" | "Band";
         /**
          * @description A question's render metadata (the engine decides visibility; see
          *     `Evaluation::visible_questions`).

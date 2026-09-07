@@ -16,9 +16,6 @@ pub enum Condition {
 	Equals(String, String),
 	/// A multi-select question's answers include an option id.
 	Includes(String, String),
-	/// A mix question gives an option a share above zero — the presence-of-class
-	/// check for a percentage split.
-	HasShare(String, String),
 	/// All sub-conditions hold (vacuously true when empty).
 	All(Vec<Condition>),
 	/// Any sub-condition holds (false when empty).
@@ -39,7 +36,6 @@ impl Condition {
 			Condition::Answered(q) => answers.answered(q),
 			Condition::Equals(q, opt) => answers.one(q) == Some(opt.as_str()),
 			Condition::Includes(q, opt) => answers.many(q).iter().any(|o| o == opt),
-			Condition::HasShare(q, opt) => answers.share(q, opt) > 0,
 			Condition::All(cs) => cs.iter().all(|c| c.eval(answers)),
 			Condition::Any(cs) => cs.iter().any(|c| c.eval(answers)),
 			Condition::Not(c) => !c.eval(answers),

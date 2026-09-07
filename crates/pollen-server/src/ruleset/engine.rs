@@ -166,7 +166,6 @@ fn apply_defaults(ruleset: &Ruleset, answers: &Answers) -> (Answers, Vec<Assumed
 			}
 			let answer = match q.kind {
 				QuestionKind::Multi => Answer::Many(vec![default.clone()]),
-				QuestionKind::Mix => Answer::Mix([(default.clone(), 100)].into_iter().collect()),
 				QuestionKind::Single | QuestionKind::Band => Answer::One(default.clone()),
 			};
 			effective.set(&q.id, answer);

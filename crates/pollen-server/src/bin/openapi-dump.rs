@@ -2,7 +2,7 @@
 //!
 //! Used by `just gen-openapi` to refresh `web/openapi.json`, which the frontend
 //! turns into TypeScript types via `openapi-typescript`. No database or network
-//! is required — the spec is fully derived from compile-time annotations.
+//! is required; the spec is fully derived from compile-time annotations.
 
 use pollen_server::{fns, openapi::ApiDoc};
 use utoipa::OpenApi;

@@ -27,7 +27,7 @@ async fn create_patch_finalise_fork_lifecycle() {
 		// A complete, blocking configuration: dashboards on but backups disabled.
 		// Every visible question is answered, so nothing is assumed and nothing
 		// is left open; platform, on-prem form, retention, and hosted-integration
-		// stay hidden with an all-cloud mix and backups declined.
+		// stay hidden with an all-cloud answer and backups declined.
 		let answers = json!({
 			"tupaia": "yes",
 			"integrations": ["none"],
@@ -35,7 +35,7 @@ async fn create_patch_finalise_fork_lifecycle() {
 			"facilities": "f0",
 			"mobile": "m0",
 			"central": "bescloud",
-			"hosting_mix": { "bescloud": 100 },
+			"hosting_where": "allbes",
 			"region": "sydney",
 			"backup_capability": "no",
 			"cadence": "release",

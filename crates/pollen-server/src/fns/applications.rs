@@ -21,7 +21,7 @@ use crate::state::AppState;
 
 /// The full state of an application: its lifecycle fields, the questions to
 /// render, the current answers, the evaluation (consequences, verdict, derived
-/// values, visible questions, guidance), and — on a fork — what changed.
+/// values, visible questions, guidance), and, on a fork, what changed.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct AppView {
 	pub id: Uuid,
@@ -31,7 +31,7 @@ pub struct AppView {
 	pub finalised_at: Option<Timestamp>,
 	pub config_hash: String,
 	/// True when the plan is bound to a ruleset other than the current bundled
-	/// default — a newer default is available. A draft updates in place; a
+	/// default, meaning a newer default is available. A draft updates in place; a
 	/// finalised plan spawns a new draft on the new ruleset.
 	pub update_available: bool,
 	/// The flow's sections, in presentation order.

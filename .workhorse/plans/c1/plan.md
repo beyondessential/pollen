@@ -229,3 +229,26 @@ DNS is now assumed BES-managed, so the domain chain resolves through to a name
 on tamanu.app without the reader opening the technical section. It can still be
 declined. Open items on an untouched plan are down to the mobile count and
 integrations.
+
+## The artifact reads as a checklist
+
+The by-audience / by-topic toggle is gone. Two views of the same data was a
+control the reader had to think about before reading anything, and the topic
+view duplicated a grouping the audience view already served. The spec no longer
+claims two groupings, and the topic label and ordering maps went with it.
+
+Each consequence is now an item built from the form's own vocabulary: white
+surface, hairline border, and a leading marker box, the same shape as a choice
+in the questionnaire. It carries more room than the old card, which packed a
+title, prose and three tags into ten pixels of padding beside a coloured bar.
+The marker carries severity: neutral and empty for an ordinary requirement,
+filled and ticked for anything off the standard path.
+
+Audience groups are collapsible, reusing the expander the technical section
+already uses, so the two surfaces share one idiom. Groups arrive open, because
+collapsing is for skipping past a group addressed to someone else, never for
+hiding content from a reader who has not looked yet.
+
+A collapsed group is hidden with CSS rather than left unrendered, so printing
+carries the whole record however the reader reached the print dialog. The
+browser's own print command is as valid a route as the button.

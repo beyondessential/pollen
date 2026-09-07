@@ -216,8 +216,9 @@ This comparison is the "what changed" summary the user sees on update: newly-req
 
 ### Finalised web view
 
-The canonical artifact is a live page that renders the same underlying data in more than one way.
-It can be presented grouped by audience or grouped by topic, with every consequence shown in full, and supports searching and deep-linking to a section.
+The canonical artifact is a live page.
+It presents every consequence in full, grouped by the reader it is addressed to, and supports searching and deep-linking to a section.
+Each group can be collapsed, so a reader can skip past the groups addressed to someone else.
 
 An interim artifact is marked as interim, and lists its open questions before the detail, so a reader meets what is still unsettled before reading what was decided.
 Every assumed answer is listed too, so a reader can see what the tool filled in on their behalf and correct any of it in a new version.

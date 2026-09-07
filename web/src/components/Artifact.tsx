@@ -9,23 +9,22 @@ import {
 	type Audience,
 	isAnswered,
 	type QuestionView,
-	TOPIC_LABEL,
-	TOPIC_ORDER,
 	type TriggeredConsequence,
 } from "../types";
-import { ConsequenceCard, VerdictBanner } from "./visuals";
+import { Chevron, ConsequenceCard, VerdictBanner } from "./visuals";
 
 const AUDIENCE_ORDER: Audience[] = ["Client", "Bes", "Record"];
 
-type Grouping = "audience" | "topic";
 type Group = { key: string; label: string; items: TriggeredConsequence[] };
 
 export default function Artifact({ view }: { view: AppView }) {
 	const navigate = useNavigate();
 	const [busy, setBusy] = useState(false);
 	const [copied, setCopied] = useState(false);
-	const [grouping, setGrouping] = useState<Grouping>("audience");
 	const [query, setQuery] = useState("");
+	// Groups open on arrival; collapsing is for skipping past the ones addressed
+	// to someone else, never for hiding content from a reader who has not looked.
+	const [shut, setShut] = useState<Record<string, boolean>>({});
 
 	const answers = view.answers as unknown as Record<string, AnswerValue>;
 	const ev = view.evaluation;
@@ -47,8 +46,8 @@ export default function Artifact({ view }: { view: AppView }) {
 					`${c.consequence.title} ${c.consequence.detail}`.toLowerCase().includes(q),
 				)
 			: ev.consequences;
-		return groupConsequences(matches, grouping).filter((g) => g.items.length > 0);
-	}, [ev.consequences, grouping, query]);
+		return groupConsequences(matches).filter((g) => g.items.length > 0);
+	}, [ev.consequences, query]);
 
 	async function makeNewVersion() {
 		// Open the tab synchronously within the click so it isn't popup-blocked,
@@ -66,10 +65,10 @@ export default function Artifact({ view }: { view: AppView }) {
 	}
 
 	function downloadPdf() {
-		// Print the complete, audience-sectioned artifact regardless of the
-		// current toggle/search; let React re-render before the print dialog.
-		setGrouping("audience");
+		// Print the whole artifact regardless of what is collapsed or searched
+		// for; let React re-render before the print dialog opens.
 		setQuery("");
+		setShut({});
 		setTimeout(() => window.print(), 50);
 	}
 
@@ -132,27 +131,11 @@ export default function Artifact({ view }: { view: AppView }) {
 				</section>
 			)}
 
-			<div className="sheet-controls">
-				<div className="tg-group">
-					<button
-						type="button"
-						className={`tg${grouping === "audience" ? " on" : ""}`}
-						onClick={() => setGrouping("audience")}
-					>
-						By audience
-					</button>
-					<button
-						type="button"
-						className={`tg${grouping === "topic" ? " on" : ""}`}
-						onClick={() => setGrouping("topic")}
-					>
-						By topic
-					</button>
-				</div>
-				{/* Searching a list you can take in at a glance is chrome, not help.
-				    A plan on the standard path lands around ten, so the line sits
-				    above that: search appears for the genuinely long ones. */}
-				{ev.consequences.length > 12 && (
+			{/* Searching a list you can take in at a glance is chrome, not help. A
+			    plan on the standard path lands around ten, so the line sits above
+			    that: search appears only for the genuinely long ones. */}
+			{ev.consequences.length > 12 && (
+				<div className="sheet-controls">
 					<input
 						className="sheet-search"
 						type="search"
@@ -160,22 +143,38 @@ export default function Artifact({ view }: { view: AppView }) {
 						value={query}
 						onChange={(e) => setQuery(e.target.value)}
 					/>
-				)}
-			</div>
+				</div>
+			)}
 
 			{groups.length === 0 ? (
 				<section className="sheet-section">
 					<p className="ledger-empty">No consequences match your search.</p>
 				</section>
 			) : (
-				groups.map((g) => (
-					<section key={g.key} id={`s-${g.key}`} className="sheet-section">
-						<h3 className="sheet-section-title">{g.label}</h3>
-						{g.items.map((c) => (
-							<ConsequenceCard key={c.id} c={c.consequence} />
-						))}
-					</section>
-				))
+				groups.map((g) => {
+					const open = !shut[g.key];
+					return (
+						<section key={g.key} id={`s-${g.key}`} className="sheet-section">
+							<button
+								type="button"
+								className={`qexpand${open ? " on" : ""}`}
+								aria-expanded={open}
+								onClick={() => setShut({ ...shut, [g.key]: open })}
+							>
+								<Chevron size={17} />
+								<span>{g.label}</span>
+								<span className="group-count">{g.items.length}</span>
+							</button>
+							{/* Always rendered, hidden with CSS: printing must carry the
+							    whole record however the reader reached the print dialog. */}
+							<div className={`items${open ? "" : " shut"}`}>
+								{g.items.map((c) => (
+									<ConsequenceCard key={c.id} c={c.consequence} />
+								))}
+							</div>
+						</section>
+					);
+				})
 			)}
 
 			{ev.assumed.length > 0 && (
@@ -213,21 +212,12 @@ export default function Artifact({ view }: { view: AppView }) {
 	);
 }
 
-function groupConsequences(items: TriggeredConsequence[], grouping: Grouping): Group[] {
-	if (grouping === "audience") {
-		return AUDIENCE_ORDER.map((a) => ({
-			key: a,
-			label: AUDIENCE_LABEL[a],
-			items: items.filter((c) => c.consequence.audience === a),
-		}));
-	}
-	// By topic: known topics first, then any others in order of appearance.
-	const extras = items.map((c) => c.source).filter((s) => !TOPIC_ORDER.includes(s));
-	const sources = [...TOPIC_ORDER, ...new Set(extras)];
-	return sources.map((source) => ({
-		key: source,
-		label: TOPIC_LABEL[source] ?? source,
-		items: items.filter((c) => c.source === source),
+/// Consequences grouped by the reader they are addressed to, in reading order.
+function groupConsequences(items: TriggeredConsequence[]): Group[] {
+	return AUDIENCE_ORDER.map((a) => ({
+		key: a,
+		label: AUDIENCE_LABEL[a],
+		items: items.filter((c) => c.consequence.audience === a),
 	}));
 }
 

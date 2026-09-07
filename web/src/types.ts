@@ -115,26 +115,3 @@ export const AUDIENCE_LABEL: Record<Audience, string> = {
 	Bes: "BES technical: setup",
 	Record: "Record & acknowledgements",
 };
-
-// Topic grouping for the artifact's by-topic view, keyed by a rule's `source`.
-export const TOPIC_LABEL: Record<string, string> = {
-	intent: "Intent",
-	topology: "Topology",
-	region: "Region",
-	platform: "Platform",
-	backups: "Backups",
-	upgrades: "Upgrades",
-	network: "Networking",
-	telemetry: "Telemetry",
-};
-
-export const TOPIC_ORDER: string[] = [
-	"intent",
-	"topology",
-	"region",
-	"platform",
-	"backups",
-	"upgrades",
-	"network",
-	"telemetry",
-];

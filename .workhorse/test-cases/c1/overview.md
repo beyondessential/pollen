@@ -57,6 +57,8 @@ been run; an unticked one is a scenario still owed, not one decided against.
 - [ ] An interim artifact shows its badge and lists open questions ahead of the detail.
 - [ ] Assumptions are listed on the artifact and are correctable through a new version.
 - [ ] The PDF export places open questions directly after the verdict, and prints no buttons.
+- [ ] Printing with a group collapsed still carries that group's items, by the button and by the browser's own print command.
+- [ ] Audience groups arrive open, and collapsing one leaves the others alone.
 - [ ] Finalising lands the reader at the top of the artifact, and a link naming a section still reaches it.
 - [ ] Search appears only on an artifact long enough to need it.
 - [ ] The balance question renders as one row of three, matching the sizing bands.

@@ -294,38 +294,8 @@ body {
 	color: var(--ink-faint);
 	margin: 0 0 9px;
 }
-.cons {
-	display: flex;
-	background: var(--surface);
-	border: 1px solid var(--line);
-	border-radius: 10px;
-	overflow: hidden;
-}
-.cons-bar {
-	width: 3px;
-	flex-shrink: 0;
-}
-.cons-body {
-	padding: 10px 13px;
-}
-.cons-head {
-	display: flex;
-	align-items: center;
-}
-.cons-title {
-	font-size: 13px;
-	font-weight: 600;
-	font-family: var(--font-display);
-}
-.cons-detail {
-	font-size: 12.5px;
-	color: var(--ink-soft);
-	line-height: 1.5;
-	margin: 5px 0 9px;
-	max-width: 70ch;
-}
 /* Inline markup (links open in a new tab; see markup.tsx) in ruleset prose. */
-.cons-detail a,
+.item-detail a,
 .qhelp a,
 .guide a,
 .choice-note a {
@@ -333,18 +303,12 @@ body {
 	text-decoration: underline;
 	text-underline-offset: 2px;
 }
-.cons-detail code,
+.item-detail code,
 .qhelp code,
 .guide code,
 .choice-note code {
 	font-family: var(--font-mono);
 	font-size: 0.9em;
-}
-.cons-tags {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 6px;
-	align-items: center;
 }
 .tag {
 	font-size: 10.5px;
@@ -515,25 +479,6 @@ body {
 	gap: 6px;
 	align-self: flex-start;
 }
-.tg-group {
-	display: flex;
-	gap: 6px;
-}
-.tg {
-	padding: 7px 13px;
-	border: 1px solid var(--line);
-	background: var(--surface);
-	border-radius: 8px;
-	font-family: inherit;
-	font-size: 12.5px;
-	color: var(--ink-soft);
-	cursor: pointer;
-}
-.tg.on {
-	background: var(--navy);
-	color: #fff;
-	border-color: var(--navy);
-}
 .sheet-search {
 	flex: 1;
 	min-width: 150px;
@@ -618,6 +563,13 @@ body {
 	.sheet-actions {
 		display: none;
 	}
+	/* A collapsed group is a reading convenience; the printed record is whole. */
+	.items.shut {
+		display: flex;
+	}
+	.qexpand svg {
+		display: none;
+	}
 	body {
 		background: #fff;
 	}
@@ -629,14 +581,14 @@ body {
 		box-shadow: none;
 	}
 	.sheet-section,
-	.cons,
+	.item,
 	.card,
 	.record {
 		break-inside: avoid;
 	}
 	/* The entrance animation (opacity 0→1, fill both) can otherwise be captured
 	   mid-flight on a freshly re-rendered view, printing sections greyed out. */
-	.cons,
+	.item,
 	.card {
 		animation: none;
 		opacity: 1;
@@ -780,4 +732,68 @@ body {
 }
 .flag-block .flag-dot {
 	background: var(--block);
+}
+
+/* ── Artifact groups and items ───────────────────────────────────────── */
+/* Consequences read as a list of things the deployment entails, built from the
+   same vocabulary as the form's choices so the two surfaces match. */
+.group-count {
+	margin-left: auto;
+	font-family: var(--font-body);
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--ink-faint);
+	background: var(--surface);
+	border-radius: 99px;
+	padding: 2px 9px;
+}
+.items {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.items.shut {
+	display: none;
+}
+.item {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 11px;
+	padding: 15px 17px;
+}
+.item-mark {
+	width: 18px;
+	height: 18px;
+	border-radius: 6px;
+	border: 1.5px solid var(--line);
+	flex-shrink: 0;
+	margin-top: 2px;
+	display: grid;
+	place-items: center;
+}
+.item-body {
+	min-width: 0;
+}
+.item-title {
+	font-family: var(--font-display);
+	font-size: 14px;
+	font-weight: 600;
+	margin: 0;
+}
+.item-detail {
+	font-size: 13px;
+	color: var(--ink-soft);
+	line-height: 1.6;
+	margin: 6px 0 0;
+	max-width: 70ch;
+}
+.item-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	align-items: center;
+	margin-top: 11px;
 }

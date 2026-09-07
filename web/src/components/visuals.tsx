@@ -63,19 +63,30 @@ export function Tag({
 	);
 }
 
+/// One consequence, read as an item on a list of things this deployment entails.
+/// Built from the same vocabulary as the form's choices (white surface, hairline
+/// border, a leading marker) so the artifact and the questionnaire read as one
+/// system. The marker carries severity; an ordinary requirement is left neutral.
 export function ConsequenceCard({ c }: { c: Consequence }) {
 	const sev = SEVERITY[c.severity];
 	return (
-		<div className="cons" style={{ borderColor: sev.bg }}>
-			<div className="cons-bar" style={{ background: sev.dot }} />
-			<div className="cons-body">
-				<div className="cons-head">
-					<span className="cons-title">{c.title}</span>
-				</div>
-				<p className="cons-detail">
+		<div className="item">
+			<span
+				className="item-mark"
+				style={
+					c.severity === "Default"
+						? undefined
+						: { background: sev.dot, borderColor: sev.dot, color: "#fff" }
+				}
+			>
+				{c.severity !== "Default" && <Check size={12} />}
+			</span>
+			<div className="item-body">
+				<h4 className="item-title">{c.title}</h4>
+				<p className="item-detail">
 					<Markup text={c.detail} />
 				</p>
-				<div className="cons-tags">
+				<div className="item-tags">
 					{c.types.map((t) => (
 						<Tag key={t} color={TYPE_COLOR[t].color} bg={TYPE_COLOR[t].bg}>
 							{CONSEQUENCE_TYPE_LABEL[t]}

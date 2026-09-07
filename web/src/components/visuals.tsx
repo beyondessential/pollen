@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { type Consequence, type Severity, type Verdict } from "../types";
+import type { Consequence, Verdict } from "../types";
 import { Markup } from "../markup";
 
 // Minimal inline icons (lucide-style paths), so nothing is fetched at runtime.
@@ -26,43 +26,27 @@ export const Chevron = (p: { size?: number }) => (
 	<Icon paths='<path d="m6 9 6 6 6-6"/>' {...p} />
 );
 
-type SevMeta = { color: string; bg: string; dot: string };
-const SEVERITY: Record<Severity, SevMeta> = {
-	Default: { color: "var(--ink-soft)", bg: "var(--line-soft)", dot: "var(--ink-faint)" },
-	NonDefault: { color: "var(--offdef)", bg: "var(--offdef-bg)", dot: "var(--offdef)" },
-	Blocking: { color: "var(--block)", bg: "var(--block-bg)", dot: "var(--block)" },
-};
-
-/// One consequence. An item the client's IT team must act on carries a box the
-/// reader ticks off as they work through the list; everything else is
-/// information and carries none. Severity shows as a coloured edge rather than
-/// a badge.
+/// One consequence, with a box the reader ticks off as they deal with it.
 export function ConsequenceCard({
 	c,
 	done,
 	onToggle,
 }: {
 	c: Consequence;
-	done?: boolean;
-	/// Set only for an action. Its absence is what makes an item read as
-	/// information rather than something to do.
-	onToggle?: () => void;
+	done: boolean;
+	onToggle: () => void;
 }) {
-	const sev = SEVERITY[c.severity];
-	const edge = c.severity === "Default" ? undefined : { borderLeftColor: sev.dot };
 	return (
-		<div className={`item${c.severity === "Default" ? "" : " item-flagged"}`} style={edge}>
-			{onToggle && (
-				<button
-					type="button"
-					className={`item-check${done ? " on" : ""}`}
-					aria-pressed={done}
-					aria-label={done ? `Mark "${c.title}" not done` : `Mark "${c.title}" done`}
-					onClick={onToggle}
-				>
-					{done && <Check size={12} />}
-				</button>
-			)}
+		<div className="item">
+			<button
+				type="button"
+				className={`item-check${done ? " on" : ""}`}
+				aria-pressed={done}
+				aria-label={done ? `Mark "${c.title}" not done` : `Mark "${c.title}" done`}
+				onClick={onToggle}
+			>
+				{done && <Check size={12} />}
+			</button>
 			<div className="item-body">
 				<h4 className={`item-title${done ? " item-done" : ""}`}>{c.title}</h4>
 				<p className="item-detail">

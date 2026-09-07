@@ -221,7 +221,7 @@ It presents every consequence in full, grouped by the reader it is addressed to,
 Each group can be collapsed, so a reader can skip past the groups addressed to someone else.
 The viability callout names the choices that took the plan off the standard path, not only how many there were.
 
-An item the client's IT team must act on carries a box the reader ticks off as the work is done; an item that records information or acknowledges a choice carries none, because there is nothing to do about it.
+Every item carries a box the reader ticks off as they deal with it, whether that means doing the work, noting the consequence, or resolving the conflict.
 Ticking is the reader's own progress, held in their browser and never against the artifact: a finalised artifact is immutable, and its link is held by several people who are not working through the same list.
 The printed record omits the boxes for the same reason.
 

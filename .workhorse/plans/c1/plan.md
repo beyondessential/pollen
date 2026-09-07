@@ -265,11 +265,16 @@ kept in their browser, never stored against the artifact, and never sent to the
 tool. The printed record omits the boxes: the PDF is the record, not a snapshot
 of someone's progress.
 
-**Only actions get a box.** An item qualifies when it is a requirement addressed
-to the client's IT team, which is what "required actions" means. That exposed
-six consequences tagged as client requirements that are nothing of the kind:
-they describe what a choice costs rather than something anyone does. Retagged as
-acknowledgements, so they sit under the record rather than in a list of work:
+**Every item gets a box.** Restricting them to client requirements was too
+clever by half: "Make DNS resilient to network partitions" is advisory, and is
+plainly still something the client does. Ticking means "I have dealt with this",
+which applies to doing the work, noting a consequence, and resolving a conflict
+alike, so there is no rule to explain and nothing to mis-tag.
+
+The tagging fixes stand on their own merits, because the spec defines a
+requirement as what the client's IT team is required to do. Six consequences
+described what a choice costs rather than anything anyone does, so they now sit
+under the record rather than among the client's actions:
 
 - Client hosts the central server
 - A few days of backups only
@@ -278,11 +283,10 @@ acknowledgements, so they sit under the record rather than in a list of work:
 - No telemetry: support, backups, and mobile are opted out
 - DNS: a dedicated BES-owned domain
 
-Two more moved for the same reason: `dns-bes-subdomain` says outright that there
-is nothing for client IT to set up, so it is advice to BES rather than a client
-action.
+A seventh moved for the same reason: `dns-bes-subdomain` says outright that
+there is nothing for client IT to set up, so it is advice to BES.
 
-Severity now shows as a coloured left edge instead of a pill. The type and
-status badges are gone entirely, along with the label maps and the shared tag
-component that only they used. The viability callout expands to name the choices
-behind its count.
+The type and status badges are gone, and so is the severity colouring on items,
+along with the label maps, the severity palette and the shared tag component
+that only they used. Severity now lives solely in the viability callout, which
+expands to name the choices behind its count rather than only totalling them.

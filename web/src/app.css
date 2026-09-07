@@ -765,11 +765,6 @@ body {
 	border-radius: 11px;
 	padding: 15px 17px;
 }
-/* Severity as a coloured edge: semantic, and quieter than a pill. */
-.item-flagged {
-	border-left-width: 3px;
-	border-left-style: solid;
-}
 /* A real control: the reader ticks these off as the work gets done. */
 .item-check {
 	width: 20px;

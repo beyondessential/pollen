@@ -59,7 +59,7 @@ been run; an unticked one is a scenario still owed, not one decided against.
 - [ ] The PDF export places open questions directly after the verdict, and prints no buttons.
 - [ ] Printing with a group collapsed still carries that group's items, by the button and by the browser's own print command.
 - [ ] Audience groups arrive open, and collapsing one leaves the others alone.
-- [ ] Only the client's required actions carry a tick box; acknowledgements and advisories carry none.
+- [ ] Every item carries a tick box, in every group.
 - [ ] A tick survives a reload of the same artifact, and does not appear on a different one.
 - [ ] Tick state never reaches the server, and the printed record shows no boxes.
 - [ ] The viability callout expands to name the choices behind its count, and prints expanded.

@@ -193,7 +193,7 @@ export default function Artifact({ view }: { view: AppView }) {
 										key={c.id}
 										c={c.consequence}
 										done={done.includes(c.id)}
-										onToggle={isAction(c) ? () => toggleDone(c.id) : undefined}
+										onToggle={() => toggleDone(c.id)}
 									/>
 								))}
 							</div>
@@ -235,12 +235,6 @@ export default function Artifact({ view }: { view: AppView }) {
 			</section>
 		</div>
 	);
-}
-
-/// Whether an item is something the client's IT team has to do, as opposed to
-/// information or an acknowledgement of a choice. Only these get a tick box.
-function isAction(c: TriggeredConsequence): boolean {
-	return c.consequence.status === "Requirement" && c.consequence.audience === "Client";
 }
 
 /// Consequences grouped by the reader they are addressed to, in reading order.

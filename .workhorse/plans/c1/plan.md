@@ -179,3 +179,31 @@ Two things changed in code:
 The eight already-unreadable dev plans were deleted, since no code path could
 load them. Pre-production, deleting `Mix` was still the right call; once the
 tool is live, that option closes.
+
+## Spec caught up with the build
+
+The implementation had run ahead of `.workhorse/specs/wizard/onboarding.md`,
+which still described a flow where every visible question had to be answered.
+Added, in the file's own prose style rather than Workhorse's default checkboxes:
+
+- **The question flow**: sections ordered least technical to most, the sizing
+  questions as the only required ones, and the technical section arriving
+  collapsed and labelled with what opening it offers.
+- **Required, assumed, and open questions**: the three ways a question resolves,
+  the test for which a question is authored as, and the guarantee that nested
+  assumptions are applied until nothing further resolves.
+- **Visibility**: an open question gates nothing, so questions behind it stay
+  hidden rather than being asked against an unknown.
+- **Artifact lifecycle**: finalising is refused only on required questions, and
+  an interim artifact is immutable like any other, so settling its gaps is a new
+  version.
+- **Outputs**: the finalised view and the PDF both place open questions ahead of
+  the detail that rests on them, and list what was assumed.
+
+Em-dashes swept from the spec at the same time.
+
+## Test cases
+
+`.workhorse/test-cases/c1/overview.md`: 30 scenarios covered by automated tests,
+11 still owed and all of them interface behaviour that wants a person looking at
+it. The unticked boxes are coverage outstanding, not scenarios dismissed.

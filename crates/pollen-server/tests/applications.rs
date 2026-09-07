@@ -309,3 +309,62 @@ async fn a_ruleset_the_engine_cannot_read_is_a_conflict_not_a_crash() {
 	})
 	.await;
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn forking_an_interim_plan_carries_its_open_questions() {
+	run_server(|server, _conn| async move {
+		// Settling an interim plan's gaps is a new version rather than an edit
+		// (spec WIZ), so the fork has to arrive still knowing what is open.
+		let created: Value = server
+			.post("/api/applications/create")
+			.json(&json!({}))
+			.await
+			.json();
+		let id = created["id"].as_str().unwrap().to_owned();
+		server
+			.post("/api/applications/patch")
+			.json(&json!({
+				"id": id,
+				"answers": { "catchment": "c1", "facilities": "f1" },
+			}))
+			.await
+			.assert_status_ok();
+
+		let finalised: Value = server
+			.post("/api/applications/finalise")
+			.json(&json!({ "id": id }))
+			.await
+			.json();
+		let open = finalised["evaluation"]["open_items"].clone();
+		assert!(
+			!open.as_array().unwrap().is_empty(),
+			"the plan under test should be interim"
+		);
+
+		let forked: Value = server
+			.post("/api/applications/fork")
+			.json(&json!({ "id": id }))
+			.await
+			.json();
+		assert_eq!(forked["status"], "draft");
+		assert_eq!(forked["parent_id"], id);
+		// Same ruleset, so nothing migrates and the gaps are the same gaps.
+		assert_eq!(forked["migration"]["dropped"], json!([]));
+		assert_eq!(forked["evaluation"]["open_items"], open);
+		assert_eq!(forked["answers"]["catchment"], "c1");
+
+		// Settling one of them removes it, leaving the rest to carry on.
+		let settled: Value = server
+			.post("/api/applications/patch")
+			.json(&json!({
+				"id": forked["id"],
+				"answers": { "catchment": "c1", "facilities": "f1", "dns": "bes" },
+			}))
+			.await
+			.json();
+		let still_open = settled["evaluation"]["open_items"].as_array().unwrap();
+		assert!(!still_open.iter().any(|o| o == "dns"));
+		assert!(!still_open.is_empty());
+	})
+	.await;
+}

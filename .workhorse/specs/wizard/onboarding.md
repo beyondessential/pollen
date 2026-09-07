@@ -5,9 +5,9 @@ id: WIZ
 # Deployment onboarding wizard
 
 A guided configuration tool that walks a BES team member and a prospective client through the technical decisions required to stand up a new Tamanu deployment.
-At each decision it surfaces the consequences of leaving the blessed path — the default, fully-supported configuration — in language a non-technical reader can follow: added cost, degraded operations, lost capabilities, or unsupported configurations.
+At each decision it surfaces the consequences of leaving the blessed path (the default, fully-supported configuration) in language a non-technical reader can follow: added cost, degraded operations, lost capabilities, or unsupported configurations.
 
-The tool produces a permanent, shareable artifact that serves three readers at once: the client's IT team (what they must do — ports, outbound endpoints, DNS, region), the BES technical team (the decisions encoded so setup is done correctly), and a record of the choices made, including an acknowledgment of any non-default paths the client opted into.
+The tool produces a permanent, shareable artifact that serves three readers at once: the client's IT team (what they must do: ports, outbound endpoints, DNS, region), the BES technical team (the decisions encoded so setup is done correctly), and a record of the choices made, including an acknowledgment of any non-default paths the client opted into.
 
 The artifact is technical, not legal.
 It is a record, not a signed instrument.
@@ -26,13 +26,22 @@ Nothing stored is sensitive: no health data, no personal data, and no client or 
 The tool surfaces these boundaries to the user, not only records them here.
 
 - **It does not yet scope BES-hosted integrations.**
-  If the client wants BES to host an integration (for example a LIMS or pharmacy system, open source and hosted by BES for some clients), the tool records the intent and emits a referral — "this is possible but must be specced in a separate technical conversation."
+  If the client wants BES to host an integration (for example a LIMS or pharmacy system, open source and hosted by BES for some clients), the tool records the intent and emits a referral: "this is possible but must be specced in a separate technical conversation."
   Scoping such hosting within the tool is a later addition; for now the hosting detail is resolved in that separate conversation rather than captured here.
 - **It does not map individual facilities.**
   The tool operates at planning grain, not provisioning grain.
   It captures the shape and scale of a deployment, not which specific facility is hosted where; that is determined later by the BES technical team.
 - **It does not capture free text, names, or notes.**
   Every field is structured or enumerated.
+
+## The question flow
+
+The flow is ordered so that a reader who is not technical can stop early and still leave with something useful.
+
+Questions are grouped into named sections presented in a fixed order, running from the least technical to the most.
+The questions that size the deployment come first, and are the only ones that must be answered.
+The most technical section arrives collapsed, labelled with what opening it offers rather than with what it contains, so it reads as an invitation to sharpen the estimate rather than as work still owed.
+Leaving it collapsed is never a barrier, because every question inside it either carries an answer the engine assumes or can be declined.
 
 ## Rule engine model
 
@@ -44,29 +53,29 @@ Every captured item and every consequence carries up to three independent tags.
 
 ### Severity
 
-- **default** — the blessed path; no callout.
-- **non-default acknowledgment** — possible but off the blessed path; the client is opting in and accepts the attached consequences.
-- **blocking** — internally contradictory or unsupported; will not work as specified, and something must change.
+- **default**: the blessed path; no callout.
+- **non-default acknowledgment**: possible but off the blessed path; the client is opting in and accepts the attached consequences.
+- **blocking**: internally contradictory or unsupported; will not work as specified, and something must change.
 
 The tool always produces an artifact, even for contradictory input.
-A conflict short-circuits the *verdict* — a prominent callout that the configuration is very likely not possible as specified — not the *recording*: the full picture is still captured below the verdict.
+A conflict short-circuits the *verdict*, a prominent callout that the configuration is very likely not possible as specified, rather than the *recording*: the full picture is still captured below the verdict.
 The engine evaluates conditions across fields, both as forward guidance during the flow and as a final consistency check when the artifact is finalised.
 
 ### Consequence type
 
 A single choice may carry several.
 
-- **cost** — a relative magnitude tier, optionally with an indicative ballpark band (for example "on the order of hundreds per year" versus "thousands per year").
+- **cost**: a relative magnitude tier, optionally with an indicative ballpark band (for example "on the order of hundreds per year" versus "thousands per year").
   Never a real quote; sales confirms actual figures.
-- **operational impact** — for example slower incident response, manual failover, reduced retention, extended upgrade downtime.
-- **capability loss** — for example no Tupaia connection, no clone-upgrade testing.
-- **support status** — supported, supported with special arrangement, or unsupported.
+- **operational impact**: for example slower incident response, manual failover, reduced retention, extended upgrade downtime.
+- **capability loss**: for example no Tupaia connection, no clone-upgrade testing.
+- **support status**: supported, supported with special arrangement, or unsupported.
 
 ### Status
 
-- **requirement** — contractual; what the client's IT team is required to do.
-- **advisory** — planning information or recommendation; non-binding.
-- **referral** — handled in a separate conversation; the artifact flags the follow-up.
+- **requirement**: contractual; what the client's IT team is required to do.
+- **advisory**: planning information or recommendation; non-binding.
+- **referral**: handled in a separate conversation; the artifact flags the follow-up.
 
 ### Triggering
 
@@ -80,14 +89,36 @@ A requirement or consequence appears when its trigger condition holds.
 
 The artifact renders the union of every triggered block, grouped for the reader.
 Authored prose (consequence detail, question help, option notes, guidance) may
-carry limited inline markup — links, which open in a new tab, and light emphasis
-— so it can point to further documentation.
+carry limited inline markup: links, which open in a new tab, and light emphasis,
+so it can point to further documentation.
 
 ### Visibility and forward guidance
 
 The engine shows a question only when its precondition holds, and hides it otherwise; a precondition is a presence-of-class flag or a cross-field condition.
+An open question asserts nothing, so a question it would gate stays hidden rather than being asked against an unknown.
 When an earlier answer will constrain a later question, the engine warns forward at the point the constraint is set, before the later question is reached.
 At finalise, the engine re-checks every cross-field condition as a final consistency pass, so a conflict reached by pushing past a warning is still caught.
+
+### Required, assumed, and open questions
+
+A question the reader cannot answer must not block the estimate.
+Every question therefore resolves in one of three ways, decided where the ruleset is authored.
+
+- **Required.**
+  A question offering neither an assumed answer nor a way to decline must be answered.
+  Only questions with no blessed-path answer are authored this way, because there is nothing the engine could assume on the reader's behalf.
+- **Assumed.**
+  A question left blank takes its authored blessed-path answer, and the artifact records that it was assumed rather than chosen.
+  An assumed answer is otherwise indistinguishable from a chosen one: it triggers the same consequences and constrains later questions the same way.
+- **Open.**
+  A question the reader declines, or leaves blank where declining is offered, asserts nothing.
+  No consequence fires either way from it, and it is carried on the artifact as an item still to be settled.
+
+A question is authored as assumable when the blessed path is overwhelmingly what happens and a wrong guess would barely move the estimate.
+It is authored as declinable when the answer varies enough between clients that assuming one would misstate the estimate rather than approximate it.
+
+Assuming an answer can reveal a question that carries an assumed answer of its own, so the engine keeps applying them until no further question resolves.
+Only questions still visible once that settles are reported as assumed.
 
 ## Artifact lifecycle
 
@@ -98,13 +129,18 @@ An artifact is either a **draft** or a **finalised** version, and a finalised ve
   It is persisted, so the same URL reopens the same in-progress artifact.
   The browser also keeps a short, bounded list of recently-touched artifacts (their identifiers and recognition facts only, never identifying data); starting a fresh plan offers to resume the most recent, until the fresh plan itself carries a decision.
 - **Finalise.**
+  Finalising is refused only while a required question is unanswered; open questions do not stand in its way.
   Finalising produces a permanent, immutable artifact at its own identifier URL.
   This is the canonical artifact.
   A finalised artifact is frozen against the exact ruleset it was finalised under (see [Content-addressed binding](#content-addressed-binding)) and always renders against that frozen ruleset, so a later change to the rules never alters an already-finalised verdict.
+- **Interim.**
+  A finalised artifact carrying open questions is interim: complete and shareable, but marked as resting partly on gaps rather than wholly on answers.
+  It is immutable in the same way as any other finalised artifact, so settling its open questions produces a new version rather than editing it.
+  An artifact with no open questions carries no such marking.
 - **Versioning.**
   A finalised artifact cannot be edited in place.
   Making changes spawns a new finalised version at a new URL, carrying lineage back to its predecessor.
-  This prevents an artifact shifting under someone who already holds the link — both BES and the client may be holding it.
+  This prevents an artifact shifting under someone who already holds the link, and both BES and the client may be holding it.
 
 ## The ruleset
 
@@ -122,9 +158,9 @@ Finalising freezes that binding forever: the artifact always evaluates against t
 ### Production ruleset over the bundled default
 
 The engine ships with a bundled copy of the ruleset, but the live default is whatever the configured repository's production branch (by default `main`) carries: the daemon checks that branch on startup and periodically, and when it holds a different, valid ruleset, adopts it as the default new drafts bind.
-So a ruleset change reaches production by merging to that branch — no engine rebuild or redeploy.
+So a ruleset change reaches production by merging to that branch, with no engine rebuild or redeploy.
 The bundled copy is the fallback: if the branch is unreachable or its ruleset invalid, the current default stays in place.
-Finalised artifacts are unaffected — each stays frozen against its bound hash — and a newer default simply surfaces the "new version available" affordance on older plans.
+Finalised artifacts are unaffected, each staying frozen against its bound hash, and a newer default simply surfaces the "new version available" affordance on older plans.
 
 ### Preview against repository refs
 
@@ -140,16 +176,16 @@ A branch is mutable; naming a branch is therefore preview-only, and finalising b
 The binding chain strips mutability at each step: a branch resolves to content (verified to come from the configured repository), which hashes to an immutable identity, which is stored once and referenced by artifacts.
 
 Resolving a branch against the source repository is rate-limited, and a resolved result is briefly cached, so repeated or abusive preview requests do not exhaust the repository host's request quota.
-Binding the default ruleset — the common path, with no branch named — makes no request to the source repository on the request path: it binds the in-memory default. That default is refreshed from the production branch (above) by a background poll on a fixed schedule, so source requests are bounded by the poll interval, not by user traffic.
+Binding the default ruleset, the common path with no branch named, makes no request to the source repository on the request path: it binds the in-memory default. That default is refreshed from the production branch (above) by a background poll on a fixed schedule, so source requests are bounded by the poll interval, not by user traffic.
 
 ### Resolution and lifecycle
 
 - **First load.**
   Opening the tool, with or without a named ruleset branch, creates a new draft.
-  Any named branch is resolved and its hash bound into the new draft, and the URL then collapses to the draft's own identifier — the ruleset is recorded against the draft, not carried in the URL.
+  Any named branch is resolved and its hash bound into the new draft, and the URL then collapses to the draft's own identifier, because the ruleset is recorded against the draft, not carried in the URL.
 - **Update is a fork, never a mutation.**
   Naming a ruleset branch again on an existing artifact's URL surfaces a "new version available" affordance.
-  Accepting it spawns a new draft bound to the new ruleset hash, with lineage back to the predecessor, and leaves the predecessor — draft or finalised — untouched.
+  Accepting it spawns a new draft bound to the new ruleset hash, with lineage back to the predecessor, and leaves the predecessor, draft or finalised, untouched.
   This works mid-draft and on a long-finalised artifact alike.
 - **A migrated artifact lands as a new draft, never auto-finalised.**
   If moving to a new ruleset dropped an answer or surfaced a newly-required question, auto-finalising would freeze an unreviewed guess.
@@ -161,8 +197,8 @@ A stored ruleset is frozen content, but the engine reads that content against it
 Withdrawing a question kind, condition, or tag value the engine once accepted makes every artifact bound to a ruleset using it unreadable, including finalised ones that are guaranteed immutable.
 The stable-id discipline applied to questions and options therefore extends to the model itself.
 
-- [ ] Values the model accepts are added, never withdrawn or repurposed, so any ruleset the tool has ever stored still loads.
-- [ ] An artifact whose bound ruleset cannot be read reports that this version of the tool cannot render the plan, rather than failing as an internal error.
+Values the model accepts are added, never withdrawn or repurposed, so any ruleset the tool has ever stored still loads.
+An artifact whose bound ruleset cannot be read reports that this version of the tool cannot render the plan, rather than failing as an internal error.
 
 ### Stable-id migration
 
@@ -183,7 +219,10 @@ This comparison is the "what changed" summary the user sees on update: newly-req
 The canonical artifact is a live page that renders the same underlying data in more than one way.
 It can be presented grouped by audience or grouped by topic, with every consequence shown in full, and supports searching and deep-linking to a section.
 
-Its header surfaces non-identifying recognition facts so one artifact is distinguishable from another without any free text or name: the size band, the topology shape, the region, the version number, and the creation date — enough that "the medium hybrid in the alternate region, version two" reads differently from "the tiny all-cloud default-region". The size is the derived band, never the raw figures behind it.
+An interim artifact is marked as interim, and lists its open questions before the detail, so a reader meets what is still unsettled before reading what was decided.
+Every assumed answer is listed too, so a reader can see what the tool filled in on their behalf and correct any of it in a new version.
+
+Its header surfaces non-identifying recognition facts so one artifact is distinguishable from another without any free text or name: the size band, the topology shape, the region, the version number, and the creation date, enough that "the medium hybrid in the alternate region, version two" reads differently from "the tiny all-cloud default-region". The size is the derived band, never the raw figures behind it.
 
 ### PDF export
 
@@ -191,19 +230,21 @@ The artifact can be exported to PDF, sectioned by audience, as a static snapshot
 The PDF is something a reader can save and attach to correspondence.
 Its sections, in order:
 
-1. **Viability verdict** — any blocking conflicts, at the top.
-2. **Client IT team — required actions** — ports, outbound endpoints, DNS, remote access, time synchronisation, region.
-3. **BES technical team — setup decisions** — sizing and staging, topology, platform, server specifications, backup and retention, the integrations capacity note.
-4. **Non-default acknowledgments** — what the client is opting into, with consequences grouped by type.
-5. **Advisory and planning** — non-binding recommendations and captured planning data.
-6. **Referrals** — items escalated to a separate conversation.
-7. **Full decision record** — everything captured.
+1. **Viability verdict**: any blocking conflicts, at the top.
+2. **Open questions**: on an interim artifact, what is still to be settled, before any of the detail that rests on it.
+3. **Client IT team, required actions**: ports, outbound endpoints, DNS, remote access, time synchronisation, region.
+4. **BES technical team, setup decisions**: sizing and staging, topology, platform, server specifications, backup and retention, the integrations capacity note.
+5. **Non-default acknowledgments**: what the client is opting into, with consequences grouped by type.
+6. **Advisory and planning**: non-binding recommendations and captured planning data.
+7. **Referrals**: items escalated to a separate conversation.
+8. **Assumptions**: the answers the engine filled in where the reader left a question blank.
+9. **Full decision record**: everything captured.
 
 ## Data and confidentiality
 
 The tool stores only structured answers and the ruleset hash they are bound against.
 It stores no free text, no client or deployment name, no health data, and no personal data.
-Identifying information — whose deployment an artifact describes — is supplied out of band, in the correspondence that carries the link or PDF, and never enters the stored artifact.
+Identifying information, meaning whose deployment an artifact describes, is supplied out of band, in the correspondence that carries the link or PDF, and never enters the stored artifact.
 
 Because no stored field can carry sensitive or identifying data, a leaked artifact URL exposes only a non-attributable technical configuration.
 Names, notes, client self-editing, and authentication move together: none can be added without reconsidering this property.

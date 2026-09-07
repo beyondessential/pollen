@@ -207,3 +207,25 @@ Em-dashes swept from the spec at the same time.
 `.workhorse/test-cases/c1/overview.md`: 30 scenarios covered by automated tests,
 11 still owed and all of them interface behaviour that wants a person looking at
 it. The unticked boxes are coverage outstanding, not scenarios dismissed.
+
+## The artifact page
+
+- **Finalising now lands at the top.** The artifact replaces the form on the
+  same URL, so the reader was left wherever the finalise button had been,
+  partway down a document they had not seen the start of. A link naming a
+  section is still honoured.
+- **One control cluster, not two.** Copy link, PDF and the new-version action
+  moved into the header, which had been holding only a date and a config hash.
+- **The config hash is gone.** It is not one of the recognition facts the header
+  owes a reader (spec WIZ), and a build identifier reads as noise on a document
+  that goes to a client.
+- **Severity was drawn twice** on every consequence card, as a coloured bar down
+  the side and again as a dot beside the title. The bar stays.
+- **Search appears only when there is enough to search.** A plan on the standard
+  path produces around ten consequences across three sections, which a reader
+  takes in at a glance.
+
+DNS is now assumed BES-managed, so the domain chain resolves through to a name
+on tamanu.app without the reader opening the technical section. It can still be
+declined. Open items on an untouched plan are down to the mobile count and
+integrations.

@@ -233,16 +233,30 @@ fn a_default_can_reveal_a_question_that_is_itself_defaulted() {
 }
 
 #[test]
-fn dns_ownership_is_never_guessed() {
-	// Who owns the domain varies too much between clients to assume, so it
-	// records as an open item rather than taking a default.
+fn the_whole_domain_chain_is_assumed() {
+	// BES managing the names is the standard arrangement, so a reader who never
+	// opens the technical section still lands on a name under tamanu.app.
 	let eval = evaluate(&v1(), &answers(sized()));
+	let assumed: Vec<(&str, &str)> = eval
+		.assumed
+		.iter()
+		.map(|a| (a.question.as_str(), a.option.as_str()))
+		.collect();
+	assert!(assumed.contains(&("dns", "bes")), "got {assumed:?}");
+	// The follow-up is only reachable through that assumption, so it has to be
+	// resolved in the same settling pass.
+	assert!(assumed.contains(&("dns_arrangement", "bes_subdomain")));
+	assert!(fired_ids(&eval).contains(&"dns-bes-subdomain"));
+
+	// Declining still works and takes the follow-up out with it.
+	let declined = evaluate(&v1(), &with(sized(), json!({ "dns": "unsure" })));
+	assert!(declined.open_items.iter().any(|o| o == "dns"));
 	assert!(
-		eval.open_items.iter().any(|o| o == "dns"),
-		"dns should be an open item; got {:?}",
-		eval.open_items
+		!declined
+			.visible_questions
+			.iter()
+			.any(|q| q == "dns_arrangement")
 	);
-	assert!(!eval.assumed.iter().any(|a| a.question == "dns"));
 }
 
 #[test]

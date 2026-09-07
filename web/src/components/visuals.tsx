@@ -70,7 +70,6 @@ export function ConsequenceCard({ c }: { c: Consequence }) {
 			<div className="cons-bar" style={{ background: sev.dot }} />
 			<div className="cons-body">
 				<div className="cons-head">
-					<span className="cons-dot" style={{ background: sev.dot }} />
 					<span className="cons-title">{c.title}</span>
 				</div>
 				<p className="cons-detail">

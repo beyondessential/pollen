@@ -96,11 +96,19 @@ export default function Artifact({ view }: { view: AppView }) {
 						{regionLabel(view.questions, answers) && (
 							<span>Region: {regionLabel(view.questions, answers)}</span>
 						)}
+						<span>{view.created_at.slice(0, 10)}</span>
 					</div>
 				</div>
-				<div className="sheet-meta">
-					<div className="mono">config {view.config_hash.slice(0, 12)}</div>
-					<div className="mono">{view.created_at.slice(0, 10)}</div>
+				<div className="sheet-actions">
+					<button type="button" className="btn ghost" onClick={copyLink}>
+						{copied ? "Link copied" : "Copy link"}
+					</button>
+					<button type="button" className="btn ghost" onClick={downloadPdf}>
+						Download PDF
+					</button>
+					<button type="button" className="btn ghost" disabled={busy} onClick={makeNewVersion}>
+						{interim ? "Complete this plan" : "Make changes"}
+					</button>
 				</div>
 			</div>
 
@@ -141,24 +149,18 @@ export default function Artifact({ view }: { view: AppView }) {
 						By topic
 					</button>
 				</div>
-				<input
-					className="sheet-search"
-					type="search"
-					placeholder="Search consequences…"
-					value={query}
-					onChange={(e) => setQuery(e.target.value)}
-				/>
-				<div className="sheet-control-actions">
-					<button type="button" className="btn ghost" onClick={copyLink}>
-						{copied ? "Link copied" : "Copy link"}
-					</button>
-					<button type="button" className="btn ghost" onClick={downloadPdf}>
-						Download PDF
-					</button>
-					<button type="button" className="btn ghost" disabled={busy} onClick={makeNewVersion}>
-						{interim ? "Complete this plan" : "Make changes"}
-					</button>
-				</div>
+				{/* Searching a list you can take in at a glance is chrome, not help.
+				    A plan on the standard path lands around ten, so the line sits
+				    above that: search appears for the genuinely long ones. */}
+				{ev.consequences.length > 12 && (
+					<input
+						className="sheet-search"
+						type="search"
+						placeholder="Search consequences…"
+						value={query}
+						onChange={(e) => setQuery(e.target.value)}
+					/>
+				)}
 			</div>
 
 			{groups.length === 0 ? (

@@ -200,8 +200,8 @@
         // ── Technical details ───────────────────────────────────────────────
         // Every question below declares a blessed-path default, so a user who
         // never opens this section still gets a complete, supported estimate.
-        // DNS is the exception: who owns the domain varies too much between
-        // clients to guess, so it records as an open item instead.
+        // Each also offers a way to decline where the answer is a policy call
+        // the client may not have made yet.
         (
             id: "onprem_form",
             kind: Single,
@@ -305,7 +305,7 @@
             options: [
                 (id: "release", label: "Every release", note: Some("Roughly fortnightly.")),
                 (id: "twomonths", label: "Every two months"),
-                (id: "lessoften", label: "Less often", warn: Some("BES supports the last 10 releases, which is about five months of them. Upgrading less often than that leaves the deployment on a version BES no longer supports.")),
+                (id: "lessoften", label: "Less often", warn: Some("BES supports the last 10 releases, which is about five months of them. We recommend updating at minimum every three months, to avoid ending up on an unsupported version of Tamanu.")),
             ],
         ),
         (
@@ -314,6 +314,7 @@
             section: Some("advanced"),
             label: "Who should manage the web addresses and certificates?",
             help: Some("Tamanu needs domain names and TLS certificates."),
+            default: Some("bes"),
             options: [
                 (id: "bes", label: "BES manages them", note: Some("Recommended. Nothing for client IT to run.")),
                 (id: "client", label: "The client's IT team manages them", warn: Some("The client must support automatic ACME certificate issuance, and keep every deployment domain under a common stem.")),

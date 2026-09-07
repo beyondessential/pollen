@@ -311,13 +311,6 @@ body {
 .cons-head {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-}
-.cons-dot {
-	width: 7px;
-	height: 7px;
-	border-radius: 99px;
-	flex-shrink: 0;
 }
 .cons-title {
 	font-size: 13px;
@@ -509,11 +502,6 @@ body {
 	font-size: 12.5px;
 	color: var(--ink-soft);
 }
-.sheet-meta {
-	text-align: right;
-	font-size: 11px;
-	color: var(--ink-faint);
-}
 .sheet-controls {
 	display: flex;
 	align-items: center;
@@ -521,6 +509,11 @@ body {
 	padding: 14px 30px;
 	border-bottom: 1px solid var(--line-soft);
 	flex-wrap: wrap;
+}
+.sheet-actions {
+	display: flex;
+	gap: 6px;
+	align-self: flex-start;
 }
 .tg-group {
 	display: flex;
@@ -551,10 +544,6 @@ body {
 	font-size: 13px;
 	color: var(--ink);
 	background: var(--surface);
-}
-.sheet-control-actions {
-	display: flex;
-	gap: 6px;
 }
 .ledger-empty {
 	font-size: 13px;
@@ -625,7 +614,8 @@ body {
 @media print {
 	.topbar,
 	.updatebar,
-	.sheet-controls {
+	.sheet-controls,
+	.sheet-actions {
 		display: none;
 	}
 	body {

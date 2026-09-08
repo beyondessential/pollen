@@ -462,6 +462,46 @@
         ),
 
         // ── Region ──────────────────────────────────────────────────────────
+        // Where the BES cloud hosting sits is a setup decision BES acts on, so
+        // it appears as their work rather than as a header fact. Leaving the
+        // standard region is separately an acknowledgement.
+        (
+            id: "region-sydney",
+            source: "region",
+            when: All([
+                Any([
+                    Equals("central", "bescloud"),
+                    Equals("hosting_where", "allbes"),
+                    Equals("hosting_where", "mix"),
+                ]),
+                Equals("region", "sydney"),
+            ]),
+            consequence: (
+                status: Requirement,
+                audience: Bes,
+                title: "Provision the BES cloud hosting in Sydney",
+                detail: "The standard region. Nothing to price beyond the usual hosting.",
+            ),
+        ),
+        (
+            id: "region-other-setup",
+            source: "region",
+            when: All([
+                Any([
+                    Equals("central", "bescloud"),
+                    Equals("hosting_where", "allbes"),
+                    Equals("hosting_where", "mix"),
+                ]),
+                Equals("region", "otheraws"),
+            ]),
+            consequence: (
+                status: Requirement,
+                audience: Bes,
+                types: [Cost],
+                title: "Agree the hosting region, and price it",
+                detail: "Hosting outside Sydney needs the region settled and its ongoing cost worked out before setup.",
+            ),
+        ),
         (
             id: "region-other",
             source: "region",
@@ -479,7 +519,7 @@
                 audience: Record,
                 types: [Cost],
                 cost: Some((tier: "Adds ongoing cost", ballpark: Some("hundreds to thousands per year"))),
-                title: "Non-standard AWS region",
+                title: "Hosting outside the standard Sydney region",
                 detail: "Running outside the standard Sydney region is supported but adds ongoing cost. The actual figures are confirmed separately, not here.",
             ),
         ),

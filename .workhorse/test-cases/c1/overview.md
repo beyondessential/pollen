@@ -66,5 +66,6 @@ been run; an unticked one is a scenario still owed, not one decided against.
 - [ ] Tick state never reaches the server, and the printed record shows no boxes.
 - [ ] The viability callout expands to name the choices behind its count, and prints expanded.
 - [ ] Finalising lands the reader at the top of the artifact, and a link naming a section still reaches it.
-- [ ] Search appears only on an artifact long enough to need it.
+- [ ] The header reads an assumed answer as the answer, not as unanswered.
+- [ ] The header's action buttons hold their shape when the facts beside them run long.
 - [ ] The balance question renders as one row of three, matching the sizing bands.

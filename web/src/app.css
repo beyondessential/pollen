@@ -456,29 +456,17 @@ body {
 	font-size: 12.5px;
 	color: var(--ink-soft);
 }
-.sheet-controls {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	padding: 14px 30px;
-	border-bottom: 1px solid var(--line-soft);
-	flex-wrap: wrap;
-}
 .sheet-actions {
 	display: flex;
+	flex: none;
 	gap: 6px;
 	align-self: flex-start;
 }
-.sheet-search {
-	flex: 1;
-	min-width: 150px;
-	padding: 8px 12px;
-	border: 1px solid var(--line);
-	border-radius: 8px;
-	font-family: inherit;
-	font-size: 13px;
-	color: var(--ink);
-	background: var(--surface);
+.sheet-actions .btn {
+	white-space: nowrap;
+}
+.sheet-head > div:first-child {
+	min-width: 0;
 }
 .ledger-empty {
 	font-size: 13px;
@@ -549,7 +537,6 @@ body {
 @media print {
 	.topbar,
 	.updatebar,
-	.sheet-controls,
 	.sheet-actions {
 		display: none;
 	}

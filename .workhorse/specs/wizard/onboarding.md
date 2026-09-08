@@ -223,7 +223,7 @@ A choice off the standard path that also asks something of a team produces two i
 Nothing off the standard path appears in a group of actions, because an acknowledgement is not something anyone does.
 Warnings come first and arrive collapsed, carrying the same off-default colour they carry everywhere else: they are context for the work below rather than the work itself, and a conflict that stops the configuration working is raised by the viability callout regardless.
 Each group can be collapsed, so a reader can skip past the groups addressed to someone else.
-The artifact supports searching and deep-linking to a section.
+A section can be linked to directly.
 
 An item in a group of work carries a box the reader ticks off as they do it.
 A warning carries none: there is nothing to do about it beyond having read it, and a box would invite it to be treated as a task.
@@ -233,7 +233,9 @@ The printed record omits the boxes for the same reason.
 An interim artifact is marked as interim, and lists its open questions before the detail, so a reader meets what is still unsettled before reading what was decided.
 Every assumed answer is listed too, so a reader can see what the tool filled in on their behalf and correct any of it in a new version.
 
-Its header surfaces non-identifying recognition facts so one artifact is distinguishable from another without any free text or name: the size band, the topology shape, the region, the version number, and the creation date, enough that "the medium hybrid in the alternate region, version two" reads differently from "the tiny all-cloud default-region". The size is the derived band, never the raw figures behind it.
+Its header surfaces non-identifying recognition facts so one artifact is distinguishable from another without any free text or name: the size band, the topology shape, the version number, and the creation date, enough that "the medium hybrid, version two" reads differently from "the tiny all-cloud". The size is the derived band, never the raw figures behind it.
+A fact the engine assumed reads the same as one the reader chose, because it is the answer until they change it.
+Settings that exist to be acted on, such as the hosting region, appear with the work they imply rather than in the header.
 
 ### PDF export
 

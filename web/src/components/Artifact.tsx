@@ -27,7 +27,6 @@ export default function Artifact({ view }: { view: AppView }) {
 	const navigate = useNavigate();
 	const [busy, setBusy] = useState(false);
 	const [copied, setCopied] = useState(false);
-	const [query, setQuery] = useState("");
 	// Groups open on arrival, bar the acknowledgements: those restate choices the
 	// reader has just made, and the viability callout raises anything that will
 	// not work regardless.
@@ -56,15 +55,10 @@ export default function Artifact({ view }: { view: AppView }) {
 		.filter((c) => c.consequence.severity === "Blocking")
 		.map((c) => c.consequence.title);
 
-	const groups = useMemo(() => {
-		const q = query.trim().toLowerCase();
-		const matches = q
-			? ev.consequences.filter((c) =>
-					`${c.consequence.title} ${c.consequence.detail}`.toLowerCase().includes(q),
-				)
-			: ev.consequences;
-		return groupConsequences(matches).filter((g) => g.items.length > 0);
-	}, [ev.consequences, query]);
+	const groups = useMemo(
+		() => groupConsequences(ev.consequences).filter((g) => g.items.length > 0),
+		[ev.consequences],
+	);
 
 	async function makeNewVersion() {
 		// Open the tab synchronously within the click so it isn't popup-blocked,
@@ -82,9 +76,8 @@ export default function Artifact({ view }: { view: AppView }) {
 	}
 
 	function downloadPdf() {
-		// Print the whole artifact regardless of what is collapsed or searched
-		// for; let React re-render before the print dialog opens.
-		setQuery("");
+		// Print the whole artifact regardless of what is collapsed; let React
+		// re-render before the print dialog opens.
 		setShut({});
 
 		setTimeout(() => window.print(), 50);
@@ -109,10 +102,7 @@ export default function Artifact({ view }: { view: AppView }) {
 						{interim && <span className="badge-interim">Interim</span>}
 					</h2>
 					<div className="sheet-facts">
-						<span>{topology(view.questions, answers)}</span>
-						{regionLabel(view.questions, answers) && (
-							<span>Region: {regionLabel(view.questions, answers)}</span>
-						)}
+						<span>{topology(view.questions, answers, assumedBy)}</span>
 						<span>{view.created_at.slice(0, 10)}</span>
 					</div>
 				</div>
@@ -149,20 +139,6 @@ export default function Artifact({ view }: { view: AppView }) {
 				</section>
 			)}
 
-			{/* Searching a list you can take in at a glance is chrome, not help. A
-			    plan on the standard path lands around ten, so the line sits above
-			    that: search appears only for the genuinely long ones. */}
-			{ev.consequences.length > 12 && (
-				<div className="sheet-controls">
-					<input
-						className="sheet-search"
-						type="search"
-						placeholder="Search consequences…"
-						value={query}
-						onChange={(e) => setQuery(e.target.value)}
-					/>
-				</div>
-			)}
 
 			{groups.length === 0 ? (
 				<section className="sheet-section">
@@ -259,19 +235,19 @@ function answerLabel(q: QuestionView, value: AnswerValue | undefined): string {
 	return optionLabel(q, value);
 }
 
-function topology(questions: QuestionView[], answers: Record<string, AnswerValue>): string {
-	const central = answerLabel(byId(questions, "central"), answers["central"]);
-	const where = answerLabel(byId(questions, "hosting_where"), answers["hosting_where"]);
-	return `Central: ${central} · Facilities: ${where}`;
-}
-
-function regionLabel(
+function topology(
 	questions: QuestionView[],
 	answers: Record<string, AnswerValue>,
-): string | null {
-	const value = answers["region"];
-	if (typeof value !== "string") return null;
-	return answerLabel(byId(questions, "region"), value);
+	assumed: Map<string, string>,
+): string {
+	// An assumed answer is the answer until the reader changes it, so the header
+	// reads it the same way the engine does.
+	const fact = (id: string) => {
+		const q = byId(questions, id);
+		const value = isAnswered(answers[id]) ? answers[id] : assumed.get(id);
+		return value ? answerLabel(q, value) : "Not answered";
+	};
+	return `Central: ${fact("central")} · Facilities: ${fact("hosting_where")}`;
 }
 
 function byId(questions: QuestionView[], id: string): QuestionView {

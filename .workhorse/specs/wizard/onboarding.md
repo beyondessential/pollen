@@ -11,7 +11,7 @@ The tool produces a permanent, shareable artifact that serves three readers at o
 
 The artifact is technical, not legal.
 It is a record, not a signed instrument.
-Contracting and sales may reference it downstream, but the tool does not enforce that, and legal sign-off is kept separate.
+Contracting may reference it downstream, but the tool does not enforce that, and legal sign-off is kept separate.
 
 ## Audience and access
 
@@ -66,7 +66,7 @@ The engine evaluates conditions across fields, both as forward guidance during t
 A single choice may carry several.
 
 - **cost**: a relative magnitude tier, optionally with an indicative ballpark band (for example "on the order of hundreds per year" versus "thousands per year").
-  Never a real quote; sales confirms actual figures.
+  Never a real quote; the actual figures are confirmed separately.
 - **operational impact**: for example slower incident response, manual failover, reduced retention, extended upgrade downtime.
 - **capability loss**: for example no Tupaia connection, no clone-upgrade testing.
 - **support status**: supported, supported with special arrangement, or unsupported.

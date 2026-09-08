@@ -233,7 +233,7 @@
             default: Some("sydney"),
             options: [
                 (id: "sydney", label: "Sydney", note: Some("Standard.")),
-                (id: "otheraws", label: "Another AWS region", warn: Some("Supported, but adds ongoing cost. Sales confirms the figures.")),
+                (id: "otheraws", label: "Another AWS region", warn: Some("Supported, but adds ongoing cost. The actual figures are confirmed separately.")),
             ],
             visible_if: Any([
                 Equals("central", "bescloud"),
@@ -480,7 +480,7 @@
                 types: [Cost],
                 cost: Some((tier: "Adds ongoing cost", ballpark: Some("hundreds to thousands per year"))),
                 title: "Non-standard AWS region",
-                detail: "Running outside the standard Sydney region is supported but adds ongoing cost. Sales confirms actual figures.",
+                detail: "Running outside the standard Sydney region is supported but adds ongoing cost. The actual figures are confirmed separately, not here.",
             ),
         ),
 

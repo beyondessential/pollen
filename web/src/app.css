@@ -319,8 +319,7 @@ body {
 /* ── Verdict ─────────────────────────────────────────────────────────── */
 .verdict {
 	display: flex;
-	gap: 11px;
-	align-items: flex-start;
+	flex-direction: column;
 	padding: 12px 14px;
 	border-radius: 11px;
 }
@@ -335,9 +334,6 @@ body {
 }
 .verdict-big .verdict-t {
 	font-size: 16px;
-}
-.verdict-big .verdict-s {
-	font-size: 13px;
 }
 
 /* ── Buttons ─────────────────────────────────────────────────────────── */

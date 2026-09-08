@@ -17,7 +17,7 @@ import { Chevron, ConsequenceCard, VerdictBanner } from "./visuals";
 // Warnings come first, so what the client is opting into is met before the work
 // it implies, but collapsed: they are context for the actions below, not the
 // task. They carry the off-default colour and run straight into those actions.
-const AUDIENCE_ORDER: Audience[] = ["Record", "Client", "Bes"];
+const AUDIENCE_ORDER: Audience[] = ["Record", "Client", "Bes", "Pricing"];
 const COLLAPSED_ON_ARRIVAL: Audience[] = ["Record"];
 const WARNINGS: Audience = "Record";
 

@@ -161,7 +161,7 @@ export interface components {
          * @description Which reader a consequence is grouped under in the by-audience view.
          * @enum {string}
          */
-        Audience: "Client" | "Bes" | "Record";
+        Audience: "Client" | "Bes" | "Pricing" | "Record";
         Consequence: {
             audience: components["schemas"]["Audience"];
             cost?: null | components["schemas"]["Cost"];

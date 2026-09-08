@@ -218,6 +218,9 @@ pub enum Status {
 pub enum Audience {
 	Client,
 	Bes,
+	/// The BES pricing and partnerships team: anything that moves what the
+	/// deployment costs or what BES can commit to supporting.
+	Pricing,
 	Record,
 }
 

@@ -759,3 +759,62 @@ fn nothing_off_the_standard_path_sits_in_an_actions_group() {
 		);
 	}
 }
+
+#[test]
+fn pricing_and_sla_drivers_reach_the_pricing_group() {
+	// The pricing and partnerships team reads one list rather than the whole
+	// record, so anything that moves the price or the support commitment has to
+	// raise its own item for them.
+	let eval = evaluate(
+		&v1(),
+		&with(
+			sized(),
+			json!({
+				"integrations": ["other_nonfhir"],
+				"platform": "windows",
+				"remote": "other",
+				"cadence": "lessoften",
+				"telemetry": "no",
+				"tupaia": "no",
+			}),
+		),
+	);
+	let ids = fired_ids(&eval);
+	for expected in [
+		"price-size",
+		"price-integrations",
+		"price-nonfhir",
+		"price-windows",
+		"price-remote",
+		"sla-telemetry",
+		"sla-cadence",
+	] {
+		assert!(ids.contains(&expected), "expected {expected}; got {ids:?}");
+	}
+
+	// They are work, not acknowledgements, so they stay on the standard path and
+	// out of the warnings the client is asked to accept.
+	for c in &eval.consequences {
+		if c.consequence.audience == Audience::Pricing {
+			assert_eq!(
+				c.consequence.severity,
+				Severity::Default,
+				"{} is pricing work, so it must not double as a warning",
+				c.id
+			);
+		}
+	}
+}
+
+#[test]
+fn a_standard_plan_still_has_something_to_price() {
+	// Even a plan entirely on the blessed path costs something to host, so the
+	// pricing group is never empty.
+	let eval = evaluate(&v1(), &answers(sized()));
+	assert!(
+		eval.consequences
+			.iter()
+			.any(|c| c.consequence.audience == Audience::Pricing),
+		"the pricing group should never be empty"
+	);
+}

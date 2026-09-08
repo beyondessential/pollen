@@ -496,9 +496,9 @@
             ]),
             consequence: (
                 status: Requirement,
-                audience: Bes,
+                audience: Pricing,
                 types: [Cost],
-                title: "Agree the hosting region, and price it",
+                title: "Price the non-standard hosting region",
                 detail: "Hosting outside Sydney needs the region settled and its ongoing cost worked out before setup.",
             ),
         ),
@@ -968,6 +968,169 @@
                 types: [Operational],
                 title: "Allow Tamanu traffic on the client network",
                 detail: "With client-hosted servers, client IT must configure the network to allow Tamanu's application traffic between the Tamanu instances, and the outbound traffic Tamanu needs to install and upgrade. See our [network requirements](https://beyond-essential.slab.com/posts/tamanu-compute-resource-recommendations-network-requirements-and-minimum-specs-wipjcyn1?shr=wipjcyn1#h0uun-network-requirements).",
+            ),
+        ),
+
+        // ── Pricing and SLA ─────────────────────────────────────────────────
+        // What a configuration costs, and what BES can commit to supporting,
+        // are decisions for the pricing and partnerships team. They are on the
+        // standard path in themselves: a choice being off it is an
+        // acknowledgement for the client, while the money and the commitment
+        // are work for someone else, so each is its own consequence.
+        (
+            id: "price-size",
+            source: "pricing",
+            when: Answered("catchment"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost],
+                title: "Price the hosting for the derived size band",
+                detail: "The size band is derived from the catchment, the facility count, and the mobile client count, and is the starting point for the hosting cost.",
+            ),
+        ),
+        (
+            id: "price-integrations",
+            source: "pricing",
+            when: Any([
+                Includes("integrations", "lims"),
+                Includes("integrations", "msupply"),
+                Includes("integrations", "rispacs"),
+                Includes("integrations", "other_fhir"),
+                Includes("integrations", "other_nonfhir"),
+            ]),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost],
+                title: "Price the extra Central capacity for connected systems",
+                detail: "Connecting other systems sizes Central up by a flat allowance, regardless of how many are connected.",
+            ),
+        ),
+        (
+            id: "price-nonfhir",
+            source: "pricing",
+            when: Includes("integrations", "other_nonfhir"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost],
+                cost: Some((tier: "Significant one-off development cost")),
+                title: "Price the bespoke integration development",
+                detail: "A system with no standard health-data interface has to be connected by hand, which is one-off development work rather than configuration.",
+            ),
+        ),
+        (
+            id: "price-windows",
+            source: "pricing",
+            when: Equals("platform", "windows"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost, Support],
+                title: "Set the support commitment for a Windows deployment",
+                detail: "The client funds the Windows licensing. BES support and incident response are slower on Windows than on Linux, so the commitment BES can make differs from the standard one.",
+            ),
+        ),
+        (
+            id: "price-amd64",
+            source: "pricing",
+            when: Equals("platform", "linuxamd"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost],
+                title: "Price the AMD64 hosting premium",
+                detail: "AMD64 costs more per unit of capacity than the standard ARM64, and gets less pre-release testing, so incidents take longer to resolve.",
+            ),
+        ),
+        (
+            id: "price-remote",
+            source: "pricing",
+            when: Equals("remote", "other"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost],
+                cost: Some((tier: "Exceptional ongoing cost", ballpark: Some("thousands per year"))),
+                title: "Price the non-Tailscale remote access arrangement",
+                detail: "Reaching managed servers by anything other than Tailscale is exceptional, and the ongoing support cost has to be worked out case by case.",
+            ),
+        ),
+        (
+            id: "price-domain",
+            source: "pricing",
+            when: All([Equals("dns", "bes"), Equals("dns_arrangement", "bes_topdomain")]),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost],
+                cost: Some((tier: "Small ongoing cost", ballpark: Some("tens per year"))),
+                title: "Price the dedicated domain registration",
+                detail: "A domain BES owns and runs for this deployment carries an ongoing registration cost.",
+            ),
+        ),
+        (
+            id: "sla-central",
+            source: "pricing",
+            when: Equals("central", "clienthosted"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Support],
+                title: "Set the support commitment where the client hosts Central",
+                detail: "BES does not control the platform Central runs on, so incident response is slower and availability is partly the client's to keep.",
+            ),
+        ),
+        (
+            id: "sla-backups",
+            source: "pricing",
+            when: Equals("backup_capability", "no"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Support],
+                title: "Set the support commitment without BES backups",
+                detail: "With no BES backups there is no managed recovery and no upgrade testing against a copy of the data, so BES cannot commit to recovering the deployment.",
+            ),
+        ),
+        (
+            id: "sla-retention",
+            source: "pricing",
+            when: All([
+                Equals("backup_capability", "yes"),
+                Equals("retention", "low"),
+            ]),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Support],
+                title: "Set the recovery commitment for a few days of retention",
+                detail: "Recovery only reaches back a few days, so anything discovered later cannot be restored. The commitment has to say so.",
+            ),
+        ),
+        (
+            id: "sla-telemetry",
+            source: "pricing",
+            when: Equals("telemetry", "no"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Support],
+                title: "Set the support commitment without telemetry",
+                detail: "Declining telemetry opts the deployment out of BES tech support, managed backups, and mobile support, so there is little left to commit to.",
+            ),
+        ),
+        (
+            id: "sla-cadence",
+            source: "pricing",
+            when: Equals("cadence", "lessoften"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Support],
+                title: "Set the support commitment for upgrades outside the release window",
+                detail: "BES supports the last 10 releases. A deployment upgrading less often than that spends time on versions outside the window, which the commitment has to account for.",
             ),
         ),
 

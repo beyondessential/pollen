@@ -61,6 +61,14 @@ The tool always produces an artifact, even for contradictory input.
 A conflict short-circuits the *verdict*, a prominent callout naming the conflicts and stating that the configuration is very likely not possible as specified, rather than the *recording*: the full picture is still captured below the verdict.
 The engine evaluates conditions across fields, both as forward guidance during the flow and as a final consistency check when the artifact is finalised.
 
+### Pricing and support commitments
+
+What a configuration costs, and what BES can commit to supporting, are decisions for the pricing and partnerships team rather than facts the artifact settles.
+
+A choice that moves either raises its own item addressed to that team, so they read one list rather than the whole record.
+Such an item is work on the standard path, not an acknowledgement: the client accepting a degraded arrangement and BES pricing it are two different things about one choice, so each is its own consequence.
+Every plan has something to price, because hosting the derived size band costs something even on the blessed path.
+
 ### Consequence type
 
 A single choice may carry several.
@@ -217,7 +225,7 @@ This comparison is the "what changed" summary the user sees on update: newly-req
 ### Finalised web view
 
 The canonical artifact is a live page.
-It presents every consequence in full, in three groups: warnings, being what the client is opting into by leaving the standard path, then what the client's IT team has to do, then what the BES technical team sets up.
+It presents every consequence in full, in four groups: warnings, being what the client is opting into by leaving the standard path, then what the client's IT team has to do, then what the BES technical team sets up, then what the BES pricing and partnerships team has to price or commit to.
 An item states the action it asks for, so a group of required actions reads as a list of work rather than a list of observations.
 A choice off the standard path that also asks something of a team produces two items: the work, which sits with that team's actions, and the acknowledgement of what the choice costs, which sits with what is being opted into.
 Nothing off the standard path appears in a group of actions, because an acknowledgement is not something anyone does.
@@ -245,10 +253,10 @@ Its sections, in order:
 
 1. **Viability verdict**: any blocking conflicts, at the top.
 2. **Open questions**: on an interim artifact, what is still to be settled, before any of the detail that rests on it.
-3. **Client IT team, required actions**: ports, outbound endpoints, DNS, remote access, time synchronisation, region.
-4. **BES technical team, setup decisions**: sizing and staging, topology, platform, server specifications, backup and retention, the integrations capacity note.
-5. **Non-default acknowledgments**: what the client is opting into, with consequences grouped by type.
-6. **Advisory and planning**: non-binding recommendations and captured planning data.
+3. **Warnings**: what the client is opting into by leaving the standard path.
+4. **Client IT team, required actions**: ports, outbound endpoints, DNS, remote access, time synchronisation.
+5. **BES technical team, setup decisions**: staging, topology, platform, server specifications, backup and retention, region.
+6. **BES pricing and partnerships**: what has to be priced, and what BES can commit to supporting.
 7. **Referrals**: items escalated to a separate conversation.
 8. **Assumptions**: the answers the engine filled in where the reader left a question blank.
 9. **Full decision record**: everything captured.

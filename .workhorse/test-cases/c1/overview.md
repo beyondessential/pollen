@@ -27,6 +27,13 @@ been run; an unticked one is a scenario still owed, not one decided against.
 - [x] Those sites still raise the client network requirements.
 - [x] Central hosted by the client reads as off the standard path.
 
+## Pricing and support commitments
+
+- [x] Anything that moves the price or the support commitment raises an item for the pricing team.
+- [x] Pricing items stay on the standard path, so they never double as warnings.
+- [x] Every plan has something to price, even one entirely on the blessed path.
+- [ ] The pricing group reads as one list a pricing estimator could work from.
+
 ## Consequences
 
 - [x] The untouched default path raises no callout at all.

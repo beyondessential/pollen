@@ -328,6 +328,7 @@
         "enum": [
           "Client",
           "Bes",
+          "Pricing",
           "Record"
         ]
       },

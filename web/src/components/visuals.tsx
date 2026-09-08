@@ -26,27 +26,33 @@ export const Chevron = (p: { size?: number }) => (
 	<Icon paths='<path d="m6 9 6 6 6-6"/>' {...p} />
 );
 
-/// One consequence, with a box the reader ticks off as they deal with it.
+/// One consequence. An item in a group of work carries a box the reader ticks
+/// off as they do it; a warning carries none, because there is nothing to do
+/// about it beyond having read it.
 export function ConsequenceCard({
 	c,
 	done,
 	onToggle,
 }: {
 	c: Consequence;
-	done: boolean;
-	onToggle: () => void;
+	done?: boolean;
+	/// Omitted for a warning. Its absence is what marks an item as something to
+	/// take in rather than something to work through.
+	onToggle?: () => void;
 }) {
 	return (
 		<div className="item">
-			<button
-				type="button"
-				className={`item-check${done ? " on" : ""}`}
-				aria-pressed={done}
-				aria-label={done ? `Mark "${c.title}" not done` : `Mark "${c.title}" done`}
-				onClick={onToggle}
-			>
-				{done && <Check size={12} />}
-			</button>
+			{onToggle && (
+				<button
+					type="button"
+					className={`item-check${done ? " on" : ""}`}
+					aria-pressed={done}
+					aria-label={done ? `Mark "${c.title}" not done` : `Mark "${c.title}" done`}
+					onClick={onToggle}
+				>
+					{done && <Check size={12} />}
+				</button>
+			)}
 			<div className="item-body">
 				<h4 className={`item-title${done ? " item-done" : ""}`}>{c.title}</h4>
 				<p className="item-detail">

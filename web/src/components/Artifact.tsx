@@ -196,7 +196,7 @@ export default function Artifact({ view }: { view: AppView }) {
 										key={c.id}
 										c={c.consequence}
 										done={done.includes(c.id)}
-										onToggle={() => toggleDone(c.id)}
+										onToggle={warn ? undefined : () => toggleDone(c.id)}
 									/>
 								))}
 							</div>

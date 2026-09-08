@@ -61,7 +61,7 @@ been run; an unticked one is a scenario still owed, not one decided against.
 - [ ] Warnings come first, arrive collapsed, carry the off-default colour, and run into the actions below without a divider.
 - [x] An off-standard choice that asks something of a team yields both an action and an acknowledgement.
 - [x] Nothing off the standard path is addressed to a group of actions.
-- [ ] Every item carries a tick box, in every group.
+- [ ] Items in the action groups carry a tick box; warnings carry none.
 - [ ] A tick survives a reload of the same artifact, and does not appear on a different one.
 - [ ] Tick state never reaches the server, and the printed record shows no boxes.
 - [ ] The viability callout expands to name the choices behind its count, and prints expanded.

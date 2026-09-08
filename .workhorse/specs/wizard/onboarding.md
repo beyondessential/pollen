@@ -225,7 +225,8 @@ Warnings come first and arrive collapsed, carrying the same off-default colour t
 Each group can be collapsed, so a reader can skip past the groups addressed to someone else.
 The artifact supports searching and deep-linking to a section.
 
-Every item carries a box the reader ticks off as they deal with it, whether that means doing the work, noting the consequence, or resolving the conflict.
+An item in a group of work carries a box the reader ticks off as they do it.
+A warning carries none: there is nothing to do about it beyond having read it, and a box would invite it to be treated as a task.
 Ticking is the reader's own progress, held in their browser and never against the artifact: a finalised artifact is immutable, and its link is held by several people who are not working through the same list.
 The printed record omits the boxes for the same reason.
 

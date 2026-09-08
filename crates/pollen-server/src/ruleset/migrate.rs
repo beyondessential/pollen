@@ -13,9 +13,9 @@ use super::model::Ruleset;
 pub struct Migration {
 	/// Answers carried over: their question id is present in the new ruleset.
 	pub answers: Answers,
-	/// Question ids whose answers were dropped — no longer in the new ruleset.
+	/// Question ids whose answers were dropped, no longer in the new ruleset.
 	pub dropped: Vec<String>,
-	/// Question ids new in the new ruleset — they appear unanswered.
+	/// Question ids new in the new ruleset; they appear unanswered.
 	pub new_questions: Vec<String>,
 }
 

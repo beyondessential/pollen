@@ -14,13 +14,14 @@ use uuid::Uuid;
 use crate::db::{Application, ApplicationStatus, ConfigRow};
 use crate::error::{AppError, Result};
 use crate::ruleset::{
-	Answers, Evaluation, Opt, Question, QuestionKind, ResolvedRuleset, Ruleset, evaluate, migrate,
+	Answers, Evaluation, Opt, Question, QuestionKind, ResolvedRuleset, Ruleset, Section, evaluate,
+	migrate,
 };
 use crate::state::AppState;
 
 /// The full state of an application: its lifecycle fields, the questions to
 /// render, the current answers, the evaluation (consequences, verdict, derived
-/// values, visible questions, guidance), and — on a fork — what changed.
+/// values, visible questions, guidance), and, on a fork, what changed.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct AppView {
 	pub id: Uuid,
@@ -30,9 +31,11 @@ pub struct AppView {
 	pub finalised_at: Option<Timestamp>,
 	pub config_hash: String,
 	/// True when the plan is bound to a ruleset other than the current bundled
-	/// default — a newer default is available. A draft updates in place; a
+	/// default, meaning a newer default is available. A draft updates in place; a
 	/// finalised plan spawns a new draft on the new ruleset.
 	pub update_available: bool,
+	/// The flow's sections, in presentation order.
+	pub sections: Vec<Section>,
 	pub questions: Vec<QuestionView>,
 	pub answers: Value,
 	pub evaluation: Evaluation,
@@ -48,6 +51,9 @@ pub struct QuestionView {
 	pub label: String,
 	pub help: Option<String>,
 	pub options: Vec<Opt>,
+	pub section: Option<String>,
+	/// The option assumed when this is left blank, if any.
+	pub default: Option<String>,
 }
 
 impl From<&Question> for QuestionView {
@@ -58,6 +64,8 @@ impl From<&Question> for QuestionView {
 			label: q.label.clone(),
 			help: q.help.clone(),
 			options: q.options.clone(),
+			section: q.section.clone(),
+			default: q.default.clone(),
 		}
 	}
 }
@@ -198,15 +206,12 @@ pub async fn finalise(
 	let ruleset = load_ruleset(&mut conn, &app.config_hash).await?;
 	let answers: Answers = serde_json::from_value(app.answers.clone()).map_err(AppError::custom)?;
 	let evaluation = evaluate(&ruleset, &answers);
-	// Every visible question must be answered; answering can reveal more, so
-	// "all visible answered" means the form is complete.
-	if evaluation
-		.visible_questions
-		.iter()
-		.any(|qid| !answers.answered(qid))
-	{
+	// Only questions with no default and no way to decline block finalising.
+	// Anything the user marked unsure finalises as an interim artifact, with
+	// the gap recorded as an open item (spec WIZ, interim artifacts).
+	if !evaluation.required.is_empty() {
 		return Err(AppError::BadRequest(
-			"answer every question before finalising".into(),
+			"answer the required questions before finalising".into(),
 		));
 	}
 	let app = Application::finalise(&mut conn, args.id).await?;
@@ -313,9 +318,20 @@ async fn store_config(
 	ConfigRow::upsert(conn, &resolved.hash, &content).await
 }
 
+/// Load the ruleset an artifact is bound to.
+///
+/// A stored ruleset is frozen content, so this can only fail to parse if the
+/// engine's own model has since withdrawn something that ruleset uses, which
+/// the model is not permitted to do (spec WIZ, the engine's model is
+/// append-only). Report it as a conflict rather than an internal error: the
+/// plan itself is intact, and this build simply cannot render it.
 async fn load_ruleset(conn: &mut diesel_async::AsyncPgConnection, hash: &str) -> Result<Ruleset> {
 	let row = ConfigRow::get(conn, hash).await?;
-	serde_json::from_value(row.content).map_err(AppError::custom)
+	serde_json::from_value(row.content).map_err(|e| {
+		AppError::Conflict(format!(
+			"this plan is bound to a ruleset that this version of the tool cannot read ({e})"
+		))
+	})
 }
 
 fn build_view(
@@ -337,6 +353,7 @@ fn build_view(
 		finalised_at: app.finalised_at,
 		config_hash: app.config_hash,
 		update_available,
+		sections: ruleset.sections.clone(),
 		questions: ruleset.questions.iter().map(QuestionView::from).collect(),
 		answers: app.answers,
 		evaluation,

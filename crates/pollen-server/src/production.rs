@@ -1,7 +1,7 @@
 //! Tracks the production ruleset on the configured repo's branch (default
 //! `main`): when it carries a different, valid ruleset than the running default,
 //! the daemon adopts it. So a ruleset change ships by pushing to the branch,
-//! without rebuilding the engine. The bundled ruleset stays the fallback — an
+//! without rebuilding the engine. The bundled ruleset stays the fallback: an
 //! unreachable branch or an invalid ruleset leaves the current default in place.
 
 use std::sync::Arc;

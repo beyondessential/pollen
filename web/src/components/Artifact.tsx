@@ -7,44 +7,58 @@ import {
 	type AppView,
 	AUDIENCE_LABEL,
 	type Audience,
+	isAnswered,
 	type QuestionView,
-	TOPIC_LABEL,
-	TOPIC_ORDER,
 	type TriggeredConsequence,
 } from "../types";
-import { ConsequenceCard, VerdictBanner } from "./visuals";
+import { listDone, recordDone } from "../doneItems";
+import { Chevron, ConsequenceCard, VerdictBanner } from "./visuals";
 
-const AUDIENCE_ORDER: Audience[] = ["Client", "Bes", "Record"];
+// Warnings come first, so what the client is opting into is met before the work
+// it implies, but collapsed: they are context for the actions below, not the
+// task. They carry the off-default colour and run straight into those actions.
+const AUDIENCE_ORDER: Audience[] = ["Record", "Client", "Bes", "Pricing"];
+const COLLAPSED_ON_ARRIVAL: Audience[] = ["Record"];
+const WARNINGS: Audience = "Record";
 
-type Grouping = "audience" | "topic";
 type Group = { key: string; label: string; items: TriggeredConsequence[] };
 
 export default function Artifact({ view }: { view: AppView }) {
 	const navigate = useNavigate();
 	const [busy, setBusy] = useState(false);
 	const [copied, setCopied] = useState(false);
-	const [grouping, setGrouping] = useState<Grouping>("audience");
-	const [query, setQuery] = useState("");
+	// Groups open on arrival, bar the acknowledgements: those restate choices the
+	// reader has just made, and the viability callout raises anything that will
+	// not work regardless.
+	const [shut, setShut] = useState<Record<string, boolean>>(() =>
+		Object.fromEntries(COLLAPSED_ON_ARRIVAL.map((a) => [a, true])),
+	);
+	// Ticked-off actions, this reader's own and kept on this device only.
+	const [done, setDone] = useState<string[]>(() => listDone(view.id));
+
+	function toggleDone(id: string) {
+		const next = done.includes(id) ? done.filter((d) => d !== id) : [...done, id];
+		setDone(next);
+		recordDone(view.id, next);
+	}
 
 	const answers = view.answers as unknown as Record<string, AnswerValue>;
 	const ev = view.evaluation;
-	const offDefault = ev.consequences.filter(
-		(c) => c.consequence.severity === "NonDefault",
-	).length;
-	const blocking = ev.consequences.filter((c) => c.consequence.severity === "Blocking").length;
-	const started = Object.values(answers).some((v) =>
-		Array.isArray(v) ? v.length > 0 : v != null && v !== "",
-	);
+	const byId = new Map(view.questions.map((q) => [q.id, q]));
+	const assumedBy = new Map(ev.assumed.map((a) => [a.question, a.option]));
+	// An artifact is interim when questions were deliberately left open. It is a
+	// normal finalised artifact in every other respect: the gaps are recorded
+	// rather than guessed, and completing it is a new version.
+	const interim = ev.open_items.length > 0;
+	// Conflicts that make the configuration unworkable, for the viability callout.
+	const conflicts = ev.consequences
+		.filter((c) => c.consequence.severity === "Blocking")
+		.map((c) => c.consequence.title);
 
-	const groups = useMemo(() => {
-		const q = query.trim().toLowerCase();
-		const matches = q
-			? ev.consequences.filter((c) =>
-					`${c.consequence.title} ${c.consequence.detail}`.toLowerCase().includes(q),
-				)
-			: ev.consequences;
-		return groupConsequences(matches, grouping).filter((g) => g.items.length > 0);
-	}, [ev.consequences, grouping, query]);
+	const groups = useMemo(
+		() => groupConsequences(ev.consequences).filter((g) => g.items.length > 0),
+		[ev.consequences],
+	);
 
 	async function makeNewVersion() {
 		// Open the tab synchronously within the click so it isn't popup-blocked,
@@ -62,10 +76,10 @@ export default function Artifact({ view }: { view: AppView }) {
 	}
 
 	function downloadPdf() {
-		// Print the complete, audience-sectioned artifact regardless of the
-		// current toggle/search; let React re-render before the print dialog.
-		setGrouping("audience");
-		setQuery("");
+		// Print the whole artifact regardless of what is collapsed; let React
+		// re-render before the print dialog opens.
+		setShut({});
+
 		setTimeout(() => window.print(), 50);
 	}
 
@@ -83,55 +97,16 @@ export default function Artifact({ view }: { view: AppView }) {
 		<div className="sheet">
 			<div className="sheet-head">
 				<div>
-					<h2 className="sheet-title">{ev.derived["size"] ?? "Unsized"} deployment</h2>
+					<h2 className="sheet-title">
+						{ev.derived["size"] ?? "Unsized"} deployment
+						{interim && <span className="badge-interim">Interim</span>}
+					</h2>
 					<div className="sheet-facts">
-						<span>{topology(view.questions, answers)}</span>
-						{regionLabel(view.questions, answers) && (
-							<span>Region: {regionLabel(view.questions, answers)}</span>
-						)}
+						<span>{topology(view.questions, answers, assumedBy)}</span>
+						<span>{view.created_at.slice(0, 10)}</span>
 					</div>
 				</div>
-				<div className="sheet-meta">
-					<div className="mono">config {view.config_hash.slice(0, 12)}</div>
-					<div className="mono">{view.created_at.slice(0, 10)}</div>
-				</div>
-			</div>
-
-			<div style={{ padding: "22px 30px 0" }}>
-				<VerdictBanner
-					verdict={ev.verdict}
-					offDefault={offDefault}
-					blocking={blocking}
-					started={started}
-					big
-				/>
-			</div>
-
-			<div className="sheet-controls">
-				<div className="tg-group">
-					<button
-						type="button"
-						className={`tg${grouping === "audience" ? " on" : ""}`}
-						onClick={() => setGrouping("audience")}
-					>
-						By audience
-					</button>
-					<button
-						type="button"
-						className={`tg${grouping === "topic" ? " on" : ""}`}
-						onClick={() => setGrouping("topic")}
-					>
-						By topic
-					</button>
-				</div>
-				<input
-					className="sheet-search"
-					type="search"
-					placeholder="Search consequences…"
-					value={query}
-					onChange={(e) => setQuery(e.target.value)}
-				/>
-				<div className="sheet-control-actions">
+				<div className="sheet-actions">
 					<button type="button" className="btn ghost" onClick={copyLink}>
 						{copied ? "Link copied" : "Copy link"}
 					</button>
@@ -139,24 +114,85 @@ export default function Artifact({ view }: { view: AppView }) {
 						Download PDF
 					</button>
 					<button type="button" className="btn ghost" disabled={busy} onClick={makeNewVersion}>
-						Make changes
+						{interim ? "Complete this plan" : "Make changes"}
 					</button>
 				</div>
 			</div>
+
+			{conflicts.length > 0 && (
+				<div style={{ padding: "22px 30px 0" }}>
+					<VerdictBanner conflicts={conflicts} />
+				</div>
+			)}
+
+			{interim && (
+				<section className="sheet-section" id="s-open">
+					<h3 className="sheet-section-title">To confirm with BES</h3>
+					<div className="record">
+						{ev.open_items.map((qid) => (
+							<div className="record-row record-open" key={qid}>
+								<span>{byId.get(qid)?.label ?? qid}</span>
+								<span className="mono">Not yet decided</span>
+							</div>
+						))}
+					</div>
+				</section>
+			)}
+
 
 			{groups.length === 0 ? (
 				<section className="sheet-section">
 					<p className="ledger-empty">No consequences match your search.</p>
 				</section>
 			) : (
-				groups.map((g) => (
-					<section key={g.key} id={`s-${g.key}`} className="sheet-section">
-						<h3 className="sheet-section-title">{g.label}</h3>
-						{g.items.map((c) => (
-							<ConsequenceCard key={c.id} c={c.consequence} />
+				groups.map((g) => {
+					const open = !shut[g.key];
+					const warn = g.key === WARNINGS;
+					return (
+						<section
+							key={g.key}
+							id={`s-${g.key}`}
+							className={`sheet-section${warn ? " sheet-section-flush" : ""}`}
+						>
+							<button
+								type="button"
+								className={`qexpand${warn ? " qexpand-warn" : ""}${open ? " on" : ""}`}
+								aria-expanded={open}
+								onClick={() => setShut({ ...shut, [g.key]: open })}
+							>
+								<Chevron size={17} />
+								<span>{g.label}</span>
+								<span className="group-count">{g.items.length}</span>
+							</button>
+							{/* Always rendered, hidden with CSS: printing must carry the
+							    whole record however the reader reached the print dialog. */}
+							<div className={`items${open ? "" : " shut"}`}>
+								{g.items.map((c) => (
+									<ConsequenceCard
+										key={c.id}
+										c={c.consequence}
+										done={done.includes(c.id)}
+										onToggle={warn ? undefined : () => toggleDone(c.id)}
+									/>
+								))}
+							</div>
+						</section>
+					);
+				})
+			)}
+
+			{ev.assumed.length > 0 && (
+				<section className="sheet-section" id="s-assumed">
+					<h3 className="sheet-section-title">Assumptions</h3>
+					<div className="record">
+						{ev.assumed.map((a) => (
+							<div className="record-row record-assumed" key={a.question}>
+								<span>{byId.get(a.question)?.label ?? a.question}</span>
+								<span className="mono">{optionLabel(byId.get(a.question), a.option)}</span>
+							</div>
 						))}
-					</section>
-				))
+					</div>
+				</section>
 			)}
 
 			<section className="sheet-section">
@@ -165,7 +201,13 @@ export default function Artifact({ view }: { view: AppView }) {
 					{view.questions.map((q) => (
 						<div className="record-row" key={q.id}>
 							<span>{q.label}</span>
-							<span className="mono">{answerLabel(q, answers[q.id])}</span>
+							<span className="mono">
+								{isAnswered(answers[q.id])
+									? answerLabel(q, answers[q.id])
+									: assumedBy.has(q.id)
+										? optionLabel(q, assumedBy.get(q.id) ?? "")
+										: "Not yet decided"}
+							</span>
 						</div>
 					))}
 				</div>
@@ -174,43 +216,38 @@ export default function Artifact({ view }: { view: AppView }) {
 	);
 }
 
-function groupConsequences(items: TriggeredConsequence[], grouping: Grouping): Group[] {
-	if (grouping === "audience") {
-		return AUDIENCE_ORDER.map((a) => ({
-			key: a,
-			label: AUDIENCE_LABEL[a],
-			items: items.filter((c) => c.consequence.audience === a),
-		}));
-	}
-	// By topic: known topics first, then any others in order of appearance.
-	const extras = items.map((c) => c.source).filter((s) => !TOPIC_ORDER.includes(s));
-	const sources = [...TOPIC_ORDER, ...new Set(extras)];
-	return sources.map((source) => ({
-		key: source,
-		label: TOPIC_LABEL[source] ?? source,
-		items: items.filter((c) => c.source === source),
+/// Consequences grouped by the reader they are addressed to, in reading order.
+function groupConsequences(items: TriggeredConsequence[]): Group[] {
+	return AUDIENCE_ORDER.map((a) => ({
+		key: a,
+		label: AUDIENCE_LABEL[a],
+		items: items.filter((c) => c.consequence.audience === a),
 	}));
 }
 
+function optionLabel(q: QuestionView | undefined, id: string): string {
+	return q?.options.find((o) => o.id === id)?.label ?? id;
+}
+
 function answerLabel(q: QuestionView, value: AnswerValue | undefined): string {
-	if (value == null || (Array.isArray(value) && value.length === 0)) return "—";
-	const label = (id: string) => q.options.find((o) => o.id === id)?.label ?? id;
-	return Array.isArray(value) ? value.map(label).join(", ") : label(value);
+	if (!isAnswered(value)) return "Not answered";
+	if (Array.isArray(value)) return value.map((id) => optionLabel(q, id)).join(", ");
+	return optionLabel(q, value);
 }
 
-function topology(questions: QuestionView[], answers: Record<string, AnswerValue>): string {
-	const central = answerLabel(byId(questions, "central"), answers["central"]);
-	const mix = answerLabel(byId(questions, "facility_mix"), answers["facility_mix"]);
-	return `Central: ${central} · Facilities: ${mix}`;
-}
-
-function regionLabel(
+function topology(
 	questions: QuestionView[],
 	answers: Record<string, AnswerValue>,
-): string | null {
-	const value = answers["region"];
-	if (typeof value !== "string") return null;
-	return answerLabel(byId(questions, "region"), value);
+	assumed: Map<string, string>,
+): string {
+	// An assumed answer is the answer until the reader changes it, so the header
+	// reads it the same way the engine does.
+	const fact = (id: string) => {
+		const q = byId(questions, id);
+		const value = isAnswered(answers[id]) ? answers[id] : assumed.get(id);
+		return value ? answerLabel(q, value) : "Not answered";
+	};
+	return `Central: ${fact("central")} · Facilities: ${fact("hosting_where")}`;
 }
 
 function byId(questions: QuestionView[], id: string): QuestionView {
@@ -221,6 +258,8 @@ function byId(questions: QuestionView[], id: string): QuestionView {
 			label: id,
 			help: null,
 			options: [],
+			section: null,
+			default: null,
 		}
 	);
 }

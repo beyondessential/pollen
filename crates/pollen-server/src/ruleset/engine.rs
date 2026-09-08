@@ -8,8 +8,8 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use super::answers::Answers;
-use super::model::{Consequence, DerivationKind, Ruleset, Severity};
+use super::answers::{Answer, Answers};
+use super::model::{Consequence, DerivationKind, QuestionKind, Ruleset, Severity};
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Evaluation {
@@ -22,7 +22,23 @@ pub struct Evaluation {
 	pub consequences: Vec<TriggeredConsequence>,
 	/// Guidance whose condition currently holds.
 	pub guidance: Vec<TriggeredGuidance>,
+	/// Visible questions left unanswered whose blessed-path default the engine
+	/// applied on the user's behalf (spec WIZ, assumed defaults).
+	pub assumed: Vec<Assumed>,
+	/// Visible questions the user marked unsure, or left blank where an unsure
+	/// option was available. These make the artifact interim.
+	pub open_items: Vec<String>,
+	/// Visible questions that must be answered: no default to fall back on and
+	/// no unsure option to decline with. These block finalising.
+	pub required: Vec<String>,
 	pub verdict: Verdict,
+}
+
+/// A default the engine applied because the question was left unanswered.
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct Assumed {
+	pub question: String,
+	pub option: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
@@ -48,14 +64,41 @@ pub enum Verdict {
 }
 
 pub fn evaluate(ruleset: &Ruleset, answers: &Answers) -> Evaluation {
+	let (answers, assumed) = apply_defaults(ruleset, answers);
+	let answers = &answers;
 	let derived = derive(ruleset, answers);
 
-	let visible_questions = ruleset
+	let visible_questions: Vec<String> = ruleset
 		.questions
 		.iter()
 		.filter(|q| q.visible_if.eval(answers))
 		.map(|q| q.id.clone())
 		.collect();
+
+	// Split the still-unresolved visible questions. A question the user marked
+	// unsure, or left blank where declining was offered, is an open item the
+	// artifact carries forward; one with no way to decline must be answered.
+	let mut open_items = Vec::new();
+	let mut required = Vec::new();
+	for qid in &visible_questions {
+		let Some(q) = ruleset.question(qid) else {
+			continue;
+		};
+		let has_unsure = q.options.iter().any(|o| o.unsure);
+		let answered_unsure =
+			q.options.iter().filter(|o| o.unsure).any(|o| {
+				answers.one(qid) == Some(o.id.as_str()) || answers.many(qid).contains(&o.id)
+			});
+		if answered_unsure {
+			open_items.push(qid.clone());
+		} else if !answers.answered(qid) {
+			if has_unsure {
+				open_items.push(qid.clone());
+			} else {
+				required.push(qid.clone());
+			}
+		}
+	}
 
 	let consequences: Vec<TriggeredConsequence> = ruleset
 		.rules
@@ -97,8 +140,53 @@ pub fn evaluate(ruleset: &Ruleset, answers: &Answers) -> Evaluation {
 		visible_questions,
 		consequences,
 		guidance,
+		assumed,
+		open_items,
+		required,
 		verdict,
 	}
+}
+
+/// Fill in the blessed-path answer for every visible question left blank that
+/// declares one (spec WIZ, assumed defaults).
+///
+/// Applying a default can reveal a question that has a default of its own, so
+/// this runs to a fixed point rather than in a single pass. The question count
+/// bounds the loop: each round either settles at least one more question or
+/// stops.
+fn apply_defaults(ruleset: &Ruleset, answers: &Answers) -> (Answers, Vec<Assumed>) {
+	let mut effective = answers.clone();
+	let mut assumed = Vec::new();
+	for _ in 0..=ruleset.questions.len() {
+		let mut changed = false;
+		for q in &ruleset.questions {
+			let Some(default) = &q.default else { continue };
+			if !q.visible_if.eval(&effective) || effective.answered(&q.id) {
+				continue;
+			}
+			let answer = match q.kind {
+				QuestionKind::Multi => Answer::Many(vec![default.clone()]),
+				QuestionKind::Single | QuestionKind::Band => Answer::One(default.clone()),
+			};
+			effective.set(&q.id, answer);
+			assumed.push(Assumed {
+				question: q.id.clone(),
+				option: default.clone(),
+			});
+			changed = true;
+		}
+		if !changed {
+			break;
+		}
+	}
+	// A default applied on one round can be hidden again by a later one, so
+	// only report assumptions whose question is still visible.
+	assumed.retain(|a| {
+		ruleset
+			.question(&a.question)
+			.is_some_and(|q| q.visible_if.eval(&effective))
+	});
+	(effective, assumed)
 }
 
 fn derive(ruleset: &Ruleset, answers: &Answers) -> BTreeMap<String, String> {
@@ -114,6 +202,9 @@ fn derive(ruleset: &Ruleset, answers: &Answers) -> BTreeMap<String, String> {
 				for qid in questions {
 					if let (Some(q), Some(answer)) = (ruleset.question(qid), answers.one(qid))
 						&& let Some(ix) = q.option_index(answer)
+						// "I'm not sure" sits in the option list but is not a band,
+						// so it must not count as the highest one reached.
+						&& q.options.get(ix).is_some_and(|o| !o.unsure)
 					{
 						max = Some(max.map_or(ix, |m| m.max(ix)));
 					}

@@ -1,6 +1,6 @@
 //! Apply the embedded database migrations. Used at deploy time and by the e2e
 //! fixture. The migrations are embedded from the repo-root `migrations/`, so
-//! this needs no files at runtime — only `DATABASE_URL`.
+//! this needs no files at runtime, only `DATABASE_URL`.
 
 use clap::Parser;
 use diesel_async::{AsyncConnection, AsyncMigrationHarness, AsyncPgConnection};

@@ -1,4 +1,4 @@
-/* New Tamanu — BES-branded design tokens and components.
+/* New Tamanu: BES-branded design tokens and components.
    Brand: BES navy #313f6a (structure) + sky #009cea (interaction). */
 
 :root {
@@ -23,6 +23,8 @@
 	--offdef-bg: #fbf1dc;
 	--block: #b23a3a;
 	--block-bg: #f7e4e1;
+	--open: #5a6b9a;
+	--open-bg: #eceffa;
 
 	--font-display: "Space Grotesk", system-ui, sans-serif;
 	--font-body: "Inter", system-ui, sans-serif;
@@ -229,11 +231,13 @@ body {
 }
 .bandrow {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
 	gap: 7px;
 }
 @media (max-width: 560px) {
 	.bandrow {
+		grid-auto-flow: row;
 		grid-template-columns: repeat(2, 1fr);
 	}
 }
@@ -290,77 +294,8 @@ body {
 	color: var(--ink-faint);
 	margin: 0 0 9px;
 }
-.meters {
-	display: flex;
-	gap: 6px;
-	margin: 16px 0 20px;
-}
-.meter {
-	flex: 1;
-	background: var(--paper);
-	border: 1px solid var(--line-soft);
-	border-radius: var(--radius-sm);
-	padding: 9px 8px;
-	text-align: center;
-}
-.meter-k {
-	display: block;
-	font-size: 9.5px;
-	letter-spacing: 0.07em;
-	text-transform: uppercase;
-	color: var(--ink-faint);
-}
-.meter-v {
-	display: block;
-	font-family: var(--font-display);
-	font-weight: 600;
-	font-size: 18px;
-	margin-top: 2px;
-}
-.ledger {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-}
-.cons {
-	display: flex;
-	background: var(--surface);
-	border: 1px solid var(--line);
-	border-radius: 10px;
-	overflow: hidden;
-}
-.cons-bar {
-	width: 3px;
-	flex-shrink: 0;
-}
-.cons-body {
-	padding: 10px 13px;
-}
-.cons-head {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-.cons-dot {
-	width: 7px;
-	height: 7px;
-	border-radius: 99px;
-	flex-shrink: 0;
-}
-.cons-title {
-	font-size: 13px;
-	font-weight: 600;
-	font-family: var(--font-display);
-}
-.cons-detail {
-	font-size: 12.5px;
-	color: var(--ink-soft);
-	line-height: 1.5;
-	margin: 5px 0 9px;
-	max-width: 70ch;
-}
 /* Inline markup (links open in a new tab; see markup.tsx) in ruleset prose. */
-.cons-detail a,
+.item-detail a,
 .qhelp a,
 .guide a,
 .choice-note a {
@@ -368,24 +303,12 @@ body {
 	text-decoration: underline;
 	text-underline-offset: 2px;
 }
-.cons-detail code,
+.item-detail code,
 .qhelp code,
 .guide code,
 .choice-note code {
 	font-family: var(--font-mono);
 	font-size: 0.9em;
-}
-.cons-tags {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 6px;
-	align-items: center;
-}
-.tag {
-	font-size: 10.5px;
-	font-weight: 500;
-	padding: 2px 8px;
-	border-radius: 99px;
 }
 .cost-note {
 	font-size: 11px;
@@ -396,8 +319,7 @@ body {
 /* ── Verdict ─────────────────────────────────────────────────────────── */
 .verdict {
 	display: flex;
-	gap: 11px;
-	align-items: flex-start;
+	flex-direction: column;
 	padding: 12px 14px;
 	border-radius: 11px;
 }
@@ -412,15 +334,6 @@ body {
 }
 .verdict-big .verdict-t {
 	font-size: 16px;
-}
-.verdict-s {
-	font-size: 11.5px;
-	opacity: 0.85;
-	line-height: 1.4;
-	margin-top: 3px;
-}
-.verdict-big .verdict-s {
-	font-size: 13px;
 }
 
 /* ── Buttons ─────────────────────────────────────────────────────────── */
@@ -543,52 +456,17 @@ body {
 	font-size: 12.5px;
 	color: var(--ink-soft);
 }
-.sheet-meta {
-	text-align: right;
-	font-size: 11px;
-	color: var(--ink-faint);
-}
-.sheet-controls {
+.sheet-actions {
 	display: flex;
-	align-items: center;
-	gap: 10px;
-	padding: 14px 30px;
-	border-bottom: 1px solid var(--line-soft);
-	flex-wrap: wrap;
-}
-.tg-group {
-	display: flex;
+	flex: none;
 	gap: 6px;
+	align-self: flex-start;
 }
-.tg {
-	padding: 7px 13px;
-	border: 1px solid var(--line);
-	background: var(--surface);
-	border-radius: 8px;
-	font-family: inherit;
-	font-size: 12.5px;
-	color: var(--ink-soft);
-	cursor: pointer;
+.sheet-actions .btn {
+	white-space: nowrap;
 }
-.tg.on {
-	background: var(--navy);
-	color: #fff;
-	border-color: var(--navy);
-}
-.sheet-search {
-	flex: 1;
-	min-width: 150px;
-	padding: 8px 12px;
-	border: 1px solid var(--line);
-	border-radius: 8px;
-	font-family: inherit;
-	font-size: 13px;
-	color: var(--ink);
-	background: var(--surface);
-}
-.sheet-control-actions {
-	display: flex;
-	gap: 6px;
+.sheet-head > div:first-child {
+	min-width: 0;
 }
 .ledger-empty {
 	font-size: 13px;
@@ -659,7 +537,21 @@ body {
 @media print {
 	.topbar,
 	.updatebar,
-	.sheet-controls {
+	.sheet-actions {
+		display: none;
+	}
+	/* A collapsed group is a reading convenience; the printed record is whole. */
+	.items.shut {
+		display: flex;
+	}
+	.verdict-list.shut {
+		display: block;
+	}
+	/* Ticking off is the reader's own progress, not part of the record. */
+	.item-check {
+		display: none;
+	}
+	.qexpand svg {
 		display: none;
 	}
 	body {
@@ -673,14 +565,14 @@ body {
 		box-shadow: none;
 	}
 	.sheet-section,
-	.cons,
+	.item,
 	.card,
 	.record {
 		break-inside: avoid;
 	}
 	/* The entrance animation (opacity 0→1, fill both) can otherwise be captured
 	   mid-flight on a freshly re-rendered view, printing sections greyed out. */
-	.cons,
+	.item,
 	.card {
 		animation: none;
 		opacity: 1;
@@ -689,4 +581,266 @@ body {
 		color: inherit;
 		text-decoration: none;
 	}
+}
+
+/* ── Question sections ───────────────────────────────────────────────── */
+/* The flow is grouped so a non-technical reader can stop after the
+   essentials; the technical group arrives collapsed. */
+.qsection {
+	margin-bottom: 30px;
+}
+/* The one collapsible section: a full-width control, so the offer to answer
+   more reads as something you can open rather than a heading. */
+.qexpand {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	text-align: left;
+	font-family: var(--font-display);
+	font-size: 14.5px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	color: var(--navy);
+	background: var(--sky-tint);
+	border: 1px solid #bfe4f8;
+	border-radius: var(--radius-sm);
+	padding: 14px 16px;
+	margin-bottom: 14px;
+	cursor: pointer;
+	transition: background 0.14s;
+}
+.qexpand:hover {
+	background: #daeffc;
+}
+.qexpand svg {
+	flex: none;
+	transition: transform 0.16s;
+}
+.qexpand.on svg {
+	transform: rotate(180deg);
+}
+.qsection-title {
+	font-family: var(--font-display);
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--navy);
+	margin: 0 0 14px;
+}
+
+/* ── Question state flags ────────────────────────────────────────────── */
+
+/* ── Off-the-blessed-path warning, shown at the point of choice ──────── */
+.warn {
+	display: flex;
+	gap: 9px;
+	padding: 11px 14px;
+	margin-top: 14px;
+	background: var(--offdef-bg);
+	border: 1px solid #ecd9ae;
+	border-radius: 10px;
+	font-size: 13px;
+	color: #7d5312;
+	line-height: 1.45;
+}
+
+/* ── Interim artifact ────────────────────────────────────────────────── */
+.badge-interim {
+	display: inline-block;
+	vertical-align: middle;
+	margin-left: 12px;
+	font-family: var(--font-body);
+	font-size: 11.5px;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--open);
+	background: var(--open-bg);
+	border: 1px solid #ccd3e8;
+	border-radius: 6px;
+	padding: 4px 9px;
+}
+.record-open span:last-child {
+	color: var(--open);
+}
+.record-assumed span:last-child {
+	color: var(--ink-faint);
+}
+
+/* ── Rail ────────────────────────────────────────────────────────────── */
+/* Just the derived size, and anything steered off the standard path. The
+   full set of requirements belongs on the artifact, not beside the form. */
+.stat {
+	margin-bottom: 26px;
+}
+.stat-k {
+	display: block;
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--ink-faint);
+}
+.stat-v {
+	display: block;
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: 27px;
+	letter-spacing: -0.02em;
+	margin-top: 3px;
+}
+.flags {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.flag {
+	display: flex;
+	align-items: baseline;
+	gap: 9px;
+	font-size: 12.5px;
+	line-height: 1.45;
+	color: var(--ink-soft);
+}
+.flag-dot {
+	flex: none;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--offdef);
+	transform: translateY(-1px);
+}
+.flag-block {
+	color: var(--block);
+}
+.flag-block .flag-dot {
+	background: var(--block);
+}
+
+/* ── Artifact groups and items ───────────────────────────────────────── */
+/* Consequences read as a list of things the deployment entails, built from the
+   same vocabulary as the form's choices so the two surfaces match. */
+.group-count {
+	margin-left: auto;
+	font-family: var(--font-body);
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--ink-faint);
+	background: var(--surface);
+	border-radius: 99px;
+	padding: 2px 9px;
+}
+.items {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.items.shut {
+	display: none;
+}
+.item {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 11px;
+	padding: 15px 17px;
+}
+/* A real control: the reader ticks these off as the work gets done. */
+.item-check {
+	width: 20px;
+	height: 20px;
+	border-radius: 6px;
+	border: 1.5px solid var(--line);
+	background: var(--surface);
+	flex-shrink: 0;
+	margin-top: 1px;
+	display: grid;
+	place-items: center;
+	cursor: pointer;
+	color: #fff;
+	padding: 0;
+	transition:
+		background 0.14s,
+		border-color 0.14s;
+}
+.item-check:hover {
+	border-color: #c4d0d6;
+}
+.item-check.on {
+	background: var(--sky);
+	border-color: var(--sky);
+}
+.item-done {
+	color: var(--ink-faint);
+	text-decoration: line-through;
+}
+.item-body {
+	min-width: 0;
+}
+.item-title {
+	font-family: var(--font-display);
+	font-size: 14px;
+	font-weight: 600;
+	margin: 0;
+}
+.item-detail {
+	font-size: 13px;
+	color: var(--ink-soft);
+	line-height: 1.6;
+	margin: 6px 0 0;
+	max-width: 70ch;
+}
+
+/* ── Verdict, expandable to name the choices behind the count ────────── */
+.verdict-toggle {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	width: 100%;
+	text-align: left;
+	background: none;
+	border: none;
+	padding: 0;
+	font-family: inherit;
+	color: inherit;
+	cursor: pointer;
+}
+.verdict-toggle svg {
+	flex: none;
+	transition: transform 0.16s;
+}
+.verdict-toggle.on svg {
+	transform: rotate(180deg);
+}
+.verdict-list {
+	margin: 12px 0 0 25px;
+	padding: 0;
+	font-size: 13px;
+	line-height: 1.7;
+}
+.verdict-list.shut {
+	display: none;
+}
+
+/* ── Warnings ────────────────────────────────────────────────────────── */
+/* The off-default colour they carried as a banner, running straight into the
+   actions they qualify rather than being fenced off from them. */
+.qexpand-warn {
+	color: var(--offdef);
+	background: var(--offdef-bg);
+	border-color: #ecd9ae;
+	margin-bottom: 0;
+}
+.qexpand-warn:hover {
+	background: #f7e6c6;
+}
+.qexpand-warn + .items {
+	margin-top: 14px;
+}
+.sheet-section-flush {
+	border-bottom: none;
+	padding-bottom: 0;
 }

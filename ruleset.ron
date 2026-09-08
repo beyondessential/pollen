@@ -1,59 +1,125 @@
 // The onboarding ruleset. Authored here, in RON; the engine evaluates it
 // (spec WIZ). This file is the single source of truth for the concrete
-// questions and consequences — comments capture the rationale. It is normalized
+// questions and consequences; comments capture the rationale. It is normalized
 // to canonical JSON and content-addressed by hash, so comments and formatting
 // don't affect identity.
 //
 // There is one canonical ruleset, here. Variant or proposed rulesets live on
-// git branches of this same file (previewed via ?config=<branch>) — not as
+// git branches of this same file (previewed via ?config=<branch>), not as
 // parallel versioned files. Its identity is its content hash, never a label.
 //
 // Stable-id discipline (spec WIZ): every question and option `id` is permanent.
 // Never reuse or repurpose an id; add new ones instead.
 //
-// Many on-prem rules repeat the same "any on-premises facility present" or
-// "any BES cloud present" condition. There are no variables in the data, so
-// the conditions are spelled out at each use.
+// The flow is ordered so a non-technical reader can stop early and still get a
+// useful estimate: the three sizing questions come first and are the only ones
+// that must be answered, then intent, then hosting, then the technical section
+// (collapsed on arrival). Every question past the essentials either declares a
+// blessed-path `default` the engine assumes when it is left blank, or offers an
+// `unsure` option that records it as an open item on an interim artifact.
+//
+// Many on-prem rules repeat the same "any client-hosted presence" or "any BES
+// cloud present" condition. There are no variables in the data, so the
+// conditions are spelled out at each use.
 
 (
+    sections: [
+        (id: "essentials", label: "Your health system"),
+        (id: "intent", label: "What you want Tamanu to do"),
+        (id: "hosting", label: "Where it runs"),
+        (id: "advanced", label: "Answer more for a more accurate plan", collapsed: true),
+    ],
+
     questions: [
-        // 1. Tupaia — asked first; it constrains backups later.
+        // ── Essentials ──────────────────────────────────────────────────────
+        // The sizing bands. These have no blessed default, because there is no typical
+        // catchment population, so catchment and facilities are the only
+        // questions that must be answered. Mobile can be declined because size
+        // still derives from the other two.
         (
-            id: "tupaia",
-            kind: Single,
-            label: "Connect to Tupaia?",
-            help: Some("Connecting means BES processes the data, which needs at minimum a low-retention backup."),
+            id: "catchment",
+            kind: Band,
+            section: Some("essentials"),
+            label: "How many people does the health system serve?",
             options: [
-                (id: "yes", label: "Yes, connect to Tupaia"),
-                (id: "no", label: "No Tupaia"),
+                (id: "c0", label: "Under 1,000"),
+                (id: "c1", label: "1,000 - 10,000"),
+                (id: "c2", label: "10,000 - 100,000"),
+                (id: "c3", label: "Over 100,000"),
+            ],
+        ),
+        (
+            id: "facilities",
+            kind: Band,
+            section: Some("essentials"),
+            label: "How many facilities will use Tamanu?",
+            help: Some("Hospitals, clinics, and health posts."),
+            options: [
+                (id: "f0", label: "One"),
+                (id: "f1", label: "2 - 5"),
+                (id: "f2", label: "6 - 20"),
+                (id: "f3", label: "More than 20"),
+            ],
+        ),
+        (
+            id: "mobile",
+            kind: Band,
+            section: Some("essentials"),
+            label: "How many people will use Tamanu on a phone or tablet?",
+            help: Some("Community health workers, and anyone working away from a desk."),
+            options: [
+                (id: "m0", label: "None"),
+                (id: "m1", label: "1 - 10"),
+                (id: "m2", label: "10 - 50"),
+                (id: "m3", label: "More than 50"),
+                (id: "m_unsure", label: "I'm not sure", unsure: true),
             ],
         ),
 
-        // 2. Integrations — recorded for planning; presence sizes Central up.
+        // ── Intent ──────────────────────────────────────────────────────────
+        // Tupaia is a capability worth having by default, so it is presented as
+        // what it gives you and defaults to on. Asked before backups because it
+        // constrains them.
+        (
+            id: "tupaia",
+            kind: Single,
+            section: Some("intent"),
+            label: "Do you want dashboards and reporting?",
+            help: Some("Provided by [Tupaia](https://tupaia.org). BES processes the data to do this, so it needs at least a short-retention backup."),
+            default: Some("yes"),
+            options: [
+                (id: "yes", label: "Yes, include dashboards and reporting", note: Some("Programme monitoring and routine indicators.")),
+                (id: "no", label: "No, Tamanu only"),
+                (id: "unsure", label: "I'm not sure", unsure: true),
+            ],
+        ),
         (
             id: "integrations",
             kind: Multi,
-            label: "Which integrations are wanted?",
-            help: Some("Integrations themselves are usually light on the system, so this is recorded for planning. Any present means Central is sized up a little."),
+            section: Some("intent"),
+            label: "Does Tamanu need to connect to other systems?",
             options: [
-                (id: "lims", label: "LIMS — laboratories (SENAITE or other)"),
-                (id: "msupply", label: "Pharmacy & warehousing (mSupply or other)"),
-                (id: "rispacs", label: "RISPACS / Imaging"),
-                (id: "other_fhir", label: "Other FHIR-based integration"),
-                (id: "other_nonfhir", label: "Other non-FHIR integration"),
-                (id: "none", label: "None for now", exclusive: true),
+                (id: "lims", label: "Laboratory system", note: Some("SENAITE or another LIMS.")),
+                (id: "msupply", label: "Pharmacy or warehousing", note: Some("mSupply or another stock system.")),
+                (id: "rispacs", label: "Imaging", note: Some("RIS / PACS.")),
+                (id: "other_fhir", label: "Something else that speaks FHIR"),
+                (id: "other_nonfhir", label: "Something else, not FHIR-based"),
+                (id: "none", label: "No integrations", exclusive: true),
+                (id: "unsure", label: "I'm not sure", exclusive: true, unsure: true),
             ],
         ),
         (
             id: "hosted_integration",
             kind: Single,
-            label: "Should BES host any of these integrations?",
-            help: Some("Possible, but specced in a separate technical conversation — flagged here, not resolved here."),
+            section: Some("intent"),
+            label: "Who runs those other systems?",
+            help: Some("BES hosting them is possible, but is scoped in a separate conversation."),
+            default: Some("no"),
             options: [
-                (id: "yes", label: "Yes — BES hosts it"),
-                (id: "no", label: "No — the client hosts it"),
+                (id: "no", label: "The client runs them"),
+                (id: "yes", label: "BES should host them"),
             ],
-            // Only when at least one integration is wanted.
+            // Only when at least one connection is wanted.
             visible_if: Any([
                 Includes("integrations", "lims"),
                 Includes("integrations", "msupply"),
@@ -63,211 +129,261 @@
             ]),
         ),
 
-        // 3. Sizing — three bands; the highest reached derives the size.
-        (
-            id: "catchment",
-            kind: Band,
-            label: "Catchment population",
-            help: Some("The total population the health system covers."),
-            options: [
-                (id: "c0", label: "<1k"),
-                (id: "c1", label: "1-10k"),
-                (id: "c2", label: "10-100k"),
-                (id: "c3", label: ">100k"),
-            ],
-        ),
-        (
-            id: "facilities",
-            kind: Band,
-            label: "Number of facilities",
-            options: [
-                (id: "f0", label: "One"),
-                (id: "f1", label: "2-5"),
-                (id: "f2", label: "6-20"),
-                (id: "f3", label: "20+"),
-            ],
-        ),
-        (
-            id: "mobile",
-            kind: Band,
-            label: "Mobile clients",
-            options: [
-                (id: "m0", label: "None"),
-                (id: "m1", label: "1-10"),
-                (id: "m2", label: "10-50"),
-                (id: "m3", label: "50+"),
-            ],
-        ),
-
-        // 4. Topology — central placement, plus the mix of facility classes.
+        // ── Hosting ─────────────────────────────────────────────────────────
+        // Central first: where the hub lives frames the facility split that
+        // follows.
         (
             id: "central",
             kind: Single,
-            label: "Where does the central server run?",
-            help: Some("Central is typically in BES cloud even when facilities are on-site. Customer cloud is treated as on-prem."),
+            section: Some("hosting"),
+            label: "Where should the central server run?",
+            help: Some("The central server ties the facilities together. Normally BES cloud, even when facilities run on site."),
+            default: Some("bescloud"),
             options: [
-                (id: "bescloud", label: "BES cloud", note: Some("Fully managed AWS hosting; client gets application access by default.")),
-                (id: "customercloud", label: "Customer cloud", note: Some("Treated as on-prem.")),
-                (id: "onprem", label: "True on-prem", note: Some("Bare metal or virtualised on site.")),
+                (id: "bescloud", label: "BES cloud", note: Some("Recommended. Fully managed; the client still gets full application access.")),
+                (id: "clienthosted", label: "Client hosted", warn: Some("Hosting the central server yourself means your IT team carries availability, backups, and upgrades for it, and BES incident response is slower.")),
+            ],
+        ),
+        // Planning grain (spec WIZ): the tool records which classes are present
+        // and a rough balance between them, never a facility-by-facility map.
+        // Client cloud and true on-prem behaved identically in every rule, so
+        // they are one option here; how those servers are provisioned is asked
+        // further down, where it actually differs.
+        //
+        // Most deployments are all one or all the other, so the balance is a
+        // follow-up rather than something everyone has to set.
+        (
+            id: "hosting_where",
+            kind: Single,
+            section: Some("hosting"),
+            label: "Where should the facility servers run?",
+            default: Some("allclient"),
+            options: [
+                (id: "allbes", label: "All in BES cloud", note: Some("Hosted by BES in a secure AWS data centre.")),
+                (id: "allclient", label: "All client hosted", note: Some("On servers the client owns or rents. Keeps working when the internet link is down.")),
+                (id: "mix", label: "A mix of both"),
             ],
         ),
         (
-            id: "facility_mix",
-            kind: Multi,
-            label: "What's the facility mix?",
-            help: Some("Planning grain only — not which specific facility sits where. The presence of a class is what brings in its requirements."),
+            id: "hosting_balance",
+            kind: Band,
+            section: Some("hosting"),
+            label: "Roughly what balance?",
+            default: Some("half"),
             options: [
-                (id: "bescloud", label: "Some in BES cloud"),
-                (id: "baremetal", label: "Some on-prem, bare metal"),
-                (id: "virtualised", label: "Some on-prem, virtualised"),
-                (id: "iti", label: "Some Tamanu ITI appliances", note: Some("BES-built ARM64 plug-in server.")),
+                (id: "mostlybes", label: "Mostly BES cloud"),
+                (id: "half", label: "About half"),
+                (id: "mostlyclient", label: "Mostly client hosted"),
             ],
+            visible_if: Equals("hosting_where", "mix"),
         ),
-
-        // 5. Region — only when any BES cloud is present.
+        // Tamanu Iti is a way of running a facility site, not a place, so it is
+        // asked separately once something sits outside BES cloud. Sites running
+        // Iti have no operating system or provisioning to choose.
+        (
+            id: "iti_use",
+            kind: Single,
+            section: Some("hosting"),
+            label: "Will any of those sites use a Tamanu Iti mini-server?",
+            help: Some("A mini-server, built by BES, that plugs into the facility network."),
+            default: Some("none"),
+            options: [
+                (id: "none", label: "No, they run their own servers"),
+                (id: "some", label: "Yes, some of them"),
+                (id: "all", label: "Yes, all of them"),
+            ],
+            visible_if: Any([
+                Equals("hosting_where", "allclient"),
+                Equals("hosting_where", "mix"),
+            ]),
+        ),
+        // ── Technical details ───────────────────────────────────────────────
+        // Every question below declares a blessed-path default, so a user who
+        // never opens this section still gets a complete, supported estimate.
+        // Each also offers a way to decline where the answer is a policy call
+        // the client may not have made yet.
+        (
+            id: "onprem_form",
+            kind: Single,
+            section: Some("advanced"),
+            label: "How are the client-hosted servers provided?",
+            help: Some("The two are provisioned differently, so the requirements differ."),
+            default: Some("virtualised"),
+            options: [
+                (id: "virtualised", label: "Virtual machines"),
+                (id: "baremetal", label: "Physical servers"),
+                (id: "mixed", label: "Both"),
+            ],
+            visible_if: Any([
+                Equals("central", "clienthosted"),
+                All([
+                    Any([
+                        Equals("hosting_where", "allclient"),
+                        Equals("hosting_where", "mix"),
+                    ]),
+                    Not(Equals("iti_use", "all")),
+                ]),
+            ]),
+        ),
         (
             id: "region",
             kind: Single,
+            section: Some("advanced"),
             label: "Which hosting region?",
+            default: Some("sydney"),
             options: [
-                (id: "sydney", label: "Sydney", note: Some("Default.")),
-                (id: "zurich", label: "Zurich", note: Some("For Europe.")),
-                (id: "otheraws", label: "Other AWS region", note: Some("Supported, adds ongoing cost.")),
+                (id: "sydney", label: "Sydney", note: Some("Standard.")),
+                (id: "otheraws", label: "Another AWS region", warn: Some("Supported, but adds ongoing cost. The actual figures are confirmed separately.")),
             ],
             visible_if: Any([
                 Equals("central", "bescloud"),
-                Includes("facility_mix", "bescloud"),
+                Equals("hosting_where", "allbes"),
+                Equals("hosting_where", "mix"),
             ]),
         ),
-
-        // 6. Platform — only when an on-prem server has an OS to choose. BES
-        // cloud and the ITI appliance are fixed to Linux on ARM64, so neither
-        // (incl. an ITI-only on-site setup) brings up this question.
+        // Only when a client-hosted server has an OS to choose. BES cloud and
+        // the Tamanu Iti mini-server are fixed to Linux on ARM64.
         (
             id: "platform",
             kind: Single,
-            label: "On-prem operating system",
-            help: Some("BES cloud and the ITI appliance are fixed to Linux on ARM64. This is for the on-prem servers."),
+            section: Some("advanced"),
+            label: "Operating system for the client-hosted servers",
+            help: Some("BES cloud and Tamanu Iti are fixed to Linux on ARM64."),
+            default: Some("linuxarm"),
             options: [
-                (id: "linuxarm", label: "Linux on ARM64", note: Some("Ideal.")),
-                (id: "linuxamd", label: "Linux on AMD64", note: Some("Fully supported.")),
-                (id: "windows", label: "Windows Server", note: Some("Phasing out — strong insistence only.")),
-                (id: "other", label: "Other (Red Hat, Kubernetes, non-server Windows)", note: Some("Unsupported.")),
+                (id: "linuxarm", label: "Linux on ARM64", note: Some("Required for full support.")),
+                (id: "linuxamd", label: "Linux on AMD64", warn: Some("ARM64 is the supported platform. AMD64 works, but carries a higher ongoing support and hosting cost.")),
+                (id: "windows", label: "Windows Server", warn: Some("Being phased out, and accepted only on strong insistence. The client licenses Windows, the application runs slower, and support and incident response are slower and less effective.")),
             ],
             visible_if: Any([
-                Equals("central", "onprem"),
-                Equals("central", "customercloud"),
-                Includes("facility_mix", "baremetal"),
-                Includes("facility_mix", "virtualised"),
+                Equals("central", "clienthosted"),
+                All([
+                    Any([
+                        Equals("hosting_where", "allclient"),
+                        Equals("hosting_where", "mix"),
+                    ]),
+                    Not(Equals("iti_use", "all")),
+                ]),
             ]),
         ),
 
-        // 7. Backups — capability, then retention (retention only if allowed).
+        // Backups, DNS and telemetry are client policy calls rather than
+        // technical preferences, so they offer "I'm not sure" and are never
+        // assumed: a wrong guess here would materially misstate the estimate.
         (
             id: "backup_capability",
             kind: Single,
-            label: "Can BES take backups?",
-            help: Some("Distinct from retention. Clone-upgrade testing needs only the ability to take a one-off backup, even if nothing is kept."),
+            section: Some("advanced"),
+            label: "Can BES take backups of the data?",
+            help: Some("Separate from how long they are kept. Upgrade testing needs only a one-off backup."),
+            default: Some("yes"),
             options: [
-                (id: "yes", label: "Yes — BES may take backups"),
-                (id: "no", label: "No — BES may not take backups", note: Some("Removes managed recovery, Tupaia, and clone upgrades.")),
+                (id: "yes", label: "Yes, BES may take backups"),
+                (id: "no", label: "No, BES may not take backups", warn: Some("This removes BES-managed recovery, dashboards and reporting, and upgrade testing against a copy of the data.")),
+                (id: "unsure", label: "I'm not sure", unsure: true),
             ],
         ),
         (
             id: "retention",
             kind: Single,
-            label: "What does BES retain?",
+            section: Some("advanced"),
+            label: "How long should BES keep backups?",
+            default: Some("full"),
             options: [
-                (id: "full", label: "Full retention", note: Some("Default — keeps the latest backup, a week of daily backups, a month of weekly, and six monthly.")),
-                (id: "low", label: "Low retention", note: Some("Kept a few days — long enough to process into Tupaia and run clone-upgrade tests.")),
+                (id: "full", label: "Full retention", note: Some("The latest backup, a week of daily, a month of weekly, and six monthly.")),
+                (id: "low", label: "A few days only", note: Some("Long enough to feed dashboards and run upgrade tests."), warn: Some("Anything that goes wrong unnoticed for longer than a few days cannot be recovered, because there is no earlier backup to go back to.")),
             ],
             visible_if: Equals("backup_capability", "yes"),
         ),
-
-        // 8. Upgrade cadence — planning data only, not binding.
         (
             id: "cadence",
             kind: Single,
+            section: Some("advanced"),
             label: "How often do you intend to upgrade?",
-            help: Some("Planning data only — not binding. Tamanu releases on a fortnightly schedule."),
+            help: Some("Tamanu releases a new version every two weeks. You don't need to upgrade with every release, most deployments skip a few and upgrade around once every two months."),
+            default: Some("twomonths"),
             options: [
-                (id: "release", label: "Every release", note: Some("~Fortnightly.")),
-                (id: "quarterly", label: "Quarterly"),
-                (id: "biannual", label: "Twice a year"),
-                (id: "asneeded", label: "As needed / unsure"),
+                (id: "release", label: "Every release", note: Some("Roughly fortnightly.")),
+                (id: "twomonths", label: "Every two months"),
+                (id: "lessoften", label: "Less often", warn: Some("BES supports the last 10 releases. We recommend updating at minimum every three months, to avoid ending up on an unsupported version of Tamanu.")),
             ],
         ),
-
-        // 9. Networking.
         (
             id: "dns",
             kind: Single,
-            label: "DNS authority",
-            help: Some("How the deployment's DNS is handled."),
+            section: Some("advanced"),
+            label: "Who should manage the web addresses and certificates?",
+            help: Some("Tamanu needs domain names and TLS certificates."),
+            default: Some("bes"),
             options: [
-                (id: "bes", label: "BES controls DNS", note: Some("BES domain, provisioned domain, or SOA delegation.")),
-                (id: "client", label: "Client controls DNS", note: Some("Then ACME automation is required, and all domains must share a common stem.")),
-                (id: "local", label: "No DNS — all local", note: Some("All servers talk over HTTP.")),
+                (id: "bes", label: "BES manages them", note: Some("Recommended. Nothing for client IT to run.")),
+                (id: "client", label: "The client's IT team manages them", warn: Some("The client must support automatic ACME certificate issuance, and keep every deployment domain under a common stem.")),
+                (id: "local", label: "No web addresses, local network only", warn: Some("Servers reach each other over plain HTTP: no certificates, no encryption in transit. Supported, but an operational and security risk.")),
+                (id: "unsure", label: "I'm not sure", unsure: true),
             ],
         ),
-        // 9a. When BES controls DNS, how the domain is owned and reaches BES's
-        // DNS. Each arrangement targets a different setup action (see the
-        // dns-bes-* rules); the BES subdomain is the frictionless default.
         (
             id: "dns_arrangement",
             kind: Single,
-            label: "How is the BES-controlled domain set up?",
-            help: Some("Who owns the domain, and how it reaches BES's DNS."),
+            section: Some("advanced"),
+            label: "Which domain should be used?",
+            default: Some("bes_subdomain"),
             options: [
-                (id: "bes_subdomain", label: "BES subdomain on tamanu.app", note: Some("A name under BES's own tamanu.app domain.")),
-                (id: "bes_topdomain", label: "BES-owned dedicated domain", note: Some("A dedicated top-level domain BES owns and runs; small ongoing cost.")),
-                (id: "client_domain", label: "Client-owned domain, pointed to BES", note: Some("Client purchases the domain and points it at a BES-provisioned DNS zone.")),
-                (id: "client_subdomain", label: "Client subdomain, delegated via SOA", note: Some("Client IT allocates a subdomain and delegates it (SOA) to a BES-provisioned DNS zone.")),
+                (id: "bes_subdomain", label: "A name on tamanu.app", note: Some("Recommended. For example vanuatu.tamanu.app.")),
+                (id: "bes_topdomain", label: "A dedicated domain BES owns", warn: Some("BES registers and runs a dedicated domain, which carries a small ongoing cost.")),
+                (id: "client_domain", label: "A domain the client buys, pointed at BES", warn: Some("The client purchases the domain and client IT points it at a BES-provisioned DNS zone.")),
+                (id: "client_subdomain", label: "A subdomain the client delegates to BES", warn: Some("Client IT allocates a subdomain and delegates it to BES with SOA records, a setup step on the client side.")),
             ],
             visible_if: Equals("dns", "bes"),
         ),
         (
             id: "remote",
             kind: Single,
-            label: "Remote access for managed servers",
+            section: Some("advanced"),
+            label: "How does BES reach the servers it manages?",
+            default: Some("tailscale"),
             options: [
-                (id: "tailscale", label: "Tailscale", note: Some("Standard. Servers join BES's Tailscale network; only those servers need it allowed.")),
-                (id: "other", label: "Non-Tailscale arrangement", note: Some("Exceptional, may add significant cost.")),
+                (id: "tailscale", label: "Tailscale", note: Some("Required. Only the managed servers need it allowed, not the whole network.")),
+                (id: "other", label: "Some other arrangement", warn: Some("Tailscale is what BES supports. Anything else is exceptional and may add significant ongoing cost.")),
             ],
         ),
         (
             id: "timesync",
             kind: Single,
-            label: "Time synchronisation",
+            section: Some("advanced"),
+            label: "How do the servers keep accurate time?",
+            help: Some("Clock drift breaks Tamanu."),
+            default: Some("outbound"),
             options: [
-                (id: "outbound", label: "Public NTP", note: Some("Allow outbound traffic to pool.ntp.org.")),
-                (id: "internal", label: "Internal time server", note: Some("Provide the IP.")),
+                (id: "outbound", label: "Public time servers", note: Some("Allow outbound traffic to pool.ntp.org.")),
+                (id: "internal", label: "An internal time server", note: Some("The client provides the IP.")),
             ],
         ),
-
-        // 10. Telemetry — operational data only; gates support, backups, mobile.
         (
             id: "telemetry",
             kind: Single,
-            label: "Allow telemetry?",
-            help: Some("Telemetry is operational data only — no patient, clinical, or otherwise sensitive data is ever transmitted. It's what lets BES support the deployment, back it up, and keep mobile working."),
+            section: Some("advanced"),
+            label: "Can the servers send operational telemetry to BES?",
+            help: Some("Operational data only, never patient, clinical, or sensitive data. It is what lets BES support the deployment, back it up, and keep mobile working."),
+            default: Some("yes"),
             options: [
                 (id: "yes", label: "Yes, allow telemetry"),
-                (id: "no", label: "No telemetry"),
+                (id: "no", label: "No telemetry", warn: Some("This opts the deployment out of BES tech support, managed backups, and mobile support.")),
+                (id: "unsure", label: "I'm not sure", unsure: true),
             ],
         ),
     ],
 
     // Size = the highest band reached across the three sizing questions, mapped
     // by ordinal. All three have four bands; the lowest maps to Tiny, then Small,
-    // Medium, Large.
+    // Medium, Large. An "I'm not sure" band contributes nothing.
     derivations: [
         (
             id: "size",
             kind: HighestBand(
                 questions: ["catchment", "facilities", "mobile"],
                 labels: ["Tiny", "Small", "Medium", "Large"],
-                // Any integration bumps the deployment up one size (capped).
+                // Any connected system bumps the deployment up one size (capped).
                 bump_when: Some(Any([
                     Includes("integrations", "lims"),
                     Includes("integrations", "msupply"),
@@ -284,7 +400,7 @@
         (
             at: "backup_capability",
             when: Equals("tupaia", "yes"),
-            message: "You asked for Tupaia, so backups can't be fully disabled — at minimum, low-retention is needed.",
+            message: "You asked for dashboards and reporting, so backups can't be fully disabled. At minimum, a few days of retention is needed.",
         ),
     ],
 
@@ -297,7 +413,7 @@
             consequence: (
                 status: Requirement,
                 audience: Bes,
-                title: "Tupaia connection requested",
+                title: "Set up the Tupaia connection",
                 detail: "Connecting to Tupaia means BES processes the data, which requires at minimum a low-retention backup.",
             ),
         ),
@@ -315,8 +431,8 @@
                 status: Advisory,
                 audience: Bes,
                 types: [Operational],
-                title: "Central sized up for integrations",
-                detail: "Any integrations add load to the central server, so Central is provisioned with more resources. This is a flat allowance — the number of integrations does not change it.",
+                title: "Size Central up for the connected systems",
+                detail: "Any integrations add load to the central server, so Central is provisioned with more resources. This is a flat allowance; the number of integrations does not change it.",
             ),
         ),
         (
@@ -325,8 +441,8 @@
             when: Equals("hosted_integration", "yes"),
             consequence: (
                 status: Referral,
-                audience: Record,
-                title: "BES-hosted integration — separate conversation",
+                audience: Bes,
+                title: "Scope the BES-hosted integration separately",
                 detail: "Hosting an integration on BES infrastructure is possible but is scoped in a dedicated technical conversation. This record only flags the intent.",
             ),
         ),
@@ -337,62 +453,114 @@
             consequence: (
                 severity: NonDefault,
                 status: Advisory,
-                audience: Bes,
+                audience: Record,
                 types: [Cost],
-                cost: Some((tier: "Significant one-off development cost")),
-                title: "Non-FHIR integration needs custom development",
+                title: "A system with no standard interface needs custom development",
                 detail: "A non-FHIR integration has no standard interface, so connecting it requires bespoke development. It is supported with no other blockers, but adds significant one-off development cost.",
             ),
         ),
 
         // ── Region ──────────────────────────────────────────────────────────
+        // Where the BES cloud hosting sits is a setup decision BES acts on, so
+        // it appears as their work rather than as a header fact. Leaving the
+        // standard region is separately an acknowledgement.
+        (
+            id: "region-sydney",
+            source: "region",
+            when: All([
+                Any([
+                    Equals("central", "bescloud"),
+                    Equals("hosting_where", "allbes"),
+                    Equals("hosting_where", "mix"),
+                ]),
+                Equals("region", "sydney"),
+            ]),
+            consequence: (
+                status: Requirement,
+                audience: Bes,
+                title: "Provision the BES cloud hosting in Sydney",
+                detail: "The standard region. Nothing to price beyond the usual hosting.",
+            ),
+        ),
+        (
+            id: "region-other-setup",
+            source: "region",
+            when: All([
+                Any([
+                    Equals("central", "bescloud"),
+                    Equals("hosting_where", "allbes"),
+                    Equals("hosting_where", "mix"),
+                ]),
+                Equals("region", "otheraws"),
+            ]),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost],
+                title: "Price the non-standard hosting region",
+                detail: "Hosting outside Sydney needs the region settled and its ongoing cost worked out before setup.",
+            ),
+        ),
         (
             id: "region-other",
             source: "region",
             when: All([
                 Any([
                     Equals("central", "bescloud"),
-                    Includes("facility_mix", "bescloud"),
+                    Equals("hosting_where", "allbes"),
+                    Equals("hosting_where", "mix"),
                 ]),
                 Equals("region", "otheraws"),
             ]),
             consequence: (
                 severity: NonDefault,
                 status: Advisory,
-                audience: Bes,
+                audience: Record,
                 types: [Cost],
-                cost: Some((tier: "Adds ongoing cost", ballpark: Some("order of hundreds–thousands / year"))),
-                title: "Non-standard AWS region",
-                detail: "Running outside the standard Sydney / Zurich regions is supported but adds ongoing cost. Sales confirms actual figures.",
+                title: "Hosting outside the standard Sydney region",
+                detail: "Running outside the standard Sydney region is supported but adds ongoing cost. The actual figures are confirmed separately, not here.",
             ),
         ),
 
         // ── Platform ────────────────────────────────────────────────────────
+        // ARM64 is the supported platform; everything else carries a penalty,
+        // graded from added cost through to unsupported.
+        (
+            id: "plat-amd64",
+            source: "platform",
+            when: Equals("platform", "linuxamd"),
+            consequence: (
+                severity: NonDefault,
+                status: Advisory,
+                audience: Record,
+                types: [Cost, Support],
+                title: "AMD64 instead of the standard ARM64",
+                detail: "Linux on ARM64 is the platform BES builds, tests, and supports first. AMD64 is supported, but hosting costs more per unit of capacity and upgrades get less pre-release testing on it, so incidents take longer to resolve.",
+            ),
+        ),
+        (
+            id: "plat-windows-licence",
+            source: "platform",
+            when: Equals("platform", "windows"),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                types: [Cost],
+                title: "Provision Windows Server licences",
+                detail: "The client licenses Windows Server, Standard rather than Datacenter.",
+            ),
+        ),
         (
             id: "plat-windows",
             source: "platform",
             when: Equals("platform", "windows"),
             consequence: (
                 severity: NonDefault,
-                status: Requirement,
-                audience: Client,
-                types: [Cost, Operational, Support],
-                cost: Some((tier: "Client-funded licensing", ballpark: Some("thousands–tens of thousands one-off, or ongoing subscription"))),
-                title: "Windows Server (being phased out)",
-                detail: "Supported only on strong insistence. The client licenses Windows (Standard, not Datacenter). Application performance is slower, and support and incident response are slower and less effective.",
-            ),
-        ),
-        (
-            id: "plat-other",
-            source: "platform",
-            when: Equals("platform", "other"),
-            consequence: (
-                severity: Blocking,
-                status: Requirement,
+                status: Advisory,
                 audience: Record,
-                types: [Support, Capability],
-                title: "Unsupported platform",
-                detail: "Red Hat, other distributions, Kubernetes, or non-server Windows are unsupported. BES cannot access the system, so there is no support, no backups, no Tupaia, and no clone-upgrade testing. The product is open source and can be run this way, but not by BES.",
+                types: [Operational, Support],
+                title: "Windows Server, which is being phased out",
+                detail: "Accepted only on strong insistence. The application runs slower on Windows, and support and incident response are slower and less effective than on the Linux platform BES builds and tests against.",
             ),
         ),
         (
@@ -405,44 +573,66 @@
             consequence: (
                 status: Requirement,
                 audience: Client,
-                title: "BES Ubuntu Server image required",
+                title: "Install the BES Ubuntu Server image",
                 detail: "Linux deployments use the customised [BES Ubuntu Server image](https://github.com/beyondessential/linux-images), set up the BES way.",
             ),
         ),
 
-        // ── On-prem server provisioning (by facility class present) ─────────
+        // ── Client-hosted server provisioning ───────────────────────────────
         (
             id: "prov-baremetal",
             source: "topology",
-            when: Includes("facility_mix", "baremetal"),
+            when: Any([
+                Equals("onprem_form", "baremetal"),
+                Equals("onprem_form", "mixed"),
+            ]),
             consequence: (
                 status: Requirement,
                 audience: Client,
                 types: [Operational],
-                title: "Bare-metal: provision generously up front",
+                title: "Provision the physical servers generously up front",
                 detail: "Disk and resources are hard to change on bare metal, so provision ahead: at least 500 GB SSD, 4 cores (prefer 8), and 16 GB RAM (prefer 32). Multiple disks and multiple TB are NOT usually required, though you may want to do RAID for redundancy.",
             ),
         ),
         (
             id: "prov-virtualised",
             source: "topology",
-            when: Includes("facility_mix", "virtualised"),
+            when: Any([
+                Equals("onprem_form", "virtualised"),
+                Equals("onprem_form", "mixed"),
+            ]),
             consequence: (
                 status: Advisory,
                 audience: Client,
-                title: "Virtualized: start small, and back up the VM",
+                title: "Start the virtual machines small, and back them up",
                 detail: "Resources can scale, so start around 50 GB / 4 cores / 16 GB and grow. VM-level backups are recommended; telling BES is not required but helps disaster planning.",
             ),
         ),
         (
             id: "iti-note",
             source: "topology",
-            when: Includes("facility_mix", "iti"),
+            when: Any([
+                Equals("iti_use", "some"),
+                Equals("iti_use", "all"),
+            ]),
             consequence: (
                 status: Requirement,
                 audience: Bes,
-                title: "Tamanu ITI appliance",
-                detail: "ITI is a BES-built, BES-provisioned ARM64 Linux appliance. The client plugs it into their network; BES installs and manages the software.",
+                title: "Provision and install the Tamanu Iti mini-servers",
+                detail: "Tamanu Iti is an ARM64 Linux mini-server, built by BES and provisioned by BES. The client plugs it into their network; BES installs and manages the software.",
+            ),
+        ),
+        (
+            id: "central-clienthosted",
+            source: "topology",
+            when: Equals("central", "clienthosted"),
+            consequence: (
+                severity: NonDefault,
+                status: Advisory,
+                audience: Record,
+                types: [Operational, Support],
+                title: "Client hosts the central server",
+                detail: "Hosting Central outside BES cloud puts availability, capacity, and the server's own upkeep on the client's IT team. BES incident response is slower, because BES does not control the platform it runs on.",
             ),
         ),
 
@@ -459,8 +649,8 @@
                 status: Requirement,
                 audience: Record,
                 types: [Capability],
-                title: "Backups disabled, but Tupaia requested",
-                detail: "Tupaia needs at least a low-retention backup to process data. With backups fully disabled this cannot work as specified — permit at least low-retention backups, or drop Tupaia.",
+                title: "Backups disabled, but dashboards requested",
+                detail: "Tupaia needs at least a low-retention backup to process data. With backups fully disabled this cannot work as specified. Permit at least low-retention backups, or drop dashboards and reporting.",
             ),
         ),
         (
@@ -484,10 +674,12 @@
                 Equals("retention", "low"),
             ]),
             consequence: (
+                severity: NonDefault,
                 status: Advisory,
-                audience: Bes,
-                title: "Low retention — kept a few days",
-                detail: "Backups are kept just a few days — long enough to process data into Tupaia and run clone-upgrade tests, at minimum data cost.",
+                audience: Record,
+                types: [Operational, Capability],
+                title: "A few days of backups only",
+                detail: "A few days of retention covers feeding dashboards and running upgrade tests, but not recovery. Data lost or corrupted without anyone noticing for a week is gone, because there is no earlier backup to restore from. Full retention keeps a week of daily backups, a month of weekly, and six monthly for exactly that case.",
             ),
         ),
 
@@ -495,31 +687,40 @@
         (
             id: "cadence",
             source: "upgrades",
-            when: Any([
-                Equals("cadence", "quarterly"),
-                Equals("cadence", "biannual"),
-                Equals("cadence", "asneeded"),
-            ]),
+            when: Equals("cadence", "lessoften"),
             consequence: (
+                severity: NonDefault,
                 status: Advisory,
-                audience: Bes,
-                types: [Operational],
-                title: "Infrequent upgrades mean larger version jumps",
-                detail: "BES releases roughly fortnightly. Upgrading less often means jumping many versions at once — heavier migrations, more potential downtime, and stronger reliance on clone-upgrade testing, which requires backup capability.",
+                audience: Record,
+                types: [Support, Operational],
+                title: "Upgrading less often than support covers",
+                detail: "BES supports the last 10 releases. At a release every two weeks that is about five months, so upgrading less often than that means running a version BES no longer supports. It also means jumping many versions at once: heavier migrations, more potential downtime, and stronger reliance on upgrade testing against a copy of the data.",
             ),
         ),
 
         // ── Networking ──────────────────────────────────────────────────────
+        (
+            id: "dns-client-acme",
+            source: "network",
+            when: Equals("dns", "client"),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                title: "Run automatic certificate issuance, and keep domains under one stem",
+                detail: "Support automatic ACME certificate issuance, and keep every deployment domain under a common stem (e.g. central.<name>.<tld> and facility.<name>.<tld>, not central.foo.tld alongside facility.bar.tld).",
+            ),
+        ),
         (
             id: "dns-client",
             source: "network",
             when: Equals("dns", "client"),
             consequence: (
                 severity: NonDefault,
-                status: Requirement,
-                audience: Client,
-                title: "Client-controlled DNS",
-                detail: "If BES does not control DNS, the client must support automatic ACME certificate issuance, and keep every deployment domain under a common stem (e.g. central.<name>.<tld> and facility.<name>.<tld> — not central.foo.tld alongside facility.bar.tld).",
+                status: Advisory,
+                audience: Record,
+                types: [Operational],
+                title: "DNS and certificates managed by the client",
+                detail: "With DNS outside BES's control, certificate renewal depends on the client's own automation. A lapse there takes the deployment offline until the client fixes it, and BES cannot resolve it for them.",
             ),
         ),
         (
@@ -528,14 +729,14 @@
             when: Equals("dns", "local"),
             consequence: (
                 severity: NonDefault,
-                status: Requirement,
-                audience: Client,
+                status: Advisory,
+                audience: Record,
                 types: [Operational],
-                title: "No DNS — all-local, plain HTTP",
-                detail: "With no DNS, servers reach each other over plain HTTP on the local network: no certificates, no TLS, no name-based routing. Supported, but an operational and security risk — traffic is unencrypted. Weigh the tradeoffs.",
+                title: "No DNS: all-local, plain HTTP",
+                detail: "With no DNS, servers reach each other over plain HTTP on the local network: no certificates, no TLS, no name-based routing. Supported, but an operational and security risk, because traffic is unencrypted.",
             ),
         ),
-        // BES controls DNS — the action depends on how the domain is owned and
+        // BES controls DNS; the action depends on how the domain is owned and
         // reaches BES's zone (dns_arrangement). The BES subdomain is the default;
         // the others each add a cost or a client-side step.
         (
@@ -543,10 +744,10 @@
             source: "network",
             when: All([Equals("dns", "bes"), Equals("dns_arrangement", "bes_subdomain")]),
             consequence: (
-                status: Requirement,
-                audience: Client,
-                title: "DNS: a name on BES's tamanu.app",
-                detail: "BES and the client agree on a name under BES's own tamanu.app domain. BES provisions and runs the DNS — nothing for client IT to set up.",
+                status: Advisory,
+                audience: Bes,
+                title: "Provision the tamanu.app name and its certificates",
+                detail: "BES and the client agree on a name under BES's own tamanu.app domain, for example vanuatu.tamanu.app. BES provisions and runs the DNS, and keeps TLS certificates renewed, so there is nothing for client IT to set up.",
             ),
         ),
         (
@@ -554,12 +755,23 @@
             source: "network",
             when: All([Equals("dns", "bes"), Equals("dns_arrangement", "bes_topdomain")]),
             consequence: (
-                status: Requirement,
-                audience: Client,
+                severity: NonDefault,
+                status: Advisory,
+                audience: Record,
                 types: [Cost],
-                cost: Some((tier: "Small ongoing cost", ballpark: Some("tens / year"))),
                 title: "DNS: a dedicated BES-owned domain",
                 detail: "BES and the client agree on a name for a dedicated top-level domain that BES owns and runs. The domain registration carries a small ongoing cost.",
+            ),
+        ),
+        (
+            id: "dns-client-domain-setup",
+            source: "network",
+            when: All([Equals("dns", "bes"), Equals("dns_arrangement", "client_domain")]),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                title: "Buy the domain and point it at the BES DNS zone",
+                detail: "The client purchases the domain, and client IT points it at the DNS zone BES provisions.",
             ),
         ),
         (
@@ -567,10 +779,22 @@
             source: "network",
             when: All([Equals("dns", "bes"), Equals("dns_arrangement", "client_domain")]),
             consequence: (
+                severity: NonDefault,
+                status: Advisory,
+                audience: Record,
+                title: "A client-owned domain rather than a name on tamanu.app",
+                detail: "BES runs the DNS zone, but the client owns the registration and carries its renewal. Letting it lapse takes the deployment offline.",
+            ),
+        ),
+        (
+            id: "dns-client-subdomain-setup",
+            source: "network",
+            when: All([Equals("dns", "bes"), Equals("dns_arrangement", "client_subdomain")]),
+            consequence: (
                 status: Requirement,
                 audience: Client,
-                title: "DNS: client-owned domain pointed at BES",
-                detail: "The client purchases the domain, and client IT points it at the DNS zone BES provisions. BES runs the zone; the client owns the registration.",
+                title: "Delegate a subdomain to the BES DNS zone",
+                detail: "Client IT allocates a subdomain on a domain the client already controls and delegates it (SOA records) to the DNS zone BES provisions.",
             ),
         ),
         (
@@ -579,10 +803,10 @@
             when: All([Equals("dns", "bes"), Equals("dns_arrangement", "client_subdomain")]),
             consequence: (
                 severity: NonDefault,
-                status: Requirement,
-                audience: Client,
-                title: "DNS: client subdomain delegated to BES (SOA)",
-                detail: "Client IT allocates a subdomain on a domain the client already controls and delegates it (SOA records) to the DNS zone BES provisions.",
+                status: Advisory,
+                audience: Record,
+                title: "A delegated subdomain rather than a name on tamanu.app",
+                detail: "The delegation is a setup step on the client side, and the parent domain stays under the client's control, so a change there can break the delegation.",
             ),
         ),
         (
@@ -594,12 +818,11 @@
                 status: Requirement,
                 audience: Record,
                 types: [Cost, Support],
-                cost: Some((tier: "Exceptional ongoing cost", ballpark: Some("thousands / year"))),
                 title: "Non-Tailscale remote access",
-                detail: "An exceptional arrangement only. Anything other than Tailscale may add significant ongoing support cost.",
+                detail: "Tailscale is what BES supports for reaching managed servers. An exceptional arrangement only, and it may add significant ongoing support cost.",
             ),
         ),
-        // Only when the client has on-prem servers to configure — with
+        // Only when the client has servers of their own to configure; with
         // everything in BES cloud, BES handles its own network.
         (
             id: "remote-tailscale",
@@ -607,39 +830,35 @@
             when: All([
                 Equals("remote", "tailscale"),
                 Any([
-                    Equals("central", "onprem"),
-                    Equals("central", "customercloud"),
-                    Includes("facility_mix", "baremetal"),
-                    Includes("facility_mix", "virtualised"),
-                    Includes("facility_mix", "iti"),
+                    Equals("central", "clienthosted"),
+                    Equals("hosting_where", "allclient"),
+                    Equals("hosting_where", "mix"),
                 ]),
             ]),
             consequence: (
                 status: Requirement,
                 audience: Client,
                 title: "Allow BES's Tailscale on managed servers",
-                detail: "The BES-managed servers join BES's own Tailscale network — not a separate one the client runs. Only those specific servers need Tailscale allowed, not the whole network. Firewalls often block it; [download Tailscale](https://tailscale.com/download) and run its netcheck command on the server or another computer configured similarly to confirm connectivity.",
+                detail: "The BES-managed servers join BES's own Tailscale network, not a separate one the client runs. Only those specific servers need Tailscale allowed, not the whole network. Firewalls often block it; [download Tailscale](https://tailscale.com/download) and run its netcheck command on the server or another computer configured similarly to confirm connectivity.",
             ),
         ),
         // Time sync (either source) is a client-network requirement only when
-        // there are on-prem servers; BES handles its own cloud servers.
+        // the client hosts servers; BES handles its own cloud servers.
         (
             id: "time-internal",
             source: "network",
             when: All([
                 Equals("timesync", "internal"),
                 Any([
-                    Equals("central", "onprem"),
-                    Equals("central", "customercloud"),
-                    Includes("facility_mix", "baremetal"),
-                    Includes("facility_mix", "virtualised"),
-                    Includes("facility_mix", "iti"),
+                    Equals("central", "clienthosted"),
+                    Equals("hosting_where", "allclient"),
+                    Equals("hosting_where", "mix"),
                 ]),
             ]),
             consequence: (
                 status: Requirement,
                 audience: Client,
-                title: "Point to internal time server",
+                title: "Provide the internal time server address",
                 detail: "Provide the internal NTP server IP so servers can synchronise time (required for correct function).",
             ),
         ),
@@ -649,11 +868,9 @@
             when: All([
                 Equals("timesync", "outbound"),
                 Any([
-                    Equals("central", "onprem"),
-                    Equals("central", "customercloud"),
-                    Includes("facility_mix", "baremetal"),
-                    Includes("facility_mix", "virtualised"),
-                    Includes("facility_mix", "iti"),
+                    Equals("central", "clienthosted"),
+                    Equals("hosting_where", "allclient"),
+                    Equals("hosting_where", "mix"),
                 ]),
             ]),
             consequence: (
@@ -664,7 +881,7 @@
             ),
         ),
         // Time sync is configured for you on the BES-managed Linux servers,
-        // but not on Windows — the client must set it up there. Fires for either
+        // but not on Windows, where the client must set it up. Fires for either
         // time source.
         (
             id: "time-windows",
@@ -675,16 +892,15 @@
                 audience: Client,
                 types: [Operational],
                 title: "Configure time sync on the Windows servers",
-                detail: "On the BES-managed Linux servers time synchronisation is handled for you; on Windows servers the client must configure it explicitly against the chosen time source. Accurate, synchronised time is required — clock drift will break Tamanu.",
+                detail: "On the BES-managed Linux servers time synchronisation is handled for you; on Windows servers the client must configure it explicitly against the chosen time source. Accurate, synchronised time is required; clock drift will break Tamanu.",
             ),
         ),
         (
             id: "dns-partition",
             source: "network",
             when: Any([
-                Includes("facility_mix", "baremetal"),
-                Includes("facility_mix", "virtualised"),
-                Includes("facility_mix", "iti"),
+                Equals("hosting_where", "allclient"),
+                Equals("hosting_where", "mix"),
             ]),
             consequence: (
                 status: Advisory,
@@ -699,9 +915,8 @@
             when: All([
                 Equals("central", "bescloud"),
                 Any([
-                    Includes("facility_mix", "baremetal"),
-                    Includes("facility_mix", "virtualised"),
-                    Includes("facility_mix", "iti"),
+                    Equals("hosting_where", "allclient"),
+                    Equals("hosting_where", "mix"),
                 ]),
             ]),
             consequence: (
@@ -712,46 +927,204 @@
             ),
         ),
         // Mobile clients reach Central directly. When BES hosts Central this is
-        // handled; when the client hosts it, they must expose it publicly.
+        // handled; when the client hosts it, they must expose it publicly. An
+        // unsure mobile count doesn't assert that mobile is in play.
         (
             id: "mobile-public-ip",
             source: "network",
             when: All([
                 Answered("mobile"),
                 Not(Equals("mobile", "m0")),
-                Any([
-                    Equals("central", "onprem"),
-                    Equals("central", "customercloud"),
-                ]),
+                Not(Equals("mobile", "m_unsure")),
+                Equals("central", "clienthosted"),
             ]),
             consequence: (
                 status: Requirement,
                 audience: Client,
                 types: [Operational],
-                title: "Central needs a public static IP for mobile clients",
+                title: "Give Central a public static IP for mobile clients",
                 detail: "Mobile clients connect to the central server directly, so when you host Central yourself it needs a public static IP with its HTTPS interface reachable from the internet. (When BES hosts Central, BES provides this.)",
             ),
         ),
-        // Any on-prem presence means the client's network must carry Tamanu's
-        // traffic and reach what it needs to install and upgrade.
+        // Any client-hosted presence means the client's network must carry
+        // Tamanu's traffic and reach what it needs to install and upgrade.
         (
             id: "onprem-network",
             source: "network",
             when: Any([
-                Equals("central", "onprem"),
-                Equals("central", "customercloud"),
-                Includes("facility_mix", "baremetal"),
-                Includes("facility_mix", "virtualised"),
-                Includes("facility_mix", "iti"),
+                Equals("central", "clienthosted"),
+                Equals("hosting_where", "allclient"),
+                Equals("hosting_where", "mix"),
             ]),
             consequence: (
                 status: Requirement,
                 audience: Client,
                 types: [Operational],
-                title: "Allow Tamanu traffic on the on-prem network",
-                detail: "With on-prem servers, client IT must configure the network to allow Tamanu's application traffic between the Tamanu instances, and the outbound traffic Tamanu needs to install and upgrade. See our [network requirements](https://beyond-essential.slab.com/posts/tamanu-compute-resource-recommendations-network-requirements-and-minimum-specs-wipjcyn1?shr=wipjcyn1#h0uun-network-requirements).",
+                title: "Allow Tamanu traffic on the client network",
+                detail: "With client-hosted servers, client IT must configure the network to allow Tamanu's application traffic between the Tamanu instances, and the outbound traffic Tamanu needs to install and upgrade. See our [network requirements](https://beyond-essential.slab.com/posts/tamanu-compute-resource-recommendations-network-requirements-and-minimum-specs-wipjcyn1?shr=wipjcyn1#h0uun-network-requirements).",
             ),
         ),
+
+        // ── Pricing and SLA ─────────────────────────────────────────────────
+        // What a configuration costs, and what BES can commit to supporting,
+        // are decisions for the pricing and partnerships team. They are on the
+        // standard path in themselves: a choice being off it is an
+        // acknowledgement for the client, while the money and the commitment
+        // are work for someone else, so each is its own consequence.
+        (
+            id: "price-size",
+            source: "pricing",
+            when: Answered("catchment"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost],
+                title: "Price the hosting for the derived size band",
+                detail: "The size band is derived from the catchment, the facility count, and the mobile client count, and is the starting point for the hosting cost.",
+            ),
+        ),
+        (
+            id: "price-integrations",
+            source: "pricing",
+            when: Any([
+                Includes("integrations", "lims"),
+                Includes("integrations", "msupply"),
+                Includes("integrations", "rispacs"),
+                Includes("integrations", "other_fhir"),
+                Includes("integrations", "other_nonfhir"),
+            ]),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost],
+                title: "Price the extra Central capacity for connected systems",
+                detail: "Connecting other systems sizes Central up by a flat allowance, regardless of how many are connected.",
+            ),
+        ),
+        (
+            id: "price-nonfhir",
+            source: "pricing",
+            when: Includes("integrations", "other_nonfhir"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost],
+                title: "Price the bespoke integration development",
+                detail: "A system with no standard health-data interface has to be connected by hand, which is one-off development work rather than configuration.",
+            ),
+        ),
+        (
+            id: "price-windows",
+            source: "pricing",
+            when: Equals("platform", "windows"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost, Support],
+                title: "Set the support commitment for a Windows deployment",
+                detail: "The client funds the Windows licensing. BES support and incident response are slower on Windows than on Linux, so the commitment BES can make differs from the standard one.",
+            ),
+        ),
+        (
+            id: "price-amd64",
+            source: "pricing",
+            when: Equals("platform", "linuxamd"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost],
+                title: "Price the AMD64 hosting premium",
+                detail: "AMD64 costs more per unit of capacity than the standard ARM64, and gets less pre-release testing, so incidents take longer to resolve.",
+            ),
+        ),
+        (
+            id: "price-remote",
+            source: "pricing",
+            when: Equals("remote", "other"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost],
+                title: "Price the non-Tailscale remote access arrangement",
+                detail: "Reaching managed servers by anything other than Tailscale is exceptional, and the ongoing support cost has to be worked out case by case.",
+            ),
+        ),
+        (
+            id: "price-domain",
+            source: "pricing",
+            when: All([Equals("dns", "bes"), Equals("dns_arrangement", "bes_topdomain")]),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Cost],
+                title: "Price the dedicated domain registration",
+                detail: "A domain BES owns and runs for this deployment carries an ongoing registration cost.",
+            ),
+        ),
+        (
+            id: "sla-central",
+            source: "pricing",
+            when: Equals("central", "clienthosted"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Support],
+                title: "Set the support commitment where the client hosts Central",
+                detail: "BES does not control the platform Central runs on, so incident response is slower and availability is partly the client's to keep.",
+            ),
+        ),
+        (
+            id: "sla-backups",
+            source: "pricing",
+            when: Equals("backup_capability", "no"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Support],
+                title: "Set the support commitment without BES backups",
+                detail: "With no BES backups there is no managed recovery and no upgrade testing against a copy of the data, so BES cannot commit to recovering the deployment.",
+            ),
+        ),
+        (
+            id: "sla-retention",
+            source: "pricing",
+            when: All([
+                Equals("backup_capability", "yes"),
+                Equals("retention", "low"),
+            ]),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Support],
+                title: "Set the recovery commitment for a few days of retention",
+                detail: "Recovery only reaches back a few days, so anything discovered later cannot be restored. The commitment has to say so.",
+            ),
+        ),
+        (
+            id: "sla-telemetry",
+            source: "pricing",
+            when: Equals("telemetry", "no"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Support],
+                title: "Set the support commitment without telemetry",
+                detail: "Declining telemetry opts the deployment out of BES tech support, managed backups, and mobile support, so there is little left to commit to.",
+            ),
+        ),
+        (
+            id: "sla-cadence",
+            source: "pricing",
+            when: Equals("cadence", "lessoften"),
+            consequence: (
+                status: Requirement,
+                audience: Pricing,
+                types: [Support],
+                title: "Set the support commitment for upgrades outside the release window",
+                detail: "BES supports the last 10 releases. A deployment upgrading less often than that spends time on versions outside the window, which the commitment has to account for.",
+            ),
+        ),
+
         // ── Telemetry ───────────────────────────────────────────────────────
         (
             id: "telemetry-off",
@@ -759,26 +1132,24 @@
             when: Equals("telemetry", "no"),
             consequence: (
                 severity: NonDefault,
-                status: Requirement,
-                audience: Client,
+                status: Advisory,
+                audience: Record,
                 types: [Support, Capability],
-                title: "No telemetry — support, backups, and mobile are opted out",
-                detail: "Declining telemetry opts the deployment out of BES tech support, managed backups, and mobile support. Telemetry carries operational data only — never patient, clinical, or sensitive data.",
+                title: "No telemetry: support, backups, and mobile are opted out",
+                detail: "Declining telemetry opts the deployment out of BES tech support, managed backups, and mobile support. Telemetry carries operational data only, never patient, clinical, or sensitive data.",
             ),
         ),
-        // The outbound allowance is a client-network requirement only when there
-        // are on-prem servers; BES's own cloud servers send telemetry directly.
+        // The outbound allowance is a client-network requirement only when the
+        // client hosts servers; BES's own cloud servers send telemetry directly.
         (
             id: "telemetry-on",
             source: "telemetry",
             when: All([
                 Equals("telemetry", "yes"),
                 Any([
-                    Equals("central", "onprem"),
-                    Equals("central", "customercloud"),
-                    Includes("facility_mix", "baremetal"),
-                    Includes("facility_mix", "virtualised"),
-                    Includes("facility_mix", "iti"),
+                    Equals("central", "clienthosted"),
+                    Equals("hosting_where", "allclient"),
+                    Equals("hosting_where", "mix"),
                 ]),
             ]),
             consequence: (
@@ -789,8 +1160,8 @@
                 detail: "Allow outbound traffic to the BES telemetry endpoints (the DNS names and IPs BES provides) so operational telemetry can be sent.",
             ),
         ),
-        // Declining telemetry removes backups and mobile support — which
-        // contradicts asking for Tupaia (needs backups) or mobile clients.
+        // Declining telemetry removes backups and mobile support, which
+        // contradicts asking for dashboards (needs backups) or mobile clients.
         (
             id: "block-telemetry-tupaia",
             source: "telemetry",
@@ -803,8 +1174,8 @@
                 status: Requirement,
                 audience: Record,
                 types: [Capability],
-                title: "Tupaia requested, but telemetry declined",
-                detail: "Declining telemetry opts out of managed backups, but Tupaia needs at least a low-retention backup to process data. This cannot work as specified — allow telemetry, or drop Tupaia.",
+                title: "Dashboards requested, but telemetry declined",
+                detail: "Declining telemetry opts out of managed backups, but Tupaia needs at least a low-retention backup to process data. This cannot work as specified. Allow telemetry, or drop dashboards and reporting.",
             ),
         ),
         (
@@ -814,6 +1185,7 @@
                 Equals("telemetry", "no"),
                 Answered("mobile"),
                 Not(Equals("mobile", "m0")),
+                Not(Equals("mobile", "m_unsure")),
             ]),
             consequence: (
                 severity: Blocking,
@@ -821,7 +1193,7 @@
                 audience: Record,
                 types: [Capability, Support],
                 title: "Mobile clients expected, but telemetry declined",
-                detail: "Declining telemetry opts out of mobile support, but mobile clients are expected. This cannot work as specified — allow telemetry, or remove the mobile clients.",
+                detail: "Declining telemetry opts out of mobile support, but mobile clients are expected. This cannot work as specified. Allow telemetry, or remove the mobile clients.",
             ),
         ),
     ],

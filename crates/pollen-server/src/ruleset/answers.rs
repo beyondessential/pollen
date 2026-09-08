@@ -43,4 +43,9 @@ impl Answers {
 			None => false,
 		}
 	}
+
+	/// Record an answer, used to apply assumed defaults before evaluation.
+	pub fn set(&mut self, question: &str, answer: Answer) {
+		self.0.insert(question.to_string(), answer);
+	}
 }

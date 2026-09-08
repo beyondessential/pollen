@@ -82,49 +82,24 @@ export type ConsequenceType = Solidify<Schemas["ConsequenceType"]>;
 export type Status = Solidify<Schemas["Status"]>;
 export type Audience = Solidify<Schemas["Audience"]>;
 export type Verdict = Solidify<Schemas["Verdict"]>;
+export type Section = Solidify<Schemas["Section"]>;
+export type Assumed = Solidify<Schemas["Assumed"]>;
 
 /// An answer value: one option id (single/band) or several (multi).
 export type AnswerValue = string | string[];
 
-// UI-only label/colour maps.
-export const CONSEQUENCE_TYPE_LABEL: Record<ConsequenceType, string> = {
-	Cost: "Cost",
-	Operational: "Operational",
-	Capability: "Capability loss",
-	Support: "Support",
-};
+/// Whether a question has been given an answer of any kind. A type guard, so
+/// callers narrow away `undefined` at the same time.
+export function isAnswered(value: AnswerValue | undefined): value is AnswerValue {
+	if (value == null) return false;
+	if (Array.isArray(value)) return value.length > 0;
+	return value !== "";
+}
 
-export const STATUS_LABEL: Record<Status, string> = {
-	Requirement: "Requirement",
-	Advisory: "Advisory",
-	Referral: "Referral",
-};
-
+// UI-only label maps.
 export const AUDIENCE_LABEL: Record<Audience, string> = {
-	Client: "Client IT — required actions",
-	Bes: "BES technical — setup",
-	Record: "Record & acknowledgements",
+	Client: "Client IT: required actions",
+	Bes: "BES technical: setup",
+	Pricing: "BES pricing and partnerships: cost and SLA",
+	Record: "Warnings",
 };
-
-// Topic grouping for the artifact's by-topic view, keyed by a rule's `source`.
-export const TOPIC_LABEL: Record<string, string> = {
-	intent: "Intent",
-	topology: "Topology",
-	region: "Region",
-	platform: "Platform",
-	backups: "Backups",
-	upgrades: "Upgrades",
-	network: "Networking",
-	telemetry: "Telemetry",
-};
-
-export const TOPIC_ORDER: string[] = [
-	"intent",
-	"topology",
-	"region",
-	"platform",
-	"backups",
-	"upgrades",
-	"network",
-	"telemetry",
-];

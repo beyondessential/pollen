@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 // Inline markup for ruleset prose: Markdown links (which open in a new tab),
 // plus **bold**, *italic*, and `code`. The ruleset is trusted, content-addressed
-// authoring input, but we still render to React nodes — never raw HTML — and
+// authoring input, but we still render to React nodes, never raw HTML, and
 // only accept http(s) link targets, so authored text can't inject markup or a
 // javascript: URL.
 const TOKEN = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|\*\*([^*]+)\*\*|`([^`]+)`|\*([^*]+)\*/g;

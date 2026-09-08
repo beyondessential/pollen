@@ -24,9 +24,10 @@ async fn create_patch_finalise_fork_lifecycle() {
 		assert_eq!(created["update_available"], false);
 		let id = created["id"].as_str().unwrap().to_owned();
 
-		// A complete, blocking configuration: Tupaia on but backups disabled.
-		// Every visible question is answered (so finalise is allowed); platform,
-		// retention, and hosted-integration stay hidden here.
+		// A complete, blocking configuration: dashboards on but backups disabled.
+		// Every visible question is answered, so nothing is assumed and nothing
+		// is left open; platform, on-prem form, retention, and hosted-integration
+		// stay hidden with an all-cloud answer and backups declined.
 		let answers = json!({
 			"tupaia": "yes",
 			"integrations": ["none"],
@@ -34,7 +35,7 @@ async fn create_patch_finalise_fork_lifecycle() {
 			"facilities": "f0",
 			"mobile": "m0",
 			"central": "bescloud",
-			"facility_mix": ["bescloud"],
+			"hosting_where": "allbes",
 			"region": "sydney",
 			"backup_capability": "no",
 			"cadence": "release",
@@ -51,6 +52,9 @@ async fn create_patch_finalise_fork_lifecycle() {
 			.json();
 		assert_eq!(patched["status"], "draft");
 		assert_eq!(patched["evaluation"]["verdict"], "Blocking");
+		// Answered outright: this is a complete plan, not an interim one.
+		assert_eq!(patched["evaluation"]["open_items"], json!([]));
+		assert_eq!(patched["evaluation"]["assumed"], json!([]));
 
 		// Get round-trips the same state.
 		let fetched: Value = server
@@ -173,7 +177,7 @@ async fn stale_finalised_plan_also_offers_an_update() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn finalise_requires_all_questions_answered() {
+async fn finalise_requires_only_the_sizing_questions() {
 	run_server(|server, _conn| async move {
 		let created: Value = server
 			.post("/api/applications/create")
@@ -182,19 +186,51 @@ async fn finalise_requires_all_questions_answered() {
 			.json();
 		let id = created["id"].as_str().unwrap().to_owned();
 
-		// Only one of many visible questions answered.
+		// The sizing questions have no blessed default, so they still gate
+		// finalising however much else is filled in.
 		server
 			.post("/api/applications/patch")
 			.json(&json!({ "id": id, "answers": { "tupaia": "yes" } }))
 			.await
 			.assert_status_ok();
-
-		// Finalising an incomplete plan is rejected.
 		server
 			.post("/api/applications/finalise")
 			.json(&json!({ "id": id }))
 			.await
 			.assert_status(StatusCode::BAD_REQUEST);
+
+		// With those answered, the plan finalises even though the technical
+		// questions were never opened: the rest is assumed or left open.
+		let patched: Value = server
+			.post("/api/applications/patch")
+			.json(&json!({
+				"id": id,
+				"answers": { "catchment": "c1", "facilities": "f1" },
+			}))
+			.await
+			.json();
+		assert_eq!(patched["evaluation"]["required"], json!([]));
+		assert!(
+			!patched["evaluation"]["open_items"]
+				.as_array()
+				.unwrap()
+				.is_empty(),
+			"the untouched policy questions should be open items"
+		);
+		assert!(
+			!patched["evaluation"]["assumed"]
+				.as_array()
+				.unwrap()
+				.is_empty(),
+			"the untouched technical questions should take their defaults"
+		);
+
+		let finalised: Value = server
+			.post("/api/applications/finalise")
+			.json(&json!({ "id": id }))
+			.await
+			.json();
+		assert_eq!(finalised["status"], "finalised");
 	})
 	.await;
 }
@@ -240,6 +276,95 @@ async fn preview_without_a_configured_repo_is_rejected() {
 			.json(&json!({ "config_branch": "some-branch" }))
 			.await
 			.assert_status(StatusCode::BAD_REQUEST);
+	})
+	.await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_ruleset_the_engine_cannot_read_is_a_conflict_not_a_crash() {
+	run_server(|server, mut conn| async move {
+		// The model is append-only precisely so this cannot happen (spec WIZ),
+		// but a public tool must not answer with an internal error if it ever
+		// does: the plan is intact, this build just cannot render it.
+		let content = json!({
+			"questions": [{
+				"id": "q1",
+				"kind": "SomethingThisEngineNeverKnew",
+				"label": "?",
+				"options": [],
+			}],
+			"rules": [],
+		});
+		let hash = "unreadable-ruleset-hash";
+		ConfigRow::upsert(&mut conn, hash, &content).await.unwrap();
+		let app = Application::create_draft(&mut conn, hash, None, &json!({}))
+			.await
+			.unwrap();
+
+		server
+			.post("/api/applications/get")
+			.json(&json!({ "id": app.id.to_string() }))
+			.await
+			.assert_status(StatusCode::CONFLICT);
+	})
+	.await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn forking_an_interim_plan_carries_its_open_questions() {
+	run_server(|server, _conn| async move {
+		// Settling an interim plan's gaps is a new version rather than an edit
+		// (spec WIZ), so the fork has to arrive still knowing what is open.
+		let created: Value = server
+			.post("/api/applications/create")
+			.json(&json!({}))
+			.await
+			.json();
+		let id = created["id"].as_str().unwrap().to_owned();
+		server
+			.post("/api/applications/patch")
+			.json(&json!({
+				"id": id,
+				"answers": { "catchment": "c1", "facilities": "f1" },
+			}))
+			.await
+			.assert_status_ok();
+
+		let finalised: Value = server
+			.post("/api/applications/finalise")
+			.json(&json!({ "id": id }))
+			.await
+			.json();
+		let open = finalised["evaluation"]["open_items"].clone();
+		assert!(
+			!open.as_array().unwrap().is_empty(),
+			"the plan under test should be interim"
+		);
+
+		let forked: Value = server
+			.post("/api/applications/fork")
+			.json(&json!({ "id": id }))
+			.await
+			.json();
+		assert_eq!(forked["status"], "draft");
+		assert_eq!(forked["parent_id"], id);
+		// Same ruleset, so nothing migrates and the gaps are the same gaps.
+		assert_eq!(forked["migration"]["dropped"], json!([]));
+		assert_eq!(forked["evaluation"]["open_items"], open);
+		assert_eq!(forked["answers"]["catchment"], "c1");
+
+		// Settling one of them removes it, leaving the rest to carry on.
+		let settled: Value = server
+			.post("/api/applications/patch")
+			.json(&json!({
+				"id": forked["id"],
+				"answers": { "catchment": "c1", "facilities": "f1", "dns": "bes" },
+			}))
+			.await
+			.json();
+		let still_open = settled["evaluation"]["open_items"].as_array().unwrap();
+		assert!(!still_open.iter().any(|o| o == "dns"));
+		assert!(!still_open.is_empty());
 	})
 	.await;
 }

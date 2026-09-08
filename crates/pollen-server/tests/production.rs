@@ -33,7 +33,10 @@ async fn adopts_a_changed_production_ruleset() {
 		let bundled_hash = current.load().hash.clone();
 
 		// A real content change (a tweaked label) from the tracked branch.
-		let modified = BUNDLED_RULESET.replace("Connect to Tupaia?", "Connect to Tupaia (prod)?");
+		let modified = BUNDLED_RULESET.replace(
+			"Do you want dashboards and reporting?",
+			"Do you want dashboards and reporting (prod)?",
+		);
 		assert_ne!(
 			modified, BUNDLED_RULESET,
 			"the replacement must change content"

@@ -10,7 +10,7 @@ use serde::Deserialize;
 use crate::error::{AppError, Result};
 
 /// Resolves a branch name to a commit and fetches a file at that commit. The
-/// input is always a branch *name*, never a URL — the source decides which
+/// input is always a branch *name*, never a URL; the source decides which
 /// repository to consult, so a caller cannot point it elsewhere.
 pub trait RefSource: Clone + Send + Sync + 'static {
 	/// Resolve a branch name to a commit identifier within the source repo.

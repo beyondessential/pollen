@@ -38,20 +38,29 @@ function Loaded({ initial }: { initial: AppView }) {
 	);
 	const size = view.evaluation.derived["size"] ?? null;
 
-	// The most recent *other* plan, captured once on mount — before we record
-	// this one below — so a freshly-started plan can offer to resume it.
+	// The most recent *other* plan, captured once on mount, before we record
+	// this one below, so a freshly-started plan can offer to resume it.
 	const [previous] = useState<RecentPlan | undefined>(() =>
 		listRecentPlans().find((p) => p.id !== initial.id),
 	);
 
 	// Remember a plan once it carries a decision (or is finalised), so it's the
 	// one we'd resume next time. A brand-new, untouched draft is deliberately not
-	// recorded — otherwise it would propose resuming itself.
+	// recorded, otherwise it would propose resuming itself.
 	useEffect(() => {
 		if (view.status === "finalised" || started) {
 			recordRecentPlan({ id: view.id, status: view.status, size });
 		}
 	}, [view.id, view.status, started, size]);
+
+	// Finalising replaces the form with the artifact on the same URL, leaving the
+	// reader wherever the finalise button was. Send them to the top of the
+	// document they have just produced, unless a link named a section.
+	useEffect(() => {
+		if (view.status === "finalised" && !window.location.hash) {
+			window.scrollTo({ top: 0 });
+		}
+	}, [view.status]);
 
 	// A `?config=<branch>` on an existing plan's URL offers to switch it to that
 	// previewed ruleset. Otherwise a draft bound to a stale default offers to

@@ -1,13 +1,6 @@
-import type { ReactNode } from "react";
+import { useState } from "react";
 
-import {
-	CONSEQUENCE_TYPE_LABEL,
-	type Consequence,
-	type ConsequenceType,
-	STATUS_LABEL,
-	type Severity,
-	type Verdict,
-} from "../types";
+import type { Consequence } from "../types";
 import { Markup } from "../markup";
 
 // Minimal inline icons (lucide-style paths), so nothing is fetched at runtime.
@@ -29,139 +22,83 @@ function Icon({ paths, size = 16 }: { paths: string; size?: number }) {
 	);
 }
 export const Check = (p: { size?: number }) => <Icon paths='<path d="M20 6 9 17l-5-5"/>' {...p} />;
+export const Chevron = (p: { size?: number }) => (
+	<Icon paths='<path d="m6 9 6 6 6-6"/>' {...p} />
+);
 
-type SevMeta = { color: string; bg: string; dot: string };
-const SEVERITY: Record<Severity, SevMeta> = {
-	Default: { color: "var(--ink-soft)", bg: "var(--line-soft)", dot: "var(--ink-faint)" },
-	NonDefault: { color: "var(--offdef)", bg: "var(--offdef-bg)", dot: "var(--offdef)" },
-	Blocking: { color: "var(--block)", bg: "var(--block-bg)", dot: "var(--block)" },
-};
-
-const TYPE_COLOR: Record<ConsequenceType, { color: string; bg: string }> = {
-	Cost: { color: "#9a6a00", bg: "#fbf1dc" },
-	Operational: { color: "#1f5fa6", bg: "#e6eff8" },
-	Capability: { color: "#8a2e2e", bg: "#f7e4e1" },
-	Support: { color: "#6b3a8a", bg: "#efe6f6" },
-};
-
-export function Tag({
-	children,
-	color,
-	bg,
+/// One consequence. An item in a group of work carries a box the reader ticks
+/// off as they do it; a warning carries none, because there is nothing to do
+/// about it beyond having read it.
+export function ConsequenceCard({
+	c,
+	done,
+	onToggle,
 }: {
-	children: ReactNode;
-	color: string;
-	bg: string;
+	c: Consequence;
+	done?: boolean;
+	/// Omitted for a warning. Its absence is what marks an item as something to
+	/// take in rather than something to work through.
+	onToggle?: () => void;
 }) {
 	return (
-		<span className="tag" style={{ color, background: bg }}>
-			{children}
-		</span>
-	);
-}
-
-export function ConsequenceCard({ c }: { c: Consequence }) {
-	const sev = SEVERITY[c.severity];
-	return (
-		<div className="cons" style={{ borderColor: sev.bg }}>
-			<div className="cons-bar" style={{ background: sev.dot }} />
-			<div className="cons-body">
-				<div className="cons-head">
-					<span className="cons-dot" style={{ background: sev.dot }} />
-					<span className="cons-title">{c.title}</span>
-				</div>
-				<p className="cons-detail">
+		<div className="item">
+			{onToggle && (
+				<button
+					type="button"
+					className={`item-check${done ? " on" : ""}`}
+					aria-pressed={done}
+					aria-label={done ? `Mark "${c.title}" not done` : `Mark "${c.title}" done`}
+					onClick={onToggle}
+				>
+					{done && <Check size={12} />}
+				</button>
+			)}
+			<div className="item-body">
+				<h4 className={`item-title${done ? " item-done" : ""}`}>{c.title}</h4>
+				<p className="item-detail">
 					<Markup text={c.detail} />
 				</p>
-				<div className="cons-tags">
-					{c.types.map((t) => (
-						<Tag key={t} color={TYPE_COLOR[t].color} bg={TYPE_COLOR[t].bg}>
-							{CONSEQUENCE_TYPE_LABEL[t]}
-						</Tag>
-					))}
-					<Tag color="#3a4750" bg="#eaedee">
-						{STATUS_LABEL[c.status]}
-					</Tag>
-					{c.cost && (
-						<span className="cost-note">
-							{c.cost.tier}
-							{c.cost.ballpark ? ` · ${c.cost.ballpark}` : ""}
-						</span>
-					)}
-				</div>
+				{c.cost && (
+					<p className="cost-note">
+						{c.cost.tier}
+						{c.cost.ballpark ? ` · ${c.cost.ballpark}` : ""}
+					</p>
+				)}
 			</div>
 		</div>
 	);
 }
 
-type VerdictMeta = { color: string; bg: string; title: string };
-function verdictMeta(verdict: Verdict): VerdictMeta {
-	switch (verdict) {
-		case "Blocking":
-			return {
-				color: "var(--block)",
-				bg: "var(--block-bg)",
-				title: "Not possible as specified",
-			};
-		case "NonDefault":
-			return {
-				color: "var(--offdef)",
-				bg: "var(--offdef-bg)",
-				title: "Possible, with acknowledged off-default choices",
-			};
-		default:
-			return {
-				color: "var(--clear)",
-				bg: "var(--clear-bg)",
-				title: "On the default, supported path",
-			};
-	}
-}
-
-export function VerdictBanner({
-	verdict,
-	offDefault,
-	blocking,
-	started = true,
-	big = false,
-}: {
-	verdict: Verdict;
-	offDefault: number;
-	blocking: number;
-	/// Whether any choice has been made yet. Before then there's no verdict to
-	/// report — only an empty form.
-	started?: boolean;
-	big?: boolean;
-}) {
-	if (!started) {
-		return (
-			<div
-				className={`verdict${big ? " verdict-big" : ""}`}
-				style={{ background: "var(--line-soft)", color: "var(--ink-soft)" }}
-			>
-				<div>
-					<div className="verdict-t">Nothing recorded yet</div>
-					<div className="verdict-s">Make a choice and its consequences appear here.</div>
-				</div>
-			</div>
-		);
-	}
-	const m = verdictMeta(verdict);
-	const subtitle =
-		verdict === "Blocking"
-			? `${blocking} blocking conflict${blocking === 1 ? "" : "s"} — something must change.`
-			: verdict === "NonDefault"
-				? `${offDefault} choice${offDefault === 1 ? "" : "s"} off the default path. This will be harder to support.`
-				: "No off-default choices recorded.";
+/// The viability callout. It exists to flag a configuration that will not work,
+/// so it speaks only when there is a blocking conflict. Choices that are merely
+/// off the standard path are listed in full in their own group, and a banner
+/// counting them again would be saying it twice.
+export function VerdictBanner({ conflicts }: { conflicts: string[] }) {
+	const [open, setOpen] = useState(true);
+	if (conflicts.length === 0) return null;
 	return (
 		<div
-			className={`verdict${big ? " verdict-big" : ""}`}
-			style={{ background: m.bg, color: m.color }}
+			className="verdict verdict-big"
+			style={{ background: "var(--block-bg)", color: "var(--block)" }}
 		>
-			<div>
-				<div className="verdict-t">{m.title}</div>
-				<div className="verdict-s">{subtitle}</div>
-			</div>
+			<button
+				type="button"
+				className={`verdict-toggle${open ? " on" : ""}`}
+				aria-expanded={open}
+				onClick={() => setOpen(!open)}
+			>
+				<Chevron size={16} />
+				<span className="verdict-t">
+					{conflicts.length} blocking conflict{conflicts.length === 1 ? "" : "s"}: this will not
+					work as specified
+				</span>
+			</button>
+			{/* Always rendered, hidden with CSS, so it prints whole. */}
+			<ul className={`verdict-list${open ? "" : " shut"}`}>
+				{conflicts.map((title) => (
+					<li key={title}>{title}</li>
+				))}
+			</ul>
 		</div>
 	);
 }

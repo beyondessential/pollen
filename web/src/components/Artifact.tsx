@@ -14,7 +14,10 @@ import {
 import { listDone, recordDone } from "../doneItems";
 import { Chevron, ConsequenceCard, VerdictBanner } from "./visuals";
 
-const AUDIENCE_ORDER: Audience[] = ["Client", "Bes", "Record"];
+// What the client is opting into comes first, so it is met before the work it
+// implies, but collapsed: it is context for the actions below, not the task.
+const AUDIENCE_ORDER: Audience[] = ["Record", "Client", "Bes"];
+const COLLAPSED_ON_ARRIVAL: Audience[] = ["Record"];
 
 type Group = { key: string; label: string; items: TriggeredConsequence[] };
 
@@ -23,9 +26,12 @@ export default function Artifact({ view }: { view: AppView }) {
 	const [busy, setBusy] = useState(false);
 	const [copied, setCopied] = useState(false);
 	const [query, setQuery] = useState("");
-	// Groups open on arrival; collapsing is for skipping past the ones addressed
-	// to someone else, never for hiding content from a reader who has not looked.
-	const [shut, setShut] = useState<Record<string, boolean>>({});
+	// Groups open on arrival, bar the acknowledgements: those restate choices the
+	// reader has just made, and the viability callout raises anything that will
+	// not work regardless.
+	const [shut, setShut] = useState<Record<string, boolean>>(() =>
+		Object.fromEntries(COLLAPSED_ON_ARRIVAL.map((a) => [a, true])),
+	);
 	// Ticked-off actions, this reader's own and kept on this device only.
 	const [done, setDone] = useState<string[]>(() => listDone(view.id));
 
@@ -37,21 +43,15 @@ export default function Artifact({ view }: { view: AppView }) {
 
 	const answers = view.answers as unknown as Record<string, AnswerValue>;
 	const ev = view.evaluation;
-	const offDefault = ev.consequences.filter(
-		(c) => c.consequence.severity === "NonDefault",
-	).length;
-	const blocking = ev.consequences.filter((c) => c.consequence.severity === "Blocking").length;
 	const byId = new Map(view.questions.map((q) => [q.id, q]));
 	const assumedBy = new Map(ev.assumed.map((a) => [a.question, a.option]));
 	// An artifact is interim when questions were deliberately left open. It is a
 	// normal finalised artifact in every other respect: the gaps are recorded
 	// rather than guessed, and completing it is a new version.
 	const interim = ev.open_items.length > 0;
-	// What took the plan off the standard path, worst first, for the verdict.
-	const rank = { Blocking: 0, NonDefault: 1, Default: 2 };
-	const offStandard = ev.consequences
-		.filter((c) => c.consequence.severity !== "Default")
-		.sort((a, b) => rank[a.consequence.severity] - rank[b.consequence.severity])
+	// Conflicts that make the configuration unworkable, for the viability callout.
+	const conflicts = ev.consequences
+		.filter((c) => c.consequence.severity === "Blocking")
 		.map((c) => c.consequence.title);
 
 	const groups = useMemo(() => {
@@ -84,6 +84,7 @@ export default function Artifact({ view }: { view: AppView }) {
 		// for; let React re-render before the print dialog opens.
 		setQuery("");
 		setShut({});
+
 		setTimeout(() => window.print(), 50);
 	}
 
@@ -126,14 +127,9 @@ export default function Artifact({ view }: { view: AppView }) {
 				</div>
 			</div>
 
-			{ev.verdict !== "Clear" && (
+			{conflicts.length > 0 && (
 				<div style={{ padding: "22px 30px 0" }}>
-					<VerdictBanner
-						verdict={ev.verdict}
-						offDefault={offDefault}
-						blocking={blocking}
-						choices={offStandard}
-					/>
+					<VerdictBanner conflicts={conflicts} />
 				</div>
 			)}
 

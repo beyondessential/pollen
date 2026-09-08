@@ -58,7 +58,7 @@ Every captured item and every consequence carries up to three independent tags.
 - **blocking**: internally contradictory or unsupported; will not work as specified, and something must change.
 
 The tool always produces an artifact, even for contradictory input.
-A conflict short-circuits the *verdict*, a prominent callout that the configuration is very likely not possible as specified, rather than the *recording*: the full picture is still captured below the verdict.
+A conflict short-circuits the *verdict*, a prominent callout naming the conflicts and stating that the configuration is very likely not possible as specified, rather than the *recording*: the full picture is still captured below the verdict.
 The engine evaluates conditions across fields, both as forward guidance during the flow and as a final consistency check when the artifact is finalised.
 
 ### Consequence type
@@ -217,9 +217,13 @@ This comparison is the "what changed" summary the user sees on update: newly-req
 ### Finalised web view
 
 The canonical artifact is a live page.
-It presents every consequence in full, grouped by the reader it is addressed to, and supports searching and deep-linking to a section.
+It presents every consequence in full, in three groups: what the client's IT team has to do, what the BES technical team sets up, and what the client is opting into by leaving the standard path.
+An item states the action it asks for, so a group of required actions reads as a list of work rather than a list of observations.
+A choice off the standard path that also asks something of a team produces two items: the work, which sits with that team's actions, and the acknowledgement of what the choice costs, which sits with what is being opted into.
+Nothing off the standard path appears in a group of actions, because an acknowledgement is not something anyone does.
+What is being opted into comes first and arrives collapsed: it is context for the work below rather than the work itself, and a conflict that stops the configuration working is raised by the viability callout regardless.
 Each group can be collapsed, so a reader can skip past the groups addressed to someone else.
-The viability callout names the choices that took the plan off the standard path, not only how many there were.
+The artifact supports searching and deep-linking to a section.
 
 Every item carries a box the reader ticks off as they deal with it, whether that means doing the work, noting the consequence, or resolving the conflict.
 Ticking is the reader's own progress, held in their browser and never against the artifact: a finalised artifact is immutable, and its link is held by several people who are not working through the same list.

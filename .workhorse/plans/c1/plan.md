@@ -290,3 +290,30 @@ The type and status badges are gone, and so is the severity colouring on items,
 along with the label maps, the severity palette and the shared tag component
 that only they used. Severity now lives solely in the viability callout, which
 expands to name the choices behind its count rather than only totalling them.
+
+## Actions read as actions, acknowledgements sit apart
+
+Every item in a group of work now names the work: "Provision Windows Server
+licences", not "Windows Server (being phased out)". Titles that described a
+state rather than a task were the tell that two different things were sharing
+one consequence.
+
+**An off-standard choice that also asks something of a team is two
+consequences**, fired off one condition: the work, which belongs with that
+team's actions, and the acknowledgement of what the choice costs, which belongs
+with what the client is opting into. Four rules split this way (Windows,
+client-managed DNS, a client-owned domain, a delegated subdomain), so Windows
+now appears as an action to buy licences *and* as an acknowledgement that the
+platform is being phased out.
+
+Three more were acknowledgements filed as BES setup, and moved: the non-standard
+region, AMD64, and the bespoke development a non-FHIR integration needs.
+
+A test holds the line: nothing off the standard path may be addressed to an
+actions group. Breaking that rule now fails the suite with an instruction to
+split the rule in two.
+
+The acknowledgements group is renamed "Off the standard path", moved to the top,
+and arrives collapsed: it is context for the work below rather than the work
+itself. The verdict callout no longer duplicates it, and speaks only when a
+conflict makes the configuration unworkable.

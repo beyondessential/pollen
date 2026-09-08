@@ -5,7 +5,7 @@
 //! answered.
 
 use pollen_server::ruleset::{
-	Answers, Ruleset, Severity, Verdict, evaluate,
+	Answers, Audience, Ruleset, Severity, Verdict, evaluate,
 	normalize::{canonical_json, content_hash},
 };
 use serde_json::json;
@@ -714,4 +714,48 @@ fn sydney_is_the_only_named_region() {
 	let ids: Vec<&str> = region.options.iter().map(|o| o.id.as_str()).collect();
 	assert_eq!(ids, vec!["sydney", "otheraws"]);
 	assert_eq!(region.default.as_deref(), Some("sydney"));
+}
+
+#[test]
+fn an_off_standard_choice_yields_both_an_action_and_an_acknowledgement() {
+	// Windows asks something of the client (licences) and costs them something
+	// (slower support). Those are two different things about one choice, so they
+	// are two consequences: the work sits with the client's actions, the cost
+	// sits with what they are opting into.
+	let eval = evaluate(&v1(), &with(sized(), json!({ "platform": "windows" })));
+	let ids = fired_ids(&eval);
+	assert!(ids.contains(&"plat-windows-licence"), "the action");
+	assert!(ids.contains(&"plat-windows"), "the acknowledgement");
+
+	let by = |id: &str| {
+		eval.consequences
+			.iter()
+			.find(|c| c.id == id)
+			.map(|c| &c.consequence)
+			.expect("fired")
+	};
+	assert_eq!(by("plat-windows-licence").audience, Audience::Client);
+	assert_eq!(by("plat-windows-licence").severity, Severity::Default);
+	assert_eq!(by("plat-windows").audience, Audience::Record);
+	assert_eq!(by("plat-windows").severity, Severity::NonDefault);
+}
+
+#[test]
+fn nothing_off_the_standard_path_sits_in_an_actions_group() {
+	// The artifact groups by audience: Client and BES hold work to do, and the
+	// record holds what is being accepted. An off-standard consequence is an
+	// acknowledgement, so it must not land in a list of actions, however it is
+	// triggered.
+	for rule in &v1().rules {
+		if rule.consequence.severity == Severity::Default {
+			continue;
+		}
+		assert_eq!(
+			rule.consequence.audience,
+			Audience::Record,
+			"{} is off the standard path but addressed to an actions group; \
+			 split it into an action and an acknowledgement",
+			rule.id
+		);
+	}
 }

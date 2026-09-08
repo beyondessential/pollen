@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import type { Consequence, Verdict } from "../types";
+import type { Consequence } from "../types";
 import { Markup } from "../markup";
 
 // Minimal inline icons (lucide-style paths), so nothing is fetched at runtime.
@@ -63,40 +63,18 @@ export function ConsequenceCard({
 	);
 }
 
-type VerdictMeta = { color: string; bg: string; title: string };
-
 /// The viability callout. It exists to flag a configuration that will not work,
-/// so it renders nothing when there is nothing to say. A banner announcing that
-/// all is well is noise on every artifact that has no problem.
-export function VerdictBanner({
-	verdict,
-	offDefault,
-	blocking,
-	choices,
-}: {
-	verdict: Verdict;
-	offDefault: number;
-	blocking: number;
-	/// What took the plan off the standard path, so a reader can see which
-	/// choices rather than only how many.
-	choices: string[];
-}) {
-	const [open, setOpen] = useState(false);
-	if (verdict === "Clear") return null;
-	const m: VerdictMeta =
-		verdict === "Blocking"
-			? {
-					color: "var(--block)",
-					bg: "var(--block-bg)",
-					title: `${blocking} blocking conflict${blocking === 1 ? "" : "s"}: this will not work as specified`,
-				}
-			: {
-					color: "var(--offdef)",
-					bg: "var(--offdef-bg)",
-					title: `${offDefault} choice${offDefault === 1 ? "" : "s"} off the standard path`,
-				};
+/// so it speaks only when there is a blocking conflict. Choices that are merely
+/// off the standard path are listed in full in their own group, and a banner
+/// counting them again would be saying it twice.
+export function VerdictBanner({ conflicts }: { conflicts: string[] }) {
+	const [open, setOpen] = useState(true);
+	if (conflicts.length === 0) return null;
 	return (
-		<div className="verdict verdict-big" style={{ background: m.bg, color: m.color }}>
+		<div
+			className="verdict verdict-big"
+			style={{ background: "var(--block-bg)", color: "var(--block)" }}
+		>
 			<button
 				type="button"
 				className={`verdict-toggle${open ? " on" : ""}`}
@@ -104,11 +82,14 @@ export function VerdictBanner({
 				onClick={() => setOpen(!open)}
 			>
 				<Chevron size={16} />
-				<span className="verdict-t">{m.title}</span>
+				<span className="verdict-t">
+					{conflicts.length} blocking conflict{conflicts.length === 1 ? "" : "s"}: this will not
+					work as specified
+				</span>
 			</button>
 			{/* Always rendered, hidden with CSS, so it prints whole. */}
 			<ul className={`verdict-list${open ? "" : " shut"}`}>
-				{choices.map((title) => (
+				{conflicts.map((title) => (
 					<li key={title}>{title}</li>
 				))}
 			</ul>

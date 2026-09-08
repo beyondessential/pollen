@@ -58,7 +58,9 @@ been run; an unticked one is a scenario still owed, not one decided against.
 - [ ] Assumptions are listed on the artifact and are correctable through a new version.
 - [ ] The PDF export places open questions directly after the verdict, and prints no buttons.
 - [ ] Printing with a group collapsed still carries that group's items, by the button and by the browser's own print command.
-- [ ] Audience groups arrive open, and collapsing one leaves the others alone.
+- [ ] What is being opted into comes first and arrives collapsed; the action groups arrive open.
+- [x] An off-standard choice that asks something of a team yields both an action and an acknowledgement.
+- [x] Nothing off the standard path is addressed to a group of actions.
 - [ ] Every item carries a tick box, in every group.
 - [ ] A tick survives a reload of the same artifact, and does not appear on a different one.
 - [ ] Tick state never reaches the server, and the printed record shows no boxes.

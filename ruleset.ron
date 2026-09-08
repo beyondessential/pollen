@@ -413,7 +413,7 @@
             consequence: (
                 status: Requirement,
                 audience: Bes,
-                title: "Dashboards and reporting requested",
+                title: "Set up the Tupaia connection",
                 detail: "Connecting to Tupaia means BES processes the data, which requires at minimum a low-retention backup.",
             ),
         ),
@@ -431,7 +431,7 @@
                 status: Advisory,
                 audience: Bes,
                 types: [Operational],
-                title: "Central sized up for connected systems",
+                title: "Size Central up for the connected systems",
                 detail: "Any integrations add load to the central server, so Central is provisioned with more resources. This is a flat allowance; the number of integrations does not change it.",
             ),
         ),
@@ -441,8 +441,8 @@
             when: Equals("hosted_integration", "yes"),
             consequence: (
                 status: Referral,
-                audience: Record,
-                title: "BES-hosted integration: separate conversation",
+                audience: Bes,
+                title: "Scope the BES-hosted integration separately",
                 detail: "Hosting an integration on BES infrastructure is possible but is scoped in a dedicated technical conversation. This record only flags the intent.",
             ),
         ),
@@ -453,7 +453,7 @@
             consequence: (
                 severity: NonDefault,
                 status: Advisory,
-                audience: Bes,
+                audience: Record,
                 types: [Cost],
                 cost: Some((tier: "Significant one-off development cost")),
                 title: "A system with no standard interface needs custom development",
@@ -476,7 +476,7 @@
             consequence: (
                 severity: NonDefault,
                 status: Advisory,
-                audience: Bes,
+                audience: Record,
                 types: [Cost],
                 cost: Some((tier: "Adds ongoing cost", ballpark: Some("hundreds to thousands per year"))),
                 title: "Non-standard AWS region",
@@ -494,11 +494,24 @@
             consequence: (
                 severity: NonDefault,
                 status: Advisory,
-                audience: Bes,
+                audience: Record,
                 types: [Cost, Support],
                 cost: Some((tier: "Adds ongoing hosting and support cost")),
                 title: "AMD64 instead of the standard ARM64",
                 detail: "Linux on ARM64 is the platform BES builds, tests, and supports first. AMD64 is supported, but hosting costs more per unit of capacity and upgrades get less pre-release testing on it, so incidents take longer to resolve.",
+            ),
+        ),
+        (
+            id: "plat-windows-licence",
+            source: "platform",
+            when: Equals("platform", "windows"),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                types: [Cost],
+                cost: Some((tier: "Client-funded licensing", ballpark: Some("thousands to tens of thousands one-off, or an ongoing subscription"))),
+                title: "Provision Windows Server licences",
+                detail: "The client licenses Windows Server, Standard rather than Datacenter.",
             ),
         ),
         (
@@ -507,12 +520,11 @@
             when: Equals("platform", "windows"),
             consequence: (
                 severity: NonDefault,
-                status: Requirement,
-                audience: Client,
-                types: [Cost, Operational, Support],
-                cost: Some((tier: "Client-funded licensing", ballpark: Some("thousands to tens of thousands one-off, or an ongoing subscription"))),
-                title: "Windows Server (being phased out)",
-                detail: "Supported only on strong insistence. The client licenses Windows (Standard, not Datacenter). Application performance is slower, and support and incident response are slower and less effective.",
+                status: Advisory,
+                audience: Record,
+                types: [Operational, Support],
+                title: "Windows Server, which is being phased out",
+                detail: "Accepted only on strong insistence. The application runs slower on Windows, and support and incident response are slower and less effective than on the Linux platform BES builds and tests against.",
             ),
         ),
         (
@@ -525,7 +537,7 @@
             consequence: (
                 status: Requirement,
                 audience: Client,
-                title: "BES Ubuntu Server image required",
+                title: "Install the BES Ubuntu Server image",
                 detail: "Linux deployments use the customised [BES Ubuntu Server image](https://github.com/beyondessential/linux-images), set up the BES way.",
             ),
         ),
@@ -542,7 +554,7 @@
                 status: Requirement,
                 audience: Client,
                 types: [Operational],
-                title: "Physical servers: provision generously up front",
+                title: "Provision the physical servers generously up front",
                 detail: "Disk and resources are hard to change on bare metal, so provision ahead: at least 500 GB SSD, 4 cores (prefer 8), and 16 GB RAM (prefer 32). Multiple disks and multiple TB are NOT usually required, though you may want to do RAID for redundancy.",
             ),
         ),
@@ -556,7 +568,7 @@
             consequence: (
                 status: Advisory,
                 audience: Client,
-                title: "Virtual machines: start small, and back up the VM",
+                title: "Start the virtual machines small, and back them up",
                 detail: "Resources can scale, so start around 50 GB / 4 cores / 16 GB and grow. VM-level backups are recommended; telling BES is not required but helps disaster planning.",
             ),
         ),
@@ -570,7 +582,7 @@
             consequence: (
                 status: Requirement,
                 audience: Bes,
-                title: "Tamanu Iti mini-server",
+                title: "Provision and install the Tamanu Iti mini-servers",
                 detail: "Tamanu Iti is an ARM64 Linux mini-server, built by BES and provisioned by BES. The client plugs it into their network; BES installs and manages the software.",
             ),
         ),
@@ -652,15 +664,27 @@
 
         // ── Networking ──────────────────────────────────────────────────────
         (
+            id: "dns-client-acme",
+            source: "network",
+            when: Equals("dns", "client"),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                title: "Run automatic certificate issuance, and keep domains under one stem",
+                detail: "Support automatic ACME certificate issuance, and keep every deployment domain under a common stem (e.g. central.<name>.<tld> and facility.<name>.<tld>, not central.foo.tld alongside facility.bar.tld).",
+            ),
+        ),
+        (
             id: "dns-client",
             source: "network",
             when: Equals("dns", "client"),
             consequence: (
                 severity: NonDefault,
-                status: Requirement,
-                audience: Client,
-                title: "Client-controlled DNS",
-                detail: "If BES does not control DNS, the client must support automatic ACME certificate issuance, and keep every deployment domain under a common stem (e.g. central.<name>.<tld> and facility.<name>.<tld>, not central.foo.tld alongside facility.bar.tld).",
+                status: Advisory,
+                audience: Record,
+                types: [Operational],
+                title: "DNS and certificates managed by the client",
+                detail: "With DNS outside BES's control, certificate renewal depends on the client's own automation. A lapse there takes the deployment offline until the client fixes it, and BES cannot resolve it for them.",
             ),
         ),
         (
@@ -686,7 +710,7 @@
             consequence: (
                 status: Advisory,
                 audience: Bes,
-                title: "DNS: a name on tamanu.app",
+                title: "Provision the tamanu.app name and its certificates",
                 detail: "BES and the client agree on a name under BES's own tamanu.app domain, for example vanuatu.tamanu.app. BES provisions and runs the DNS, and keeps TLS certificates renewed, so there is nothing for client IT to set up.",
             ),
         ),
@@ -705,15 +729,37 @@
             ),
         ),
         (
+            id: "dns-client-domain-setup",
+            source: "network",
+            when: All([Equals("dns", "bes"), Equals("dns_arrangement", "client_domain")]),
+            consequence: (
+                status: Requirement,
+                audience: Client,
+                title: "Buy the domain and point it at the BES DNS zone",
+                detail: "The client purchases the domain, and client IT points it at the DNS zone BES provisions.",
+            ),
+        ),
+        (
             id: "dns-bes-client-domain",
             source: "network",
             when: All([Equals("dns", "bes"), Equals("dns_arrangement", "client_domain")]),
             consequence: (
                 severity: NonDefault,
+                status: Advisory,
+                audience: Record,
+                title: "A client-owned domain rather than a name on tamanu.app",
+                detail: "BES runs the DNS zone, but the client owns the registration and carries its renewal. Letting it lapse takes the deployment offline.",
+            ),
+        ),
+        (
+            id: "dns-client-subdomain-setup",
+            source: "network",
+            when: All([Equals("dns", "bes"), Equals("dns_arrangement", "client_subdomain")]),
+            consequence: (
                 status: Requirement,
                 audience: Client,
-                title: "DNS: client-owned domain pointed at BES",
-                detail: "The client purchases the domain, and client IT points it at the DNS zone BES provisions. BES runs the zone; the client owns the registration.",
+                title: "Delegate a subdomain to the BES DNS zone",
+                detail: "Client IT allocates a subdomain on a domain the client already controls and delegates it (SOA records) to the DNS zone BES provisions.",
             ),
         ),
         (
@@ -722,10 +768,10 @@
             when: All([Equals("dns", "bes"), Equals("dns_arrangement", "client_subdomain")]),
             consequence: (
                 severity: NonDefault,
-                status: Requirement,
-                audience: Client,
-                title: "DNS: client subdomain delegated to BES (SOA)",
-                detail: "Client IT allocates a subdomain on a domain the client already controls and delegates it (SOA records) to the DNS zone BES provisions.",
+                status: Advisory,
+                audience: Record,
+                title: "A delegated subdomain rather than a name on tamanu.app",
+                detail: "The delegation is a setup step on the client side, and the parent domain stays under the client's control, so a change there can break the delegation.",
             ),
         ),
         (
@@ -778,7 +824,7 @@
             consequence: (
                 status: Requirement,
                 audience: Client,
-                title: "Point to internal time server",
+                title: "Provide the internal time server address",
                 detail: "Provide the internal NTP server IP so servers can synchronise time (required for correct function).",
             ),
         ),
@@ -862,7 +908,7 @@
                 status: Requirement,
                 audience: Client,
                 types: [Operational],
-                title: "Central needs a public static IP for mobile clients",
+                title: "Give Central a public static IP for mobile clients",
                 detail: "Mobile clients connect to the central server directly, so when you host Central yourself it needs a public static IP with its HTTPS interface reachable from the internet. (When BES hosts Central, BES provides this.)",
             ),
         ),

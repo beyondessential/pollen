@@ -73,8 +73,9 @@ Every plan has something to price, because hosting the derived size band costs s
 
 A single choice may carry several.
 
-- **cost**: a relative magnitude tier, optionally with an indicative ballpark band (for example "on the order of hundreds per year" versus "thousands per year").
-  Never a real quote; the actual figures are confirmed separately.
+- **cost**: that the choice moves what the deployment costs.
+  A consequence may carry a magnitude tier and an indicative band where a real one is known, but never a quote, and never a figure nobody has costed.
+  What a configuration actually costs is worked out by the pricing and partnerships team, from the items addressed to them.
 - **operational impact**: for example slower incident response, manual failover, reduced retention, extended upgrade downtime.
 - **capability loss**: for example no Tupaia connection, no clone-upgrade testing.
 - **support status**: supported, supported with special arrangement, or unsupported.

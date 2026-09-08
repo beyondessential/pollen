@@ -12,65 +12,84 @@ async function answer(page: Page, question: string, option: string) {
 	await patched;
 }
 
-// A complete, all-default configuration (no off-default choices → clear verdict).
-const CLEAR: Array<[string, string]> = [
-	["Connect to Tupaia?", "No Tupaia"],
-	["Which integrations are wanted?", "None for now"],
-	["Catchment population", "<1k"],
-	["Number of facilities", "One"],
-	["Mobile clients", "None"],
-	["Where does the central server run?", "BES cloud"],
-	["What's the facility mix?", "Some in BES cloud"],
-	["Which hosting region?", "Sydney"],
-	["Can BES take backups?", "Yes — BES may take backups"],
-	["What does BES retain?", "Full retention"],
-	["How often do you intend to upgrade?", "Every release"],
-	["DNS authority", "BES controls DNS"],
-	["How is the BES-controlled domain set up?", "BES subdomain on tamanu.app"],
-	["Remote access for managed servers", "Tailscale"],
-	["Time synchronisation", "Public NTP"],
-	["Allow telemetry?", "Yes, allow telemetry"],
+const CATCHMENT = "How many people does the health system serve?";
+const FACILITIES = "How many facilities will use Tamanu?";
+const MOBILE = "How many people will use Tamanu on a phone or tablet?";
+const DASHBOARDS = "Do you want dashboards and reporting?";
+const INTEGRATIONS = "Does Tamanu need to connect to other systems?";
+
+// Everything a plan needs to leave nothing open. The rest of the flow either
+// assumes a blessed-path answer or is reached through the technical section,
+// which this deliberately never opens.
+const COMPLETE: Array<[string, string]> = [
+	[CATCHMENT, "Under 1,000"],
+	[FACILITIES, "One"],
+	[MOBILE, "None"],
+	[DASHBOARDS, "No, Tamanu only"],
+	[INTEGRATIONS, "No integrations"],
 ];
 
-// Walk the all-default plan and finalise it, landing on the artifact.
-async function finaliseDefaultPlan(page: Page) {
+async function finaliseCompletePlan(page: Page) {
 	await page.goto("/");
 	await expect(page).toHaveURL(/\/a\//); // URL collapses to the new draft's id
-	for (const [question, option] of CLEAR) {
+	for (const [question, option] of COMPLETE) {
 		await answer(page, question, option);
 	}
-	await page.getByRole("button", { name: "Finalise" }).click();
+	await page.getByRole("button", { name: "Finalise", exact: true }).click();
 	await expect(page.getByRole("heading", { name: "Tiny deployment" })).toBeVisible();
 }
 
-test("walks a default plan to a finalised artifact", async ({ page }) => {
+test("the essentials alone are enough to finalise an interim plan", async ({ page }) => {
 	await page.goto("/");
-	await expect(page).toHaveURL(/\/a\//); // URL collapses to the new draft's id
-	await expect(page.getByRole("heading", { name: "Connect to Tupaia?" })).toBeVisible();
+	await expect(page).toHaveURL(/\/a\//);
+	// The flow opens on sizing, not on anything technical.
+	await expect(page.getByRole("heading", { name: CATCHMENT })).toBeVisible();
+	await expect(page.getByRole("button", { name: "Finalise" })).toBeDisabled();
 
-	for (const [question, option] of CLEAR) {
-		await answer(page, question, option);
-	}
+	// These two are the whole of what must be answered.
+	await answer(page, CATCHMENT, "Under 1,000");
+	await answer(page, FACILITIES, "One");
 
-	// All visible questions answered → clear verdict, finalise enabled.
-	await expect(page.getByText("On the default, supported path")).toBeVisible();
-	const finalise = page.getByRole("button", { name: "Finalise" });
+	const finalise = page.getByRole("button", { name: "Finalise interim plan" });
 	await expect(finalise).toBeEnabled();
 	await finalise.click();
 
-	// The finalised artifact.
+	// The questions left open are carried on the artifact rather than guessed.
 	await expect(page.getByRole("heading", { name: "Tiny deployment" })).toBeVisible();
+	await expect(page.locator(".badge-interim")).toBeVisible();
+	await expect(page.getByRole("heading", { name: "To confirm with BES" })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Assumptions" })).toBeVisible();
+});
 
-	// By-topic grouping and search both work. (All-cloud, so the networking
-	// item present is the DNS arrangement, not the on-prem-only allowances.)
-	await page.getByRole("button", { name: "By topic" }).click();
-	await expect(page.getByRole("heading", { name: "Networking" })).toBeVisible();
-	await page.getByPlaceholder("Search consequences…").fill("tamanu.app");
-	await expect(page.getByText("DNS: a name on BES's tamanu.app")).toBeVisible();
+test("walks a complete plan to a finalised artifact", async ({ page }) => {
+	await page.goto("/");
+	await expect(page).toHaveURL(/\/a\//);
+
+	for (const [question, option] of COMPLETE) {
+		await answer(page, question, option);
+	}
+
+	// Nothing off the standard path, so the rail stays quiet and the plan
+	// finalises without being interim.
+	await expect(page.getByText("Off the standard path")).toBeHidden();
+	const finalise = page.getByRole("button", { name: "Finalise", exact: true });
+	await expect(finalise).toBeEnabled();
+	await finalise.click();
+
+	await expect(page.getByRole("heading", { name: "Tiny deployment" })).toBeVisible();
+	await expect(page.locator(".badge-interim")).toBeHidden();
+	// Grouped by the reader each item is addressed to, with no warnings to show.
+	await expect(page.getByRole("button", { name: "Client IT: required actions" })).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: "BES pricing and partnerships: cost and SLA" }),
+	).toBeVisible();
+	await expect(page.getByRole("button", { name: "Warnings" })).toBeHidden();
+	// The standard domain arrangement is BES's to set up.
+	await expect(page.getByText("Provision the tamanu.app name and its certificates")).toBeVisible();
 });
 
 test("'Make changes' opens the new version in a new tab", async ({ page, context }) => {
-	await finaliseDefaultPlan(page);
+	await finaliseCompletePlan(page);
 
 	const popupPromise = context.waitForEvent("page");
 	await page.getByRole("button", { name: "Make changes" }).click();
@@ -88,14 +107,14 @@ test("a fresh plan offers to resume the previous one", async ({ page }) => {
 	// First plan: a decision so it's remembered in local storage.
 	await page.goto("/");
 	await expect(page).toHaveURL(/\/a\//);
-	await answer(page, "Connect to Tupaia?", "No Tupaia");
+	await answer(page, DASHBOARDS, "No, Tamanu only");
 
 	// A fresh plan offers to resume it; making a decision records the new plan
 	// and dismisses the offer.
 	await page.getByRole("link", { name: "Start a new plan" }).click();
 	await expect(page).toHaveURL(/\/a\//);
 	await expect(page.getByRole("button", { name: "Resume" })).toBeVisible();
-	await answer(page, "Connect to Tupaia?", "Yes, connect to Tupaia");
+	await answer(page, DASHBOARDS, "Yes, include dashboards and reporting");
 	const second = page.url();
 	await expect(page.getByRole("button", { name: "Resume" })).toBeHidden();
 
@@ -105,16 +124,22 @@ test("a fresh plan offers to resume the previous one", async ({ page }) => {
 	await page.getByRole("button", { name: "Resume" }).click();
 	await expect(page).toHaveURL(second);
 	await expect(
-		page.locator(".choice.on").filter({ hasText: "Yes, connect to Tupaia" }),
+		page.locator(".choice.on").filter({ hasText: "Yes, include dashboards and reporting" }),
 	).toBeVisible();
 });
 
-test("a blocking, incomplete plan can't be finalised", async ({ page }) => {
+test("a blocking conflict shows, and the sizing questions still gate finalising", async ({
+	page,
+}) => {
 	await page.goto("/");
-	await answer(page, "Connect to Tupaia?", "Yes, connect to Tupaia");
-	await answer(page, "Can BES take backups?", "No — BES may not take backups");
+	await answer(page, DASHBOARDS, "Yes, include dashboards and reporting");
 
-	// The conflict shows, but the form is incomplete, so finalise stays disabled.
-	await expect(page.getByText("Not possible as specified")).toBeVisible();
+	// Backups sit in the technical section, which arrives collapsed.
+	await page.getByRole("button", { name: "Answer more for a more accurate plan" }).click();
+	await answer(page, "Can BES take backups of the data?", "No, BES may not take backups");
+
+	// The conflict is raised, but the sizing questions are still unanswered.
+	await expect(page.getByText("Backups disabled, but dashboards requested")).toBeVisible();
 	await expect(page.getByRole("button", { name: "Finalise" })).toBeDisabled();
+	await expect(page.getByText(/Still needed/)).toBeVisible();
 });

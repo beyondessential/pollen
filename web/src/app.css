@@ -837,3 +837,23 @@ body {
 .verdict-list.shut {
 	display: none;
 }
+
+/* ── Warnings ────────────────────────────────────────────────────────── */
+/* The off-default colour they carried as a banner, running straight into the
+   actions they qualify rather than being fenced off from them. */
+.qexpand-warn {
+	color: var(--offdef);
+	background: var(--offdef-bg);
+	border-color: #ecd9ae;
+	margin-bottom: 0;
+}
+.qexpand-warn:hover {
+	background: #f7e6c6;
+}
+.qexpand-warn + .items {
+	margin-top: 14px;
+}
+.sheet-section-flush {
+	border-bottom: none;
+	padding-bottom: 0;
+}

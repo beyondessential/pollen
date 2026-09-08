@@ -14,10 +14,12 @@ import {
 import { listDone, recordDone } from "../doneItems";
 import { Chevron, ConsequenceCard, VerdictBanner } from "./visuals";
 
-// What the client is opting into comes first, so it is met before the work it
-// implies, but collapsed: it is context for the actions below, not the task.
+// Warnings come first, so what the client is opting into is met before the work
+// it implies, but collapsed: they are context for the actions below, not the
+// task. They carry the off-default colour and run straight into those actions.
 const AUDIENCE_ORDER: Audience[] = ["Record", "Client", "Bes"];
 const COLLAPSED_ON_ARRIVAL: Audience[] = ["Record"];
+const WARNINGS: Audience = "Record";
 
 type Group = { key: string; label: string; items: TriggeredConsequence[] };
 
@@ -169,11 +171,16 @@ export default function Artifact({ view }: { view: AppView }) {
 			) : (
 				groups.map((g) => {
 					const open = !shut[g.key];
+					const warn = g.key === WARNINGS;
 					return (
-						<section key={g.key} id={`s-${g.key}`} className="sheet-section">
+						<section
+							key={g.key}
+							id={`s-${g.key}`}
+							className={`sheet-section${warn ? " sheet-section-flush" : ""}`}
+						>
 							<button
 								type="button"
-								className={`qexpand${open ? " on" : ""}`}
+								className={`qexpand${warn ? " qexpand-warn" : ""}${open ? " on" : ""}`}
 								aria-expanded={open}
 								onClick={() => setShut({ ...shut, [g.key]: open })}
 							>

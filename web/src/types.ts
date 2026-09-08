@@ -100,5 +100,5 @@ export function isAnswered(value: AnswerValue | undefined): value is AnswerValue
 export const AUDIENCE_LABEL: Record<Audience, string> = {
 	Client: "Client IT: required actions",
 	Bes: "BES technical: setup",
-	Record: "Off the standard path",
+	Record: "Warnings",
 };

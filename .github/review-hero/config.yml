@@ -1,0 +1,10 @@
+# Review Hero repo config. Project context (what Pollen is, its conventions) is
+# not repeated here — the review agents read AGENTS.md/CLAUDE.md directly.
+#
+# Extra diff-exclusion patterns, on top of the built-in defaults (lockfiles,
+# *.generated.*, etc). These are generated and committed, so reviewing their
+# diffs is noise — see AGENTS.md for the `just gen-openapi` flow that produces
+# them.
+ignore_patterns:
+  - "web/openapi.json"
+  - "web/src/api-types.ts"

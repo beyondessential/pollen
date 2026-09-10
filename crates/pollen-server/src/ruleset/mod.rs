@@ -13,11 +13,15 @@ pub mod source;
 
 pub use answers::{Answer, Answers};
 pub use condition::Condition;
-pub use engine::{Assumed, Evaluation, TriggeredConsequence, TriggeredGuidance, Verdict, evaluate};
+pub use engine::{
+	Assumed, Evaluation, TriggeredConsequence, TriggeredGuidance, TriggeredRequirement, Verdict,
+	evaluate,
+};
 pub use migrate::{Migration, migrate};
 pub use model::{
 	Audience, Consequence, ConsequenceType, Cost, Derivation, DerivationKind, Guidance, Opt,
-	Question, QuestionKind, Rule, Ruleset, Section, Severity, Status,
+	Question, QuestionKind, Requirement, Rule, Ruleset, Section, Severity, SizeSpecs, Spec,
+	SpecRow, Status,
 };
 pub use resolver::{RULESET_PATH, ResolvedRuleset, RulesetResolver};
 pub use source::{GitHubSource, RefSource};

@@ -24,6 +24,10 @@ fn fired_ids(eval: &pollen_server::ruleset::Evaluation) -> Vec<&str> {
 	eval.consequences.iter().map(|c| c.id.as_str()).collect()
 }
 
+fn requirement_ids(eval: &pollen_server::ruleset::Evaluation) -> Vec<&str> {
+	eval.requirements.iter().map(|r| r.id.as_str()).collect()
+}
+
 /// The three sizing bands, so a test can focus on what it's actually asserting
 /// without leaving the required questions unanswered.
 fn sized() -> serde_json::Value {
@@ -802,6 +806,267 @@ fn pricing_and_sla_drivers_reach_the_pricing_group() {
 			);
 		}
 	}
+}
+
+// ── Compute requirements ─────────────────────────────────────────────────────
+
+#[test]
+fn compute_requirements_track_the_classes_present() {
+	// The default path sizes small, all-client facilities with BES cloud Central.
+	// Central is BES-hosted so it carries no client requirement; the facilities
+	// and the workstations do; there are no mobile devices.
+	let eval = evaluate(&v1(), &answers(sized()));
+	let ids = requirement_ids(&eval);
+	assert!(ids.contains(&"req-facility"), "got {ids:?}");
+	assert!(ids.contains(&"req-workstation"), "got {ids:?}");
+	assert!(
+		!ids.contains(&"req-central"),
+		"BES hosts Central by default"
+	);
+	assert!(!ids.contains(&"req-mobile"), "no mobile users by default");
+	assert!(!ids.contains(&"req-iti"));
+}
+
+#[test]
+fn an_all_cloud_deployment_only_needs_workstations() {
+	// Everything BES-hosted, no mobile: the client provisions nothing but the
+	// devices staff use to reach Tamanu.
+	let eval = evaluate(
+		&v1(),
+		&answers(json!({
+			"catchment": "c0",
+			"facilities": "f0",
+			"mobile": "m0",
+			"central": "bescloud",
+			"hosting_where": "allbes",
+		})),
+	);
+	assert_eq!(requirement_ids(&eval), vec!["req-workstation"]);
+}
+
+#[test]
+fn a_client_hosted_central_carries_its_own_requirement() {
+	let eval = evaluate(&v1(), &with(sized(), json!({ "central": "clienthosted" })));
+	assert!(requirement_ids(&eval).contains(&"req-central"));
+}
+
+#[test]
+fn mobile_users_bring_a_mobile_device_requirement() {
+	let with_mobile = evaluate(&v1(), &with(sized(), json!({ "mobile": "m2" })));
+	assert!(requirement_ids(&with_mobile).contains(&"req-mobile"));
+
+	// An unsure mobile count asserts nothing, so no device requirement fires.
+	let unsure = evaluate(&v1(), &with(sized(), json!({ "mobile": "m_unsure" })));
+	assert!(!requirement_ids(&unsure).contains(&"req-mobile"));
+}
+
+#[test]
+fn iti_replaces_the_facility_server_requirement_when_every_site_runs_one() {
+	// Some sites on Iti keeps the facility-server requirement for the rest.
+	let some = evaluate(
+		&v1(),
+		&with(
+			sized(),
+			json!({ "hosting_where": "allclient", "iti_use": "some" }),
+		),
+	);
+	let some_ids = requirement_ids(&some);
+	assert!(some_ids.contains(&"req-facility"));
+	assert!(some_ids.contains(&"req-iti"));
+
+	// Every site on Iti: there is no client-run facility server left to spec.
+	let all = evaluate(
+		&v1(),
+		&with(
+			sized(),
+			json!({ "hosting_where": "allclient", "iti_use": "all" }),
+		),
+	);
+	let all_ids = requirement_ids(&all);
+	assert!(all_ids.contains(&"req-iti"));
+	assert!(!all_ids.contains(&"req-facility"));
+}
+
+#[test]
+fn a_ruleset_stored_without_requirements_still_loads() {
+	// A finalised artifact bound before compute requirements existed has no
+	// `requirements` field in its stored JSON. The append-only model must still
+	// read it (spec WIZ, the engine's model is append-only).
+	let stored = json!({
+		"questions": [
+			{ "id": "catchment", "kind": "Band", "label": "?", "options": [ { "id": "c0", "label": "?" } ] },
+		],
+		"rules": [],
+	});
+	let ruleset: Ruleset = serde_json::from_value(stored).expect("loads without requirements");
+	assert!(ruleset.requirements.is_empty());
+	let eval = evaluate(&ruleset, &answers(json!({ "catchment": "c0" })));
+	assert!(eval.requirements.is_empty());
+}
+
+#[test]
+fn every_requirement_names_a_class_and_at_least_one_spec_row() {
+	// A profile with no rows at any size would render an empty class heading.
+	for r in &v1().requirements {
+		assert!(!r.class.is_empty(), "requirement {} has no class", r.id);
+		assert!(
+			!r.specs.is_empty() || !r.by_size.is_empty(),
+			"requirement {} has no spec rows",
+			r.id
+		);
+	}
+}
+
+#[test]
+fn a_sized_server_scales_its_specs_with_the_size_band() {
+	// The client-hosted server profiles pick their processor, memory and storage
+	// from the derived size band, and lead with those rows.
+	let spec = |eval: &pollen_server::ruleset::Evaluation, id: &str, label: &str| -> String {
+		eval.requirements
+			.iter()
+			.find(|r| r.id == id)
+			.unwrap_or_else(|| panic!("{id} present"))
+			.specs
+			.iter()
+			.find(|s| s.label == label)
+			.unwrap_or_else(|| panic!("{id} has a {label} row"))
+			.value
+			.clone()
+	};
+
+	// Tiny (the lightest band) versus Large, client-hosted throughout.
+	let tiny = evaluate(
+		&v1(),
+		&answers(json!({ "catchment": "c0", "facilities": "f0", "central": "clienthosted" })),
+	);
+	assert_eq!(
+		spec(&tiny, "req-central", "Processor"),
+		"2 cores, x86_64 or ARM64"
+	);
+	assert_eq!(spec(&tiny, "req-central", "Storage"), "480 GB SSD");
+
+	let large = evaluate(
+		&v1(),
+		&answers(json!({ "catchment": "c3", "facilities": "f0", "central": "clienthosted" })),
+	);
+	assert_eq!(
+		spec(&large, "req-central", "Processor"),
+		"8 cores, x86_64 or ARM64"
+	);
+	assert_eq!(spec(&large, "req-central", "Memory"), "32 GB");
+	assert_eq!(spec(&large, "req-central", "Storage"), "2 TB SSD");
+
+	// The size-varying rows lead; the invariant network/OS rows follow.
+	let central = large
+		.requirements
+		.iter()
+		.find(|r| r.id == "req-central")
+		.unwrap();
+	let labels: Vec<&str> = central.specs.iter().map(|s| s.label.as_str()).collect();
+	assert_eq!(
+		labels,
+		vec![
+			"Processor",
+			"Memory",
+			"Storage",
+			"Network",
+			"Operating system"
+		]
+	);
+}
+
+#[test]
+fn the_smallest_band_advises_against_buying_a_server() {
+	// A Tiny deployment that still chooses to self-host is steered toward BES
+	// hosting or an Iti rather than dedicated hardware.
+	let note = |eval: &pollen_server::ruleset::Evaluation| -> String {
+		eval.requirements
+			.iter()
+			.find(|r| r.id == "req-central")
+			.unwrap()
+			.note
+			.clone()
+			.unwrap_or_default()
+	};
+
+	let tiny = evaluate(
+		&v1(),
+		&answers(json!({ "catchment": "c0", "facilities": "f0", "central": "clienthosted" })),
+	);
+	assert!(
+		note(&tiny).contains("cost-effective"),
+		"tiny central should carry the hosting advisory; got {:?}",
+		note(&tiny)
+	);
+
+	// A larger band carries no such advisory.
+	let large = evaluate(
+		&v1(),
+		&answers(json!({ "catchment": "c3", "facilities": "f0", "central": "clienthosted" })),
+	);
+	assert!(!note(&large).contains("cost-effective"));
+}
+
+#[test]
+fn the_operating_system_row_states_the_platform_chosen() {
+	// The requirement reports the reader's own selection rather than listing the
+	// options, so exactly one operating system row survives.
+	let os = |platform: &str| -> Vec<String> {
+		let eval = evaluate(
+			&v1(),
+			&with(
+				sized(),
+				json!({ "central": "clienthosted", "platform": platform }),
+			),
+		);
+		eval.requirements
+			.iter()
+			.find(|r| r.id == "req-central")
+			.expect("central present")
+			.specs
+			.iter()
+			.filter(|s| s.label == "Operating system")
+			.map(|s| s.value.clone())
+			.collect()
+	};
+
+	assert_eq!(os("linux"), vec!["Linux"]);
+	assert_eq!(os("windows"), vec!["Windows Server"]);
+}
+
+#[test]
+fn mobile_devices_need_android_13() {
+	let eval = evaluate(&v1(), &with(sized(), json!({ "mobile": "m2" })));
+	let mobile = eval
+		.requirements
+		.iter()
+		.find(|r| r.id == "req-mobile")
+		.expect("mobile present");
+	let os = mobile
+		.specs
+		.iter()
+		.find(|s| s.label == "Operating system")
+		.expect("has an OS row");
+	assert_eq!(os.value, "Android 13 or newer");
+}
+
+#[test]
+fn an_unsized_draft_falls_back_to_the_lightest_band() {
+	// A draft where the bands aren't answered yet has no derived size, so a sized
+	// server shows the lightest band's rows rather than none.
+	let eval = evaluate(&v1(), &answers(json!({ "central": "clienthosted" })));
+	assert!(!eval.derived.contains_key("size"));
+	let central = eval
+		.requirements
+		.iter()
+		.find(|r| r.id == "req-central")
+		.expect("central still shown");
+	let processor = central
+		.specs
+		.iter()
+		.find(|s| s.label == "Processor")
+		.expect("has a processor row");
+	assert_eq!(processor.value, "2 cores, x86_64 or ARM64");
 }
 
 #[test]

@@ -507,6 +507,100 @@ body {
 	color: var(--ink-soft);
 }
 
+/* ── Section heading (heads a stack of sibling sections) ─────────────── */
+.sheet-heading {
+	padding: 20px 30px 0;
+}
+.sheet-caption {
+	margin: 0;
+	font-size: 12.5px;
+	color: var(--ink-faint);
+	line-height: 1.5;
+}
+.sheet-section-title + .sheet-caption {
+	margin-top: -7px;
+}
+
+/* ── Compute requirements ────────────────────────────────────────────── */
+.reqs {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	margin-top: 14px;
+}
+.req {
+	border: 1px solid var(--line);
+	border-radius: 11px;
+	background: var(--surface);
+	box-shadow:
+		0 1px 2px rgba(20, 34, 43, 0.03),
+		0 12px 28px -22px rgba(20, 34, 43, 0.16);
+	overflow: hidden;
+}
+.req-head {
+	padding: 13px 16px 11px;
+	border-bottom: 1px solid var(--line-soft);
+}
+.req-class {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	color: var(--ink);
+}
+.req-summary {
+	margin: 3px 0 0;
+	font-size: 12.5px;
+	color: var(--ink-soft);
+	line-height: 1.45;
+}
+/* A spec sheet: fixed label column so the figures line up down the card. */
+.req-specs {
+	margin: 0;
+}
+.req-spec {
+	display: grid;
+	grid-template-columns: 136px 1fr;
+	gap: 16px;
+	padding: 9px 16px;
+	font-size: 12.5px;
+	border-top: 1px solid var(--line-soft);
+}
+.req-spec:first-child {
+	border-top: none;
+}
+.req-spec dt {
+	color: var(--ink-faint);
+}
+.req-spec dd {
+	margin: 0;
+	color: var(--ink);
+	font-weight: 500;
+	line-height: 1.45;
+}
+/* Advisory, so it takes the sky informational wash rather than a severity hue. */
+.req-note {
+	margin: 0;
+	padding: 10px 16px;
+	background: var(--sky-tint);
+	border-top: 1px solid #bfe4f8;
+	font-size: 12px;
+	color: var(--navy-deep);
+	line-height: 1.45;
+}
+.req-note a {
+	color: var(--sky-deep);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+@media (max-width: 560px) {
+	.req-spec {
+		grid-template-columns: 1fr;
+		gap: 2px;
+	}
+}
+
 /* ── Splash / status ─────────────────────────────────────────────────── */
 .splash {
 	display: grid;
@@ -567,7 +661,8 @@ body {
 	.sheet-section,
 	.item,
 	.card,
-	.record {
+	.record,
+	.req {
 		break-inside: avoid;
 	}
 	/* The entrance animation (opacity 0→1, fill both) can otherwise be captured

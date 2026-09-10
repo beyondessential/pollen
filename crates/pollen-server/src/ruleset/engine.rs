@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use super::answers::{Answer, Answers};
-use super::model::{Consequence, DerivationKind, QuestionKind, Ruleset, Severity};
+use super::model::{Consequence, DerivationKind, QuestionKind, Ruleset, Severity, Spec, SpecRow};
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Evaluation {
@@ -20,6 +20,9 @@ pub struct Evaluation {
 	pub visible_questions: Vec<String>,
 	/// Every triggered consequence, in ruleset order.
 	pub consequences: Vec<TriggeredConsequence>,
+	/// The compute requirements for the classes present in the deployment, in
+	/// ruleset order (spec WIZ, Compute requirements).
+	pub requirements: Vec<TriggeredRequirement>,
 	/// Guidance whose condition currently holds.
 	pub guidance: Vec<TriggeredGuidance>,
 	/// Visible questions left unanswered whose blessed-path default the engine
@@ -46,6 +49,17 @@ pub struct TriggeredConsequence {
 	pub id: String,
 	pub source: String,
 	pub consequence: Consequence,
+}
+
+/// A compute requirement whose class is present in the deployment. Carries the
+/// profile's content (the `when` condition that selected it is not on the wire).
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct TriggeredRequirement {
+	pub id: String,
+	pub class: String,
+	pub summary: Option<String>,
+	pub specs: Vec<Spec>,
+	pub note: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
@@ -111,6 +125,55 @@ pub fn evaluate(ruleset: &Ruleset, answers: &Answers) -> Evaluation {
 		})
 		.collect();
 
+	// Requirements are gated on the same defaulted answers as consequences, so an
+	// assumed hosting choice surfaces the classes it implies. A sized class picks
+	// its rows from the derived size band, falling back to the lightest band when
+	// the deployment isn't sized yet (a draft before the bands are answered).
+	let size = derived.get("size").map(String::as_str);
+	let requirements: Vec<TriggeredRequirement> = ruleset
+		.requirements
+		.iter()
+		.filter(|r| r.when.eval(answers))
+		.map(|r| {
+			let by_size = (!r.by_size.is_empty())
+				.then(|| {
+					size.and_then(|s| r.by_size.iter().find(|ss| ss.size == s))
+						.or_else(|| r.by_size.first())
+				})
+				.flatten();
+			// Size-varying rows (processor, memory, storage) lead; the invariant
+			// rows (network, operating system) follow. A row gated on the answers
+			// is dropped unless it holds, so a requirement states the choice the
+			// reader made rather than every option.
+			let present = |rows: &[SpecRow]| -> Vec<Spec> {
+				rows.iter()
+					.filter(|row| row.when.eval(answers))
+					.map(|row| Spec {
+						label: row.label.clone(),
+						value: row.value.clone(),
+					})
+					.collect()
+			};
+			let mut specs = Vec::new();
+			if let Some(ss) = by_size {
+				specs.extend(present(&ss.specs));
+			}
+			specs.extend(present(&r.specs));
+			// A band-specific note augments the profile's own.
+			let note = match (r.note.clone(), by_size.and_then(|ss| ss.note.clone())) {
+				(Some(base), Some(band)) => Some(format!("{base} {band}")),
+				(base, band) => base.or(band),
+			};
+			TriggeredRequirement {
+				id: r.id.clone(),
+				class: r.class.clone(),
+				summary: r.summary.clone(),
+				specs,
+				note,
+			}
+		})
+		.collect();
+
 	let guidance: Vec<TriggeredGuidance> = ruleset
 		.guidance
 		.iter()
@@ -139,6 +202,7 @@ pub fn evaluate(ruleset: &Ruleset, answers: &Answers) -> Evaluation {
 		derived,
 		visible_questions,
 		consequences,
+		requirements,
 		guidance,
 		assumed,
 		open_items,

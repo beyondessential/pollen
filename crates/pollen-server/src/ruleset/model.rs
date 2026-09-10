@@ -20,6 +20,10 @@ pub struct Ruleset {
 	pub rules: Vec<Rule>,
 	#[serde(default)]
 	pub guidance: Vec<Guidance>,
+	/// Compute requirement profiles, surfaced in the artifact for each server or
+	/// device class present in the deployment (spec WIZ, Compute requirements).
+	#[serde(default)]
+	pub requirements: Vec<Requirement>,
 }
 
 impl Ruleset {
@@ -58,6 +62,38 @@ impl Ruleset {
 		for r in &self.rules {
 			if !rule_ids.insert(r.id.as_str()) {
 				return Err(AppError::custom(format!("duplicate rule id: {}", r.id)));
+			}
+		}
+
+		let mut requirement_ids = HashSet::new();
+		for r in &self.requirements {
+			if !requirement_ids.insert(r.id.as_str()) {
+				return Err(AppError::custom(format!(
+					"duplicate requirement id: {}",
+					r.id
+				)));
+			}
+			// A profile with no rows at any size would render an empty class.
+			if r.specs.is_empty() && r.by_size.is_empty() {
+				return Err(AppError::custom(format!(
+					"requirement {} has no spec rows",
+					r.id
+				)));
+			}
+			let mut sizes = HashSet::new();
+			for ss in &r.by_size {
+				if !sizes.insert(ss.size.as_str()) {
+					return Err(AppError::custom(format!(
+						"requirement {} repeats size band {}",
+						r.id, ss.size
+					)));
+				}
+				if ss.specs.is_empty() {
+					return Err(AppError::custom(format!(
+						"requirement {} size band {} has no spec rows",
+						r.id, ss.size
+					)));
+				}
 			}
 		}
 
@@ -185,6 +221,77 @@ pub struct Cost {
 	pub tier: String,
 	#[serde(default)]
 	pub ballpark: Option<String>,
+}
+
+/// A compute requirement profile for one class of server or device. Surfaced in
+/// the artifact when its `when` condition holds, i.e. when that class is present
+/// in the deployment (spec WIZ, Compute requirements).
+///
+/// A profile carries the size-invariant rows in `specs` (network, operating
+/// system) and, where the class is sized to the deployment, a per-band set of
+/// rows in `by_size` (processor, memory, storage). The engine resolves `by_size`
+/// against the derived size band and presents the matching rows ahead of the
+/// invariant ones.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Requirement {
+	/// Permanent identifier. Never reused or repurposed (spec WIZ, stable-id).
+	pub id: String,
+	/// Surfaced only when this holds (e.g. the class is present in the mix).
+	pub when: Condition,
+	/// The server or device class this profile describes, e.g. "Central server".
+	pub class: String,
+	/// A short line on who provisions this class and when it appears.
+	#[serde(default)]
+	pub summary: Option<String>,
+	/// Size-invariant spec rows (e.g. network, operating system). Shown after the
+	/// size-varying rows.
+	#[serde(default)]
+	pub specs: Vec<SpecRow>,
+	/// Spec rows that scale with the deployment's size band, keyed by band. Empty
+	/// for a class that is the same at every size (user devices, mobile, Iti).
+	#[serde(default)]
+	pub by_size: Vec<SizeSpecs>,
+	/// An optional caveat shown beneath the rows.
+	#[serde(default)]
+	pub note: Option<String>,
+}
+
+/// The size-varying spec rows for one size band of a [`Requirement`].
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SizeSpecs {
+	/// The size band label these rows apply to (matches a `size` derivation
+	/// label, e.g. "Small").
+	pub size: String,
+	/// The size-varying rows (processor, memory, storage).
+	pub specs: Vec<SpecRow>,
+	/// An optional note specific to this band (e.g. the smallest band advising a
+	/// hosted or mini-server option over buying a server).
+	#[serde(default)]
+	pub note: Option<String>,
+}
+
+/// One authored row of a compute requirement: a labelled figure such as
+/// `("Memory", "16 GB")`.
+///
+/// A row may be gated on the answers, so a requirement can state the choice the
+/// reader actually made rather than listing every option. Rows sharing a label
+/// (e.g. one operating system row per platform) are authored mutually
+/// exclusive, so exactly one survives.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpecRow {
+	pub label: String,
+	pub value: String,
+	/// Included only when this holds. Defaults to always.
+	#[serde(default = "Condition::always")]
+	pub when: Condition,
+}
+
+/// One row of a compute requirement as presented: the engine has already
+/// resolved the size band and dropped the rows whose condition does not hold.
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
+pub struct Spec {
+	pub label: String,
+	pub value: String,
 }
 
 /// The viability axis (spec WIZ, Severity).

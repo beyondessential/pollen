@@ -1169,4 +1169,164 @@
             ),
         ),
     ],
+
+    // Compute requirements (spec WIZ). One profile per server or device class;
+    // each surfaces when its class is present in the deployment. The figures are
+    // the recommended base-level specs from the Tamanu compute-resource
+    // reference; larger deployments are advised further by BES, so nothing here
+    // scales by size band. Only classes someone must provision appear: a
+    // BES-cloud server is provisioned by BES and carries no client-facing
+    // requirement, so the server profiles gate on client hosting.
+    requirements: [
+        (
+            id: "req-central",
+            // Only when the client hosts Central; BES provisions the cloud one.
+            when: Equals("central", "clienthosted"),
+            class: "Central server",
+            summary: Some("Provisioned by the client's IT team. Ties the facilities together."),
+            // Size-invariant rows; the processor, memory and storage scale below.
+            specs: [
+                (label: "Network", value: "50 down / 20 up Mbps. Inbound TCP 80 and 443, and UDP 443. A public DNS name and TLS certificate."),
+                (label: "Operating system", value: "Linux", when: Equals("platform", "linux")),
+                (label: "Operating system", value: "Windows Server", when: Equals("platform", "windows")),
+            ],
+            // Sized to the deployment. The figures track the recommended on-prem
+            // tower tiers; the make is a suggestion, not a requirement.
+            by_size: [
+                (
+                    size: "Tiny",
+                    specs: [
+                        (label: "Processor", value: "2 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "16 GB"),
+                        (label: "Storage", value: "480 GB SSD"),
+                    ],
+                    note: Some("For a deployment this small, letting BES host the central server in its cloud is usually more cost-effective than buying and maintaining hardware."),
+                ),
+                (
+                    size: "Small",
+                    specs: [
+                        (label: "Processor", value: "2 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "16 GB"),
+                        (label: "Storage", value: "480 GB SSD"),
+                    ],
+                ),
+                (
+                    size: "Medium",
+                    specs: [
+                        (label: "Processor", value: "4 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "16 GB"),
+                        (label: "Storage", value: "960 GB SSD"),
+                    ],
+                ),
+                (
+                    size: "Large",
+                    specs: [
+                        (label: "Processor", value: "8 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "32 GB"),
+                        (label: "Storage", value: "2 TB SSD"),
+                    ],
+                ),
+            ],
+        ),
+        (
+            id: "req-facility",
+            // Any client-hosted facility that runs its own server, i.e. not the
+            // sites handed to a Tamanu Iti mini-server.
+            when: All([
+                Any([
+                    Equals("hosting_where", "allclient"),
+                    Equals("hosting_where", "mix"),
+                ]),
+                Not(Equals("iti_use", "all")),
+            ]),
+            class: "Facility server",
+            summary: Some("Provisioned by the client's IT team, one per facility that runs its own server."),
+            specs: [
+                (label: "Network", value: "To Central: 20 down / 5 up Mbps, under 300ms latency. Inbound TCP 80 and 443, and UDP 443, internally."),
+                (label: "Operating system", value: "Linux", when: Equals("platform", "linux")),
+                (label: "Operating system", value: "Windows Server", when: Equals("platform", "windows")),
+            ],
+            note: Some("Keeps working within the facility when the link to Central is down."),
+            by_size: [
+                (
+                    size: "Tiny",
+                    specs: [
+                        (label: "Processor", value: "2 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "16 GB"),
+                        (label: "Storage", value: "480 GB SSD"),
+                    ],
+                    note: Some("For a single small facility, a Tamanu Iti mini-server or BES-cloud hosting is usually more cost-effective than a dedicated server."),
+                ),
+                (
+                    size: "Small",
+                    specs: [
+                        (label: "Processor", value: "2 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "16 GB"),
+                        (label: "Storage", value: "480 GB SSD"),
+                    ],
+                ),
+                (
+                    size: "Medium",
+                    specs: [
+                        (label: "Processor", value: "4 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "16 GB"),
+                        (label: "Storage", value: "960 GB SSD"),
+                    ],
+                ),
+                (
+                    size: "Large",
+                    specs: [
+                        (label: "Processor", value: "8 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "32 GB"),
+                        (label: "Storage", value: "2 TB SSD"),
+                    ],
+                ),
+            ],
+        ),
+        (
+            id: "req-iti",
+            when: Any([
+                Equals("iti_use", "some"),
+                Equals("iti_use", "all"),
+            ]),
+            class: "Tamanu Iti mini-server",
+            summary: Some("A mini-server bought from BES, plugged into the facility network. Runs ARM64 Linux with its own WiFi and battery backup. One model, whatever the size."),
+            specs: [
+                (label: "Processor", value: "4 cores, ARM64"),
+                (label: "Memory", value: "8 GB"),
+                (label: "Storage", value: "500 GB SSD"),
+                (label: "Network", value: "To Central: 20 down / 5 up Mbps, under 300ms latency. Reachable by facility users on ports 80 and 443."),
+            ],
+        ),
+        (
+            id: "req-workstation",
+            // The client always needs devices to reach Tamanu.
+            when: Always,
+            class: "User devices",
+            summary: Some("Any desktop or laptop staff use to reach Tamanu. Provided by the client."),
+            specs: [
+                (label: "Processor", value: "2 cores"),
+                (label: "Memory", value: "4 GB"),
+                (label: "Software", value: "Google Chrome or Chromium, desktop version, one of the latest two stable releases. Mobile browsers are not supported."),
+                (label: "Network", value: "To the Facility server: 10 down / 2 up Mbps, under 400ms latency. Access on ports 80 and 443."),
+            ],
+        ),
+        (
+            id: "req-mobile",
+            when: All([
+                Answered("mobile"),
+                Not(Equals("mobile", "m0")),
+                Not(Equals("mobile", "m_unsure")),
+            ]),
+            class: "Mobile devices",
+            summary: Some("Phones or tablets for community and field health workers. Provided by the client."),
+            specs: [
+                (label: "Operating system", value: "Android 13 or newer"),
+                (label: "Processor", value: "4 cores, ARM64"),
+                (label: "Memory", value: "2 GB"),
+                (label: "Storage", value: "8 GB"),
+                (label: "Network", value: "100 down / 28 up Kbps, under 500ms latency. The first sync is best done on a faster network, such as wifi."),
+            ],
+        ),
+    ],
 )

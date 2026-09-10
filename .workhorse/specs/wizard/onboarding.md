@@ -101,6 +101,9 @@ Authored prose (consequence detail, question help, option notes, guidance) may
 carry limited inline markup: links, which open in a new tab, and light emphasis,
 so it can point to further documentation.
 
+The ruleset also carries a compute requirement profile for each class of server or device, each gated by the same trigger conditions.
+The engine surfaces the profiles whose class is present in the deployment, which the artifact renders as the [Compute requirements](#compute-requirements).
+
 ### Visibility and forward guidance
 
 The engine shows a question only when its precondition holds, and hides it otherwise; a precondition is a presence-of-class flag or a cross-field condition.
@@ -226,11 +229,13 @@ This comparison is the "what changed" summary the user sees on update: newly-req
 ### Finalised web view
 
 The canonical artifact is a live page.
-It presents every consequence in full, in four groups: warnings, being what the client is opting into by leaving the standard path, then what the client's IT team has to do, then what the BES technical team sets up, then what the BES pricing and partnerships team has to price or commit to.
+Warnings lead it: what the client is opting into by leaving the standard path is met before anything else.
+The compute requirements follow (see [Compute requirements](#compute-requirements)), being the answer the reader came for.
+Beneath those, under a **Next steps** heading that frames them as who does what, it presents the remaining consequences in full, in three groups: what the client's IT team has to do, then what the BES technical team sets up, then what the BES pricing and partnerships team has to price or commit to.
 An item states the action it asks for, so a group of required actions reads as a list of work rather than a list of observations.
 A choice off the standard path that also asks something of a team produces two items: the work, which sits with that team's actions, and the acknowledgement of what the choice costs, which sits with what is being opted into.
 Nothing off the standard path appears in a group of actions, because an acknowledgement is not something anyone does.
-Warnings come first and arrive collapsed, carrying the same off-default colour they carry everywhere else: they are context for the work below rather than the work itself, and a conflict that stops the configuration working is raised by the viability callout regardless.
+Warnings arrive collapsed, carrying the same off-default colour they carry everywhere else: they are context rather than the work itself, and a conflict that stops the configuration working is raised by the viability callout regardless.
 Each group can be collapsed, so a reader can skip past the groups addressed to someone else.
 A section can be linked to directly.
 
@@ -246,6 +251,25 @@ Its header surfaces non-identifying recognition facts so one artifact is disting
 A fact the engine assumed reads the same as one the reader chose, because it is the answer until they change it.
 Settings that exist to be acted on, such as the hosting region, appear with the work they imply rather than in the header.
 
+
+### Compute requirements
+
+The compute requirements answer a single question for the reader: what would they have to provide themselves to run this deployment.
+So the artifact states the concrete requirements for each class of server and device the client provisions, and only those.
+Each class is presented as its own block: the class name, a short line on who provisions it, a set of labelled spec rows leading with processor, memory and storage and then network and operating system or software, and an optional note.
+
+Which classes appear is driven by the answers, so a reader sees only what their deployment needs someone to buy or provide.
+A class BES provisions itself, such as a central or facility server hosted in BES cloud, carries no block, because the client provides nothing for it.
+So the central server appears only when the client hosts it; a facility server appears when a client-hosted facility runs its own server rather than a mini-server; the Tamanu Iti mini-server, which the client buys from BES, appears when any site uses one; the user devices staff work at always appear; and mobile devices appear when the deployment has mobile users.
+
+A server's processor, memory and storage scale with the deployment's derived size band, drawn from the recommended per-band figures; its network row is the same at every size.
+A row may instead be tied to an answer, so the operating system row names the platform the reader chose rather than listing what is available.
+Working out what is needed is the tool's job, so the requirements state it plainly rather than hedging that a larger deployment might need more.
+The make of a server is a suggestion, never a requirement: the block leads with the specification a server must meet, not a product to buy.
+For the smallest deployments the block advises hosting with BES or using a mini-server rather than buying a server at all, since dedicated hardware rarely pays off at that scale.
+Devices that do not scale, such as workstations and phones, state one recommended specification.
+Indicative pricing is out of scope here and is settled by the pricing and partnerships team, who already receive an item to price the hosting.
+
 ### PDF export
 
 The artifact can be exported to PDF, sectioned by audience, as a static snapshot derived from the same data.
@@ -255,12 +279,13 @@ Its sections, in order:
 1. **Viability verdict**: any blocking conflicts, at the top.
 2. **Open questions**: on an interim artifact, what is still to be settled, before any of the detail that rests on it.
 3. **Warnings**: what the client is opting into by leaving the standard path.
-4. **Client IT team, required actions**: ports, outbound endpoints, DNS, remote access, time synchronisation.
-5. **BES technical team, setup decisions**: staging, topology, platform, server specifications, backup and retention, region.
-6. **BES pricing and partnerships**: what has to be priced, and what BES can commit to supporting.
-7. **Referrals**: items escalated to a separate conversation.
-8. **Assumptions**: the answers the engine filled in where the reader left a question blank.
-9. **Full decision record**: everything captured.
+4. **Compute requirements**: the specs for each server and device class the deployment uses.
+5. **Client IT team, required actions**: ports, outbound endpoints, DNS, remote access, time synchronisation.
+6. **BES technical team, setup decisions**: staging, topology, platform, backup and retention, region.
+7. **BES pricing and partnerships**: what has to be priced, and what BES can commit to supporting.
+8. **Referrals**: items escalated to a separate conversation.
+9. **Assumptions**: the answers the engine filled in where the reader left a question blank.
+10. **Full decision record**: everything captured.
 
 ## Data and confidentiality
 

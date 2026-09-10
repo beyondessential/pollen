@@ -419,6 +419,7 @@
           "derived",
           "visible_questions",
           "consequences",
+          "requirements",
           "guidance",
           "assumed",
           "open_items",
@@ -470,6 +471,13 @@
               "type": "string"
             },
             "description": "Visible questions that must be answered: no default to fall back on and\nno unsure option to decline with. These block finalising."
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TriggeredRequirement"
+            },
+            "description": "The compute requirements for the classes present in the deployment, in\nruleset order (spec WIZ, Compute requirements)."
           },
           "verdict": {
             "$ref": "#/components/schemas/Verdict"
@@ -722,6 +730,22 @@
           "Blocking"
         ]
       },
+      "Spec": {
+        "type": "object",
+        "description": "One row of a compute requirement as presented: the engine has already\nresolved the size band and dropped the rows whose condition does not hold.",
+        "required": [
+          "label",
+          "value"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
       "Status": {
         "type": "string",
         "description": "The technical-versus-contractual line (spec WIZ, Status).",
@@ -762,6 +786,41 @@
           },
           "message": {
             "type": "string"
+          }
+        }
+      },
+      "TriggeredRequirement": {
+        "type": "object",
+        "description": "A compute requirement whose class is present in the deployment. Carries the\nprofile's content (the `when` condition that selected it is not on the wire).",
+        "required": [
+          "id",
+          "class",
+          "specs"
+        ],
+        "properties": {
+          "class": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "specs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Spec"
+            }
+          },
+          "summary": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       },

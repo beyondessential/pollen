@@ -1163,7 +1163,7 @@
             ],
             notes: [
                 (
-                    text: "On virtual machines these can scale, so it is fine to start smaller and grow into them. VM-level backups are recommended; telling BES is not required, but it helps disaster planning.",
+                    text: "A virtual machine can be resized, so these figures are a target rather than a day-one commitment: storage especially can start smaller and grow. VM-level backups are recommended; telling BES is not required, but it helps disaster planning.",
                     when: Any([
                         Equals("onprem_form", "virtualised"),
                         Equals("onprem_form", "mixed"),
@@ -1236,7 +1236,7 @@
             notes: [
                 (text: "Keeps working within the facility when the link to Central is down."),
                 (
-                    text: "On virtual machines these can scale, so it is fine to start smaller and grow into them. VM-level backups are recommended; telling BES is not required, but it helps disaster planning.",
+                    text: "A virtual machine can be resized, so these figures are a target rather than a day-one commitment: storage especially can start smaller and grow. VM-level backups are recommended; telling BES is not required, but it helps disaster planning.",
                     when: Any([
                         Equals("onprem_form", "virtualised"),
                         Equals("onprem_form", "mixed"),

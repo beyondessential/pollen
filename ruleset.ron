@@ -1187,8 +1187,7 @@
             // Size-invariant rows; the processor, memory and storage scale below.
             specs: [
                 (label: "Network", value: "50 down / 20 up Mbps. Inbound TCP 80 and 443, and UDP 443. A public DNS name and TLS certificate."),
-                (label: "Operating system", value: "Linux on ARM64", when: Equals("platform", "linuxarm")),
-                (label: "Operating system", value: "Linux on AMD64", when: Equals("platform", "linuxamd")),
+                (label: "Operating system", value: "Linux", when: Equals("platform", "linux")),
                 (label: "Operating system", value: "Windows Server", when: Equals("platform", "windows")),
             ],
             // Sized to the deployment. The figures track the recommended on-prem
@@ -1244,8 +1243,7 @@
             summary: Some("Provisioned by the client's IT team, one per facility that runs its own server."),
             specs: [
                 (label: "Network", value: "To Central: 20 down / 5 up Mbps, under 300ms latency. Inbound TCP 80 and 443, and UDP 443, internally."),
-                (label: "Operating system", value: "Linux on ARM64", when: Equals("platform", "linuxarm")),
-                (label: "Operating system", value: "Linux on AMD64", when: Equals("platform", "linuxamd")),
+                (label: "Operating system", value: "Linux", when: Equals("platform", "linux")),
                 (label: "Operating system", value: "Windows Server", when: Equals("platform", "windows")),
             ],
             note: Some("Keeps working within the facility when the link to Central is down."),

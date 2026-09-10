@@ -1030,8 +1030,7 @@ fn the_operating_system_row_states_the_platform_chosen() {
 			.collect()
 	};
 
-	assert_eq!(os("linuxarm"), vec!["Linux on ARM64"]);
-	assert_eq!(os("linuxamd"), vec!["Linux on AMD64"]);
+	assert_eq!(os("linux"), vec!["Linux"]);
 	assert_eq!(os("windows"), vec!["Windows Server"]);
 }
 

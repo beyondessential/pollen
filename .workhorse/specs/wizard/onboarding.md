@@ -253,15 +253,19 @@ Below the consequence groups the page presents the compute requirements (see [Co
 
 ### Compute requirements
 
-The artifact states the concrete compute requirements for each class of server and device the deployment actually uses.
-Each class is presented as its own block: the class name, a short line on who provisions it, and a set of labelled spec rows covering processor, memory, storage, network, and operating system or software.
+The compute requirements answer a single question for the reader: what would they have to provide themselves to run this deployment.
+So the artifact states the concrete requirements for each class of server and device the client provisions, and only those.
+Each class is presented as its own block: the class name, a short line on who provisions it, a set of labelled spec rows leading with processor, memory and storage and then network and operating system or software, and an optional note.
 
-Which classes appear is driven by the answers, so a reader sees only what their deployment needs someone to provide.
-A class BES provisions itself, such as a central or facility server hosted in BES cloud, carries no requirement block, because the client provisions nothing for it.
-So the central server appears only when the client hosts it; a facility server appears when a client-hosted facility runs its own server rather than a BES-supplied mini-server; the mini-server appears when any site uses one, stating only the network it needs; the user devices staff work at always appear; and mobile devices appear when the deployment has mobile users.
+Which classes appear is driven by the answers, so a reader sees only what their deployment needs someone to buy or provide.
+A class BES provisions itself, such as a central or facility server hosted in BES cloud, carries no block, because the client provides nothing for it.
+So the central server appears only when the client hosts it; a facility server appears when a client-hosted facility runs its own server rather than a mini-server; the Tamanu Iti mini-server, which the client buys from BES, appears when any site uses one; the user devices staff work at always appear; and mobile devices appear when the deployment has mobile users.
 
-The figures are the recommended baseline for a deployment of this kind, not a figure scaled to the exact size.
-A larger deployment may need more, and BES advises on that separately; the size band the figures rest on is already in the header.
+A server's processor, memory and storage scale with the deployment's derived size band, drawn from the recommended per-band figures; its network and operating system rows are the same at every size.
+The make of a server is a suggestion, never a requirement: the block leads with the specification a server must meet, not a product to buy.
+For the smallest deployments the block advises hosting with BES or using a mini-server rather than buying a server at all, since dedicated hardware rarely pays off at that scale.
+Devices that do not scale, such as workstations and phones, state one recommended specification.
+Indicative pricing is out of scope here and is settled by the pricing and partnerships team, who already receive an item to price the hosting.
 
 ### PDF export
 

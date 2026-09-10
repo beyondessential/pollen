@@ -1184,14 +1184,48 @@
             when: Equals("central", "clienthosted"),
             class: "Central server",
             summary: Some("Provisioned by the client's IT team. Ties the facilities together."),
+            // Size-invariant rows; the processor, memory and storage scale below.
             specs: [
-                (label: "Processor", value: "4 cores, x86_64 or ARM64"),
-                (label: "Memory", value: "16 GB"),
-                (label: "Storage", value: "NVMe SSD, 200 GB available"),
                 (label: "Network", value: "50 down / 20 up Mbps. Inbound TCP 80 and 443, and UDP 443. A public DNS name and TLS certificate."),
                 (label: "Operating system", value: "Ubuntu Linux 24.04 recommended; Windows Server supported. Follows the platform choice above."),
             ],
-            note: Some("On physical servers, disk and cores are hard to change later, so provision ahead of these figures."),
+            // Sized to the deployment. The figures track the recommended on-prem
+            // tower tiers; the make is a suggestion, not a requirement.
+            by_size: [
+                (
+                    size: "Tiny",
+                    specs: [
+                        (label: "Processor", value: "2 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "16 GB"),
+                        (label: "Storage", value: "480 GB SSD"),
+                    ],
+                    note: Some("For a deployment this small, letting BES host the central server in its cloud is usually more cost-effective than buying and maintaining hardware."),
+                ),
+                (
+                    size: "Small",
+                    specs: [
+                        (label: "Processor", value: "2 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "16 GB"),
+                        (label: "Storage", value: "480 GB SSD"),
+                    ],
+                ),
+                (
+                    size: "Medium",
+                    specs: [
+                        (label: "Processor", value: "4 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "16 GB"),
+                        (label: "Storage", value: "960 GB SSD"),
+                    ],
+                ),
+                (
+                    size: "Large",
+                    specs: [
+                        (label: "Processor", value: "8 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "32 GB"),
+                        (label: "Storage", value: "2 TB SSD"),
+                    ],
+                ),
+            ],
         ),
         (
             id: "req-facility",
@@ -1207,13 +1241,45 @@
             class: "Facility server",
             summary: Some("Provisioned by the client's IT team, one per facility that runs its own server."),
             specs: [
-                (label: "Processor", value: "4 cores, x86_64 or ARM64"),
-                (label: "Memory", value: "8 GB"),
-                (label: "Storage", value: "NVMe SSD, 200 GB available"),
                 (label: "Network", value: "To Central: 20 down / 5 up Mbps, under 300ms latency. Inbound TCP 80 and 443, and UDP 443, internally."),
                 (label: "Operating system", value: "Ubuntu Linux 24.04 recommended; Windows Server supported. Follows the platform choice above."),
             ],
             note: Some("Keeps working within the facility when the link to Central is down."),
+            by_size: [
+                (
+                    size: "Tiny",
+                    specs: [
+                        (label: "Processor", value: "2 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "16 GB"),
+                        (label: "Storage", value: "480 GB SSD"),
+                    ],
+                    note: Some("For a single small facility, a Tamanu Iti mini-server or BES-cloud hosting is usually more cost-effective than a dedicated server."),
+                ),
+                (
+                    size: "Small",
+                    specs: [
+                        (label: "Processor", value: "2 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "16 GB"),
+                        (label: "Storage", value: "480 GB SSD"),
+                    ],
+                ),
+                (
+                    size: "Medium",
+                    specs: [
+                        (label: "Processor", value: "4 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "16 GB"),
+                        (label: "Storage", value: "960 GB SSD"),
+                    ],
+                ),
+                (
+                    size: "Large",
+                    specs: [
+                        (label: "Processor", value: "8 cores, x86_64 or ARM64"),
+                        (label: "Memory", value: "32 GB"),
+                        (label: "Storage", value: "2 TB SSD"),
+                    ],
+                ),
+            ],
         ),
         (
             id: "req-iti",
@@ -1222,8 +1288,11 @@
                 Equals("iti_use", "all"),
             ]),
             class: "Tamanu Iti mini-server",
-            summary: Some("Built and supplied by BES, plugged into the facility network. No hardware for the client to provision."),
+            summary: Some("A mini-server bought from BES, plugged into the facility network. Runs ARM64 Linux with its own WiFi and battery backup. One model, whatever the size."),
             specs: [
+                (label: "Processor", value: "4 cores, ARM64"),
+                (label: "Memory", value: "8 GB"),
+                (label: "Storage", value: "500 GB SSD"),
                 (label: "Network", value: "To Central: 20 down / 5 up Mbps, under 300ms latency. Reachable by facility users on ports 80 and 443."),
             ],
         ),

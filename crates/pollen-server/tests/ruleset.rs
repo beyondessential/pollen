@@ -906,11 +906,124 @@ fn a_ruleset_stored_without_requirements_still_loads() {
 
 #[test]
 fn every_requirement_names_a_class_and_at_least_one_spec_row() {
-	// A profile with no rows would render an empty class heading in the artifact.
+	// A profile with no rows at any size would render an empty class heading.
 	for r in &v1().requirements {
 		assert!(!r.class.is_empty(), "requirement {} has no class", r.id);
-		assert!(!r.specs.is_empty(), "requirement {} has no spec rows", r.id);
+		assert!(
+			!r.specs.is_empty() || !r.by_size.is_empty(),
+			"requirement {} has no spec rows",
+			r.id
+		);
 	}
+}
+
+#[test]
+fn a_sized_server_scales_its_specs_with_the_size_band() {
+	// The client-hosted server profiles pick their processor, memory and storage
+	// from the derived size band, and lead with those rows.
+	let spec = |eval: &pollen_server::ruleset::Evaluation, id: &str, label: &str| -> String {
+		eval.requirements
+			.iter()
+			.find(|r| r.id == id)
+			.unwrap_or_else(|| panic!("{id} present"))
+			.specs
+			.iter()
+			.find(|s| s.label == label)
+			.unwrap_or_else(|| panic!("{id} has a {label} row"))
+			.value
+			.clone()
+	};
+
+	// Tiny (the lightest band) versus Large, client-hosted throughout.
+	let tiny = evaluate(
+		&v1(),
+		&answers(json!({ "catchment": "c0", "facilities": "f0", "central": "clienthosted" })),
+	);
+	assert_eq!(
+		spec(&tiny, "req-central", "Processor"),
+		"2 cores, x86_64 or ARM64"
+	);
+	assert_eq!(spec(&tiny, "req-central", "Storage"), "480 GB SSD");
+
+	let large = evaluate(
+		&v1(),
+		&answers(json!({ "catchment": "c3", "facilities": "f0", "central": "clienthosted" })),
+	);
+	assert_eq!(
+		spec(&large, "req-central", "Processor"),
+		"8 cores, x86_64 or ARM64"
+	);
+	assert_eq!(spec(&large, "req-central", "Memory"), "32 GB");
+	assert_eq!(spec(&large, "req-central", "Storage"), "2 TB SSD");
+
+	// The size-varying rows lead; the invariant network/OS rows follow.
+	let central = large
+		.requirements
+		.iter()
+		.find(|r| r.id == "req-central")
+		.unwrap();
+	let labels: Vec<&str> = central.specs.iter().map(|s| s.label.as_str()).collect();
+	assert_eq!(
+		labels,
+		vec![
+			"Processor",
+			"Memory",
+			"Storage",
+			"Network",
+			"Operating system"
+		]
+	);
+}
+
+#[test]
+fn the_smallest_band_advises_against_buying_a_server() {
+	// A Tiny deployment that still chooses to self-host is steered toward BES
+	// hosting or an Iti rather than dedicated hardware.
+	let note = |eval: &pollen_server::ruleset::Evaluation| -> String {
+		eval.requirements
+			.iter()
+			.find(|r| r.id == "req-central")
+			.unwrap()
+			.note
+			.clone()
+			.unwrap_or_default()
+	};
+
+	let tiny = evaluate(
+		&v1(),
+		&answers(json!({ "catchment": "c0", "facilities": "f0", "central": "clienthosted" })),
+	);
+	assert!(
+		note(&tiny).contains("cost-effective"),
+		"tiny central should carry the hosting advisory; got {:?}",
+		note(&tiny)
+	);
+
+	// A larger band carries no such advisory.
+	let large = evaluate(
+		&v1(),
+		&answers(json!({ "catchment": "c3", "facilities": "f0", "central": "clienthosted" })),
+	);
+	assert!(!note(&large).contains("cost-effective"));
+}
+
+#[test]
+fn an_unsized_draft_falls_back_to_the_lightest_band() {
+	// A draft where the bands aren't answered yet has no derived size, so a sized
+	// server shows the lightest band's rows rather than none.
+	let eval = evaluate(&v1(), &answers(json!({ "central": "clienthosted" })));
+	assert!(eval.derived.get("size").is_none());
+	let central = eval
+		.requirements
+		.iter()
+		.find(|r| r.id == "req-central")
+		.expect("central still shown");
+	let processor = central
+		.specs
+		.iter()
+		.find(|s| s.label == "Processor")
+		.expect("has a processor row");
+	assert_eq!(processor.value, "2 cores, x86_64 or ARM64");
 }
 
 #[test]

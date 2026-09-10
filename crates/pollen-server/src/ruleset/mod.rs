@@ -20,7 +20,7 @@ pub use engine::{
 pub use migrate::{Migration, migrate};
 pub use model::{
 	Audience, Consequence, ConsequenceType, Cost, Derivation, DerivationKind, Guidance, Opt,
-	Question, QuestionKind, Requirement, Rule, Ruleset, Section, Severity, Spec, Status,
+	Question, QuestionKind, Requirement, Rule, Ruleset, Section, Severity, SizeSpecs, Spec, Status,
 };
 pub use resolver::{RULESET_PATH, ResolvedRuleset, RulesetResolver};
 pub use source::{GitHubSource, RefSource};

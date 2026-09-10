@@ -46,3 +46,26 @@ nobody has confirmed. The size band already appears in the artifact header.
 - [x] Rust engine tests for presence gating; extend `tests/ruleset.rs`
 - [x] Create `.workhorse/test-cases/g1/overview.md`
 - [x] `just check`, `just test`, frontend typecheck
+
+## Refinement: size-scaling (after the price-list resource)
+
+The price list gives authoritative per-band server specs, so compute requirements
+now scale with the derived size band instead of showing one baseline tier.
+
+- Server profiles (Central, Facility) carry size-invariant rows in `specs`
+  (network, OS) plus per-band rows in `by_size` (processor, memory, storage). The
+  engine resolves `by_size` against `derived["size"]` and leads with those rows.
+- Figures follow the recommended on-prem tower tiers (small 2c/16GB/480GB,
+  medium 4c/16GB/960GB, large 8c/32GB/2TB); Tiny reuses small figures plus an
+  advisory to host with BES or use an Iti rather than buy a server. Make is a
+  suggestion, not a requirement.
+- The Iti profile now states its one-model hardware spec (4c/8GB/500GB SSD).
+- Only client-provisioned classes appear (what they'd buy to self-host); BES-cloud
+  servers stay off — confirmed with the user.
+- Cost/pricing deferred: user chose "cost tier only" and will return to pricing.
+  A per-server tier would just restate the deployment size band, so no cost rows
+  this pass. Wire type and frontend unchanged (size resolved server-side).
+
+- [x] Model: `by_size`/`SizeSpecs`, validation, engine resolution, ruleset rework
+- [x] Tests for size-scaling + Tiny advisory; spec updated to match
+- [x] `cargo test`, clippy, frontend build, playwright e2e all green

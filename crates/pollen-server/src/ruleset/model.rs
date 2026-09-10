@@ -73,6 +73,28 @@ impl Ruleset {
 					r.id
 				)));
 			}
+			// A profile with no rows at any size would render an empty class.
+			if r.specs.is_empty() && r.by_size.is_empty() {
+				return Err(AppError::custom(format!(
+					"requirement {} has no spec rows",
+					r.id
+				)));
+			}
+			let mut sizes = HashSet::new();
+			for ss in &r.by_size {
+				if !sizes.insert(ss.size.as_str()) {
+					return Err(AppError::custom(format!(
+						"requirement {} repeats size band {}",
+						r.id, ss.size
+					)));
+				}
+				if ss.specs.is_empty() {
+					return Err(AppError::custom(format!(
+						"requirement {} size band {} has no spec rows",
+						r.id, ss.size
+					)));
+				}
+			}
 		}
 
 		Ok(())
@@ -203,9 +225,13 @@ pub struct Cost {
 
 /// A compute requirement profile for one class of server or device. Surfaced in
 /// the artifact when its `when` condition holds, i.e. when that class is present
-/// in the deployment (spec WIZ, Compute requirements). The figures are the
-/// recommended base-level specs; scaling for larger deployments is advised
-/// separately by BES.
+/// in the deployment (spec WIZ, Compute requirements).
+///
+/// A profile carries the size-invariant rows in `specs` (network, operating
+/// system) and, where the class is sized to the deployment, a per-band set of
+/// rows in `by_size` (processor, memory, storage). The engine resolves `by_size`
+/// against the derived size band and presents the matching rows ahead of the
+/// invariant ones.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Requirement {
 	/// Permanent identifier. Never reused or repurposed (spec WIZ, stable-id).
@@ -217,9 +243,29 @@ pub struct Requirement {
 	/// A short line on who provisions this class and when it appears.
 	#[serde(default)]
 	pub summary: Option<String>,
-	/// The spec rows (processor, memory, storage, network, and so on).
+	/// Size-invariant spec rows (e.g. network, operating system). Shown after the
+	/// size-varying rows.
+	#[serde(default)]
 	pub specs: Vec<Spec>,
+	/// Spec rows that scale with the deployment's size band, keyed by band. Empty
+	/// for a class that is the same at every size (user devices, mobile, Iti).
+	#[serde(default)]
+	pub by_size: Vec<SizeSpecs>,
 	/// An optional caveat shown beneath the rows.
+	#[serde(default)]
+	pub note: Option<String>,
+}
+
+/// The size-varying spec rows for one size band of a [`Requirement`].
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SizeSpecs {
+	/// The size band label these rows apply to (matches a `size` derivation
+	/// label, e.g. "Small").
+	pub size: String,
+	/// The size-varying rows (processor, memory, storage).
+	pub specs: Vec<Spec>,
+	/// An optional note specific to this band (e.g. the smallest band advising a
+	/// hosted or mini-server option over buying a server).
 	#[serde(default)]
 	pub note: Option<String>,
 }

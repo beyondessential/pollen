@@ -126,17 +126,40 @@ pub fn evaluate(ruleset: &Ruleset, answers: &Answers) -> Evaluation {
 		.collect();
 
 	// Requirements are gated on the same defaulted answers as consequences, so an
-	// assumed hosting choice surfaces the classes it implies.
+	// assumed hosting choice surfaces the classes it implies. A sized class picks
+	// its rows from the derived size band, falling back to the lightest band when
+	// the deployment isn't sized yet (a draft before the bands are answered).
+	let size = derived.get("size").map(String::as_str);
 	let requirements: Vec<TriggeredRequirement> = ruleset
 		.requirements
 		.iter()
 		.filter(|r| r.when.eval(answers))
-		.map(|r| TriggeredRequirement {
-			id: r.id.clone(),
-			class: r.class.clone(),
-			summary: r.summary.clone(),
-			specs: r.specs.clone(),
-			note: r.note.clone(),
+		.map(|r| {
+			let by_size = (!r.by_size.is_empty())
+				.then(|| {
+					size.and_then(|s| r.by_size.iter().find(|ss| ss.size == s))
+						.or_else(|| r.by_size.first())
+				})
+				.flatten();
+			// Size-varying rows (processor, memory, storage) lead; the invariant
+			// rows (network, operating system) follow.
+			let mut specs = Vec::new();
+			if let Some(ss) = by_size {
+				specs.extend(ss.specs.iter().cloned());
+			}
+			specs.extend(r.specs.iter().cloned());
+			// A band-specific note augments the profile's own.
+			let note = match (r.note.clone(), by_size.and_then(|ss| ss.note.clone())) {
+				(Some(base), Some(band)) => Some(format!("{base} {band}")),
+				(base, band) => base.or(band),
+			};
+			TriggeredRequirement {
+				id: r.id.clone(),
+				class: r.class.clone(),
+				summary: r.summary.clone(),
+				specs,
+				note,
+			}
 		})
 		.collect();
 

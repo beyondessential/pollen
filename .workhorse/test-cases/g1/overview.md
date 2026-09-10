@@ -11,7 +11,15 @@ requirements).
 - [x] Client-hosted Central surfaces the Central server requirement
 - [x] Mobile users surface the mobile device requirement; an unsure mobile count surfaces nothing
 - [x] Some sites on Iti keep the facility-server requirement and add the Iti one; every site on Iti drops the facility server and keeps only Iti
-- [x] Every requirement profile in the ruleset names a class and has at least one spec row
+- [x] Every requirement profile in the ruleset names a class and has at least one spec row (flat or per-band)
+
+## Size scaling
+
+- [x] A client-hosted server's processor/memory/storage scale with the derived size band (Tiny vs Large give different rows)
+- [x] Size-varying rows lead; network and OS rows follow
+- [x] The smallest band carries an advisory to host with BES or use an Iti rather than buy a server; larger bands do not
+- [x] The Iti profile states its one-model hardware spec (4c/8GB/500GB), not size-varying
+- [x] A draft not yet sized (bands unanswered) falls back to the lightest band's rows
 
 ## Artifact rendering
 

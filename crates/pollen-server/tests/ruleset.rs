@@ -201,7 +201,7 @@ fn unanswered_questions_take_their_blessed_default() {
 		("tupaia", "yes"),
 		("hosting_where", "allclient"),
 		("central", "bescloud"),
-		("platform", "linuxarm"),
+		("platform", "linux"),
 		("remote", "tailscale"),
 		("timesync", "outbound"),
 		("cadence", "twomonths"),
@@ -406,14 +406,12 @@ fn no_dns_is_an_off_default_risk() {
 }
 
 #[test]
-fn amd64_is_supported_but_carries_a_penalty() {
-	// ARM64 is what BES supports; AMD64 is allowed but must read as off-default.
-	let arm = evaluate(&v1(), &with(sized(), json!({ "platform": "linuxarm" })));
-	assert!(!fired_ids(&arm).contains(&"plat-amd64"));
-
-	let amd = evaluate(&v1(), &with(sized(), json!({ "platform": "linuxamd" })));
-	assert!(fired_ids(&amd).contains(&"plat-amd64"));
-	assert_eq!(amd.verdict, Verdict::NonDefault);
+fn linux_carries_no_architecture_penalty() {
+	// Architecture (ARM64 or AMD64) isn't asked, so Linux is the blessed
+	// default with no off-default consequence attached.
+	let eval = evaluate(&v1(), &with(sized(), json!({ "platform": "linux" })));
+	assert!(fired_ids(&eval).contains(&"plat-image"));
+	assert_eq!(eval.verdict, Verdict::Clear);
 }
 
 #[test]

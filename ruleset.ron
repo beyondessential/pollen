@@ -242,17 +242,17 @@
             ]),
         ),
         // Only when a client-hosted server has an OS to choose. BES cloud and
-        // the Tamanu Iti mini-server are fixed to Linux on ARM64.
+        // the Tamanu Iti mini-server are fixed to Linux. Architecture (ARM64 or
+        // AMD64) makes no difference to support or cost, so it isn't asked.
         (
             id: "platform",
             kind: Single,
             section: Some("advanced"),
             label: "Operating system for the client-hosted servers",
-            help: Some("BES cloud and Tamanu Iti are fixed to Linux on ARM64."),
-            default: Some("linuxarm"),
+            help: Some("BES cloud and Tamanu Iti are fixed to Linux."),
+            default: Some("linux"),
             options: [
-                (id: "linuxarm", label: "Linux on ARM64", note: Some("Required for full support.")),
-                (id: "linuxamd", label: "Linux on AMD64", warn: Some("ARM64 is the supported platform. AMD64 works, but carries a higher ongoing support and hosting cost.")),
+                (id: "linux", label: "Linux", note: Some("Required for full support.")),
                 (id: "windows", label: "Windows Server", warn: Some("Being phased out, and accepted only on strong insistence. The client licenses Windows, the application runs slower, and support and incident response are slower and less effective.")),
             ],
             visible_if: Any([
@@ -523,21 +523,8 @@
         ),
 
         // ── Platform ────────────────────────────────────────────────────────
-        // ARM64 is the supported platform; everything else carries a penalty,
-        // graded from added cost through to unsupported.
-        (
-            id: "plat-amd64",
-            source: "platform",
-            when: Equals("platform", "linuxamd"),
-            consequence: (
-                severity: NonDefault,
-                status: Advisory,
-                audience: Record,
-                types: [Cost, Support],
-                title: "AMD64 instead of the standard ARM64",
-                detail: "Linux on ARM64 is the platform BES builds, tests, and supports first. AMD64 is supported, but hosting costs more per unit of capacity and upgrades get less pre-release testing on it, so incidents take longer to resolve.",
-            ),
-        ),
+        // Linux is the supported platform, on either architecture; Windows
+        // carries a penalty, graded from added cost through to unsupported.
         (
             id: "plat-windows-licence",
             source: "platform",
@@ -566,10 +553,7 @@
         (
             id: "plat-image",
             source: "platform",
-            when: Any([
-                Equals("platform", "linuxarm"),
-                Equals("platform", "linuxamd"),
-            ]),
+            when: Equals("platform", "linux"),
             consequence: (
                 status: Requirement,
                 audience: Client,
@@ -1023,18 +1007,6 @@
                 types: [Cost, Support],
                 title: "Set the support commitment for a Windows deployment",
                 detail: "The client funds the Windows licensing. BES support and incident response are slower on Windows than on Linux, so the commitment BES can make differs from the standard one.",
-            ),
-        ),
-        (
-            id: "price-amd64",
-            source: "pricing",
-            when: Equals("platform", "linuxamd"),
-            consequence: (
-                status: Requirement,
-                audience: Pricing,
-                types: [Cost],
-                title: "Price the AMD64 hosting premium",
-                detail: "AMD64 costs more per unit of capacity than the standard ARM64, and gets less pre-release testing, so incidents take longer to resolve.",
             ),
         ),
         (

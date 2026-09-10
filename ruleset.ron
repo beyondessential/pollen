@@ -1170,7 +1170,7 @@
                     ]),
                 ),
                 (
-                    text: "Buy above these figures: physical hardware is hard to change later. Multiple disks or terabytes are not usually needed, though RAID helps redundancy.",
+                    text: "These figures are a minimum; buying more is wise to allow for growth. Multiple disks or terabytes are not usually needed, though RAID helps redundancy.",
                     when: Any([
                         Equals("onprem_form", "baremetal"),
                         Equals("onprem_form", "mixed"),
@@ -1243,7 +1243,7 @@
                     ]),
                 ),
                 (
-                    text: "Buy above these figures: physical hardware is hard to change later. Multiple disks or terabytes are not usually needed, though RAID helps redundancy.",
+                    text: "These figures are a minimum; buying more is wise to allow for growth. Multiple disks or terabytes are not usually needed, though RAID helps redundancy.",
                     when: Any([
                         Equals("onprem_form", "baremetal"),
                         Equals("onprem_form", "mixed"),

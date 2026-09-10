@@ -208,6 +208,11 @@ export interface components {
              *     no unsure option to decline with. These block finalising.
              */
             required: string[];
+            /**
+             * @description The compute requirements for the classes present in the deployment, in
+             *     ruleset order (spec WIZ, Compute requirements).
+             */
+            requirements: components["schemas"]["TriggeredRequirement"][];
             verdict: components["schemas"]["Verdict"];
             /**
              * @description The ids of questions currently shown, in ruleset order (spec WIZ,
@@ -319,6 +324,14 @@ export interface components {
          */
         Severity: "Default" | "NonDefault" | "Blocking";
         /**
+         * @description One row of a compute requirement: a labelled figure such as
+         *     `("Memory", "16 GB")`.
+         */
+        Spec: {
+            label: string;
+            value: string;
+        };
+        /**
          * @description The technical-versus-contractual line (spec WIZ, Status).
          * @enum {string}
          */
@@ -331,6 +344,17 @@ export interface components {
         TriggeredGuidance: {
             at: string;
             message: string;
+        };
+        /**
+         * @description A compute requirement whose class is present in the deployment. Carries the
+         *     profile's content (the `when` condition that selected it is not on the wire).
+         */
+        TriggeredRequirement: {
+            class: string;
+            id: string;
+            note?: string | null;
+            specs: components["schemas"]["Spec"][];
+            summary?: string | null;
         };
         /**
          * @description The viability verdict: the worst severity present across triggered

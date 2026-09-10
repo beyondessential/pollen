@@ -13,6 +13,7 @@ import {
 } from "../types";
 import { listDone, recordDone } from "../doneItems";
 import { Chevron, ConsequenceCard, VerdictBanner } from "./visuals";
+import { Markup } from "../markup";
 
 // Warnings come first, so what the client is opting into is met before the work
 // it implies, but collapsed: they are context for the actions below, not the
@@ -179,6 +180,43 @@ export default function Artifact({ view }: { view: AppView }) {
 						</section>
 					);
 				})
+			)}
+
+			{ev.requirements.length > 0 && (
+				<section className="sheet-section" id="s-compute">
+					<h3 className="sheet-section-title">Compute requirements</h3>
+					<p className="ledger-empty">
+						Recommended baseline for each server and device in this deployment. Larger
+						deployments may need more; BES advises on that separately.
+					</p>
+					<div className="reqs">
+						{ev.requirements.map((r) => (
+							<div className="req" key={r.id}>
+								<div className="req-head">
+									<span className="req-class">{r.class}</span>
+									{r.summary && (
+										<span className="req-summary">
+											<Markup text={r.summary} />
+										</span>
+									)}
+								</div>
+								<div className="record">
+									{r.specs.map((s) => (
+										<div className="record-row" key={s.label}>
+											<span>{s.label}</span>
+											<span>{s.value}</span>
+										</div>
+									))}
+								</div>
+								{r.note && (
+									<p className="req-note">
+										<Markup text={r.note} />
+									</p>
+								)}
+							</div>
+						))}
+					</div>
+				</section>
 			)}
 
 			{ev.assumed.length > 0 && (

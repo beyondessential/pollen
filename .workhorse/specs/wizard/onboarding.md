@@ -101,6 +101,9 @@ Authored prose (consequence detail, question help, option notes, guidance) may
 carry limited inline markup: links, which open in a new tab, and light emphasis,
 so it can point to further documentation.
 
+The ruleset also carries a compute requirement profile for each class of server or device, each gated by the same trigger conditions.
+The engine surfaces the profiles whose class is present in the deployment, which the artifact renders as the [Compute requirements](#compute-requirements).
+
 ### Visibility and forward guidance
 
 The engine shows a question only when its precondition holds, and hides it otherwise; a precondition is a presence-of-class flag or a cross-field condition.
@@ -246,6 +249,20 @@ Its header surfaces non-identifying recognition facts so one artifact is disting
 A fact the engine assumed reads the same as one the reader chose, because it is the answer until they change it.
 Settings that exist to be acted on, such as the hosting region, appear with the work they imply rather than in the header.
 
+Below the consequence groups the page presents the compute requirements (see [Compute requirements](#compute-requirements)) for the deployment.
+
+### Compute requirements
+
+The artifact states the concrete compute requirements for each class of server and device the deployment actually uses.
+Each class is presented as its own block: the class name, a short line on who provisions it, and a set of labelled spec rows covering processor, memory, storage, network, and operating system or software.
+
+Which classes appear is driven by the answers, so a reader sees only what their deployment needs someone to provide.
+A class BES provisions itself, such as a central or facility server hosted in BES cloud, carries no requirement block, because the client provisions nothing for it.
+So the central server appears only when the client hosts it; a facility server appears when a client-hosted facility runs its own server rather than a BES-supplied mini-server; the mini-server appears when any site uses one, stating only the network it needs; the user devices staff work at always appear; and mobile devices appear when the deployment has mobile users.
+
+The figures are the recommended baseline for a deployment of this kind, not a figure scaled to the exact size.
+A larger deployment may need more, and BES advises on that separately; the size band the figures rest on is already in the header.
+
 ### PDF export
 
 The artifact can be exported to PDF, sectioned by audience, as a static snapshot derived from the same data.
@@ -256,11 +273,12 @@ Its sections, in order:
 2. **Open questions**: on an interim artifact, what is still to be settled, before any of the detail that rests on it.
 3. **Warnings**: what the client is opting into by leaving the standard path.
 4. **Client IT team, required actions**: ports, outbound endpoints, DNS, remote access, time synchronisation.
-5. **BES technical team, setup decisions**: staging, topology, platform, server specifications, backup and retention, region.
+5. **BES technical team, setup decisions**: staging, topology, platform, backup and retention, region.
 6. **BES pricing and partnerships**: what has to be priced, and what BES can commit to supporting.
-7. **Referrals**: items escalated to a separate conversation.
-8. **Assumptions**: the answers the engine filled in where the reader left a question blank.
-9. **Full decision record**: everything captured.
+7. **Compute requirements**: the specs for each server and device class the deployment uses.
+8. **Referrals**: items escalated to a separate conversation.
+9. **Assumptions**: the answers the engine filled in where the reader left a question blank.
+10. **Full decision record**: everything captured.
 
 ## Data and confidentiality
 

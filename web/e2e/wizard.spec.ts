@@ -86,6 +86,16 @@ test("walks a complete plan to a finalised artifact", async ({ page }) => {
 	await expect(page.getByRole("button", { name: "Warnings" })).toBeHidden();
 	// The standard domain arrangement is BES's to set up.
 	await expect(page.getByText("Provision the tamanu.app name and its certificates")).toBeVisible();
+
+	// Compute requirements list the classes this deployment needs provisioned:
+	// client-hosted facilities and the workstations staff use. Central is BES
+	// cloud here, and there are no mobile users, so neither appears.
+	const compute = page.locator("#s-compute");
+	await expect(compute.getByRole("heading", { name: "Compute requirements" })).toBeVisible();
+	await expect(compute.getByText("Facility server", { exact: true })).toBeVisible();
+	await expect(compute.getByText("User devices", { exact: true })).toBeVisible();
+	await expect(compute.getByText("Central server", { exact: true })).toBeHidden();
+	await expect(compute.getByText("Mobile devices", { exact: true })).toBeHidden();
 });
 
 test("'Make changes' opens the new version in a new tab", async ({ page, context }) => {

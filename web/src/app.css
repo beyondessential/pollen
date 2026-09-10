@@ -507,6 +507,36 @@ body {
 	color: var(--ink-soft);
 }
 
+/* ── Compute requirements ────────────────────────────────────────────── */
+.reqs {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	margin-top: 14px;
+}
+.req-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 4px 10px;
+	margin-bottom: 8px;
+}
+.req-class {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--ink);
+}
+.req-summary {
+	font-size: 12.5px;
+	color: var(--ink-soft);
+}
+.req-note {
+	margin: 8px 0 0;
+	font-size: 12px;
+	color: var(--ink-faint);
+	line-height: 1.5;
+}
+
 /* ── Splash / status ─────────────────────────────────────────────────── */
 .splash {
 	display: grid;
@@ -567,7 +597,8 @@ body {
 	.sheet-section,
 	.item,
 	.card,
-	.record {
+	.record,
+	.req {
 		break-inside: avoid;
 	}
 	/* The entrance animation (opacity 0→1, fill both) can otherwise be captured

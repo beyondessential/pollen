@@ -24,6 +24,10 @@ fn fired_ids(eval: &pollen_server::ruleset::Evaluation) -> Vec<&str> {
 	eval.consequences.iter().map(|c| c.id.as_str()).collect()
 }
 
+fn requirement_ids(eval: &pollen_server::ruleset::Evaluation) -> Vec<&str> {
+	eval.requirements.iter().map(|r| r.id.as_str()).collect()
+}
+
 /// The three sizing bands, so a test can focus on what it's actually asserting
 /// without leaving the required questions unanswered.
 fn sized() -> serde_json::Value {
@@ -801,6 +805,111 @@ fn pricing_and_sla_drivers_reach_the_pricing_group() {
 				c.id
 			);
 		}
+	}
+}
+
+// ── Compute requirements ─────────────────────────────────────────────────────
+
+#[test]
+fn compute_requirements_track_the_classes_present() {
+	// The default path sizes small, all-client facilities with BES cloud Central.
+	// Central is BES-hosted so it carries no client requirement; the facilities
+	// and the workstations do; there are no mobile devices.
+	let eval = evaluate(&v1(), &answers(sized()));
+	let ids = requirement_ids(&eval);
+	assert!(ids.contains(&"req-facility"), "got {ids:?}");
+	assert!(ids.contains(&"req-workstation"), "got {ids:?}");
+	assert!(
+		!ids.contains(&"req-central"),
+		"BES hosts Central by default"
+	);
+	assert!(!ids.contains(&"req-mobile"), "no mobile users by default");
+	assert!(!ids.contains(&"req-iti"));
+}
+
+#[test]
+fn an_all_cloud_deployment_only_needs_workstations() {
+	// Everything BES-hosted, no mobile: the client provisions nothing but the
+	// devices staff use to reach Tamanu.
+	let eval = evaluate(
+		&v1(),
+		&answers(json!({
+			"catchment": "c0",
+			"facilities": "f0",
+			"mobile": "m0",
+			"central": "bescloud",
+			"hosting_where": "allbes",
+		})),
+	);
+	assert_eq!(requirement_ids(&eval), vec!["req-workstation"]);
+}
+
+#[test]
+fn a_client_hosted_central_carries_its_own_requirement() {
+	let eval = evaluate(&v1(), &with(sized(), json!({ "central": "clienthosted" })));
+	assert!(requirement_ids(&eval).contains(&"req-central"));
+}
+
+#[test]
+fn mobile_users_bring_a_mobile_device_requirement() {
+	let with_mobile = evaluate(&v1(), &with(sized(), json!({ "mobile": "m2" })));
+	assert!(requirement_ids(&with_mobile).contains(&"req-mobile"));
+
+	// An unsure mobile count asserts nothing, so no device requirement fires.
+	let unsure = evaluate(&v1(), &with(sized(), json!({ "mobile": "m_unsure" })));
+	assert!(!requirement_ids(&unsure).contains(&"req-mobile"));
+}
+
+#[test]
+fn iti_replaces_the_facility_server_requirement_when_every_site_runs_one() {
+	// Some sites on Iti keeps the facility-server requirement for the rest.
+	let some = evaluate(
+		&v1(),
+		&with(
+			sized(),
+			json!({ "hosting_where": "allclient", "iti_use": "some" }),
+		),
+	);
+	let some_ids = requirement_ids(&some);
+	assert!(some_ids.contains(&"req-facility"));
+	assert!(some_ids.contains(&"req-iti"));
+
+	// Every site on Iti: there is no client-run facility server left to spec.
+	let all = evaluate(
+		&v1(),
+		&with(
+			sized(),
+			json!({ "hosting_where": "allclient", "iti_use": "all" }),
+		),
+	);
+	let all_ids = requirement_ids(&all);
+	assert!(all_ids.contains(&"req-iti"));
+	assert!(!all_ids.contains(&"req-facility"));
+}
+
+#[test]
+fn a_ruleset_stored_without_requirements_still_loads() {
+	// A finalised artifact bound before compute requirements existed has no
+	// `requirements` field in its stored JSON. The append-only model must still
+	// read it (spec WIZ, the engine's model is append-only).
+	let stored = json!({
+		"questions": [
+			{ "id": "catchment", "kind": "Band", "label": "?", "options": [ { "id": "c0", "label": "?" } ] },
+		],
+		"rules": [],
+	});
+	let ruleset: Ruleset = serde_json::from_value(stored).expect("loads without requirements");
+	assert!(ruleset.requirements.is_empty());
+	let eval = evaluate(&ruleset, &answers(json!({ "catchment": "c0" })));
+	assert!(eval.requirements.is_empty());
+}
+
+#[test]
+fn every_requirement_names_a_class_and_at_least_one_spec_row() {
+	// A profile with no rows would render an empty class heading in the artifact.
+	for r in &v1().requirements {
+		assert!(!r.class.is_empty(), "requirement {} has no class", r.id);
+		assert!(!r.specs.is_empty(), "requirement {} has no spec rows", r.id);
 	}
 }
 

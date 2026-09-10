@@ -20,6 +20,10 @@ pub struct Ruleset {
 	pub rules: Vec<Rule>,
 	#[serde(default)]
 	pub guidance: Vec<Guidance>,
+	/// Compute requirement profiles, surfaced in the artifact for each server or
+	/// device class present in the deployment (spec WIZ, Compute requirements).
+	#[serde(default)]
+	pub requirements: Vec<Requirement>,
 }
 
 impl Ruleset {
@@ -58,6 +62,16 @@ impl Ruleset {
 		for r in &self.rules {
 			if !rule_ids.insert(r.id.as_str()) {
 				return Err(AppError::custom(format!("duplicate rule id: {}", r.id)));
+			}
+		}
+
+		let mut requirement_ids = HashSet::new();
+		for r in &self.requirements {
+			if !requirement_ids.insert(r.id.as_str()) {
+				return Err(AppError::custom(format!(
+					"duplicate requirement id: {}",
+					r.id
+				)));
 			}
 		}
 
@@ -185,6 +199,37 @@ pub struct Cost {
 	pub tier: String,
 	#[serde(default)]
 	pub ballpark: Option<String>,
+}
+
+/// A compute requirement profile for one class of server or device. Surfaced in
+/// the artifact when its `when` condition holds, i.e. when that class is present
+/// in the deployment (spec WIZ, Compute requirements). The figures are the
+/// recommended base-level specs; scaling for larger deployments is advised
+/// separately by BES.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Requirement {
+	/// Permanent identifier. Never reused or repurposed (spec WIZ, stable-id).
+	pub id: String,
+	/// Surfaced only when this holds (e.g. the class is present in the mix).
+	pub when: Condition,
+	/// The server or device class this profile describes, e.g. "Central server".
+	pub class: String,
+	/// A short line on who provisions this class and when it appears.
+	#[serde(default)]
+	pub summary: Option<String>,
+	/// The spec rows (processor, memory, storage, network, and so on).
+	pub specs: Vec<Spec>,
+	/// An optional caveat shown beneath the rows.
+	#[serde(default)]
+	pub note: Option<String>,
+}
+
+/// One row of a compute requirement: a labelled figure such as
+/// `("Memory", "16 GB")`.
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
+pub struct Spec {
+	pub label: String,
+	pub value: String,
 }
 
 /// The viability axis (spec WIZ, Severity).

@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use super::answers::{Answer, Answers};
-use super::model::{Consequence, DerivationKind, QuestionKind, Ruleset, Severity};
+use super::model::{Consequence, DerivationKind, QuestionKind, Ruleset, Severity, Spec};
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Evaluation {
@@ -20,6 +20,9 @@ pub struct Evaluation {
 	pub visible_questions: Vec<String>,
 	/// Every triggered consequence, in ruleset order.
 	pub consequences: Vec<TriggeredConsequence>,
+	/// The compute requirements for the classes present in the deployment, in
+	/// ruleset order (spec WIZ, Compute requirements).
+	pub requirements: Vec<TriggeredRequirement>,
 	/// Guidance whose condition currently holds.
 	pub guidance: Vec<TriggeredGuidance>,
 	/// Visible questions left unanswered whose blessed-path default the engine
@@ -46,6 +49,17 @@ pub struct TriggeredConsequence {
 	pub id: String,
 	pub source: String,
 	pub consequence: Consequence,
+}
+
+/// A compute requirement whose class is present in the deployment. Carries the
+/// profile's content (the `when` condition that selected it is not on the wire).
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct TriggeredRequirement {
+	pub id: String,
+	pub class: String,
+	pub summary: Option<String>,
+	pub specs: Vec<Spec>,
+	pub note: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
@@ -111,6 +125,21 @@ pub fn evaluate(ruleset: &Ruleset, answers: &Answers) -> Evaluation {
 		})
 		.collect();
 
+	// Requirements are gated on the same defaulted answers as consequences, so an
+	// assumed hosting choice surfaces the classes it implies.
+	let requirements: Vec<TriggeredRequirement> = ruleset
+		.requirements
+		.iter()
+		.filter(|r| r.when.eval(answers))
+		.map(|r| TriggeredRequirement {
+			id: r.id.clone(),
+			class: r.class.clone(),
+			summary: r.summary.clone(),
+			specs: r.specs.clone(),
+			note: r.note.clone(),
+		})
+		.collect();
+
 	let guidance: Vec<TriggeredGuidance> = ruleset
 		.guidance
 		.iter()
@@ -139,6 +168,7 @@ pub fn evaluate(ruleset: &Ruleset, answers: &Answers) -> Evaluation {
 		derived,
 		visible_questions,
 		consequences,
+		requirements,
 		guidance,
 		assumed,
 		open_items,

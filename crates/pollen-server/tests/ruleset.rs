@@ -117,9 +117,8 @@ fn demo_config_is_blocking() {
 			"expected {expected} to fire; got {ids:?}"
 		);
 	}
-	// Not fired: the client hosts integrations; the servers aren't virtualised.
+	// Not fired: the client hosts the integrations themselves.
 	assert!(!ids.contains(&"int-hosted"));
-	assert!(!ids.contains(&"prov-virtualised"));
 }
 
 #[test]
@@ -984,9 +983,8 @@ fn the_smallest_band_advises_against_buying_a_server() {
 			.iter()
 			.find(|r| r.id == "req-central")
 			.unwrap()
-			.note
-			.clone()
-			.unwrap_or_default()
+			.notes
+			.join(" ")
 	};
 
 	let tiny = evaluate(

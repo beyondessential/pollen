@@ -204,10 +204,14 @@ export default function Artifact({ view }: { view: AppView }) {
 										</div>
 									))}
 								</dl>
-								{r.note && (
-									<p className="req-note">
-										<Markup text={r.note} />
-									</p>
+								{r.notes.length > 0 && (
+									<div className="req-notes">
+										{r.notes.map((n) => (
+											<p className="req-note" key={n}>
+												<Markup text={n} />
+											</p>
+										))}
+									</div>
 								)}
 							</article>
 						))}

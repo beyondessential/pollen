@@ -579,12 +579,18 @@ body {
 	font-weight: 500;
 	line-height: 1.45;
 }
-/* Advisory, so it takes the sky informational wash rather than a severity hue. */
-.req-note {
-	margin: 0;
+/* Advisory, so it takes the sky informational wash rather than a severity hue.
+   Several hints share one wash so the card ends in a single block. */
+.req-notes {
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
 	padding: 10px 16px;
 	background: var(--sky-tint);
 	border-top: 1px solid #bfe4f8;
+}
+.req-note {
+	margin: 0;
 	font-size: 12px;
 	color: var(--navy-deep);
 	line-height: 1.45;

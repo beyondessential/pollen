@@ -264,6 +264,10 @@ So the central server appears only when the client hosts it; a facility server a
 
 A server's processor, memory and storage scale with the deployment's derived size band, drawn from the recommended per-band figures; its network row is the same at every size.
 A row may instead be tied to an answer, so the operating system row names the platform the reader chose rather than listing what is available.
+
+A block can carry hints beneath its rows, and a hint may be tied to an answer the same way.
+Guidance about how to provision the figures belongs here rather than among the actions: that virtual machines can start smaller and grow into the figures qualifies the figures themselves, so it sits under them and appears only when the servers are virtual.
+Such a hint states the guidance without restating the figures, which would contradict the rows above it.
 Working out what is needed is the tool's job, so the requirements state it plainly rather than hedging that a larger deployment might need more.
 The make of a server is a suggestion, never a requirement: the block leads with the specification a server must meet, not a product to buy.
 For the smallest deployments the block advises hosting with BES or using a mini-server rather than buying a server at all, since dedicated hardware rarely pays off at that scale.

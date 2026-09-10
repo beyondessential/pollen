@@ -579,20 +579,6 @@
             ),
         ),
         (
-            id: "prov-virtualised",
-            source: "topology",
-            when: Any([
-                Equals("onprem_form", "virtualised"),
-                Equals("onprem_form", "mixed"),
-            ]),
-            consequence: (
-                status: Advisory,
-                audience: Client,
-                title: "Start the virtual machines small, and back them up",
-                detail: "Resources can scale, so start around 50 GB / 4 cores / 16 GB and grow. VM-level backups are recommended; telling BES is not required but helps disaster planning.",
-            ),
-        ),
-        (
             id: "iti-note",
             source: "topology",
             when: Any([
@@ -1190,6 +1176,15 @@
                 (label: "Operating system", value: "Linux", when: Equals("platform", "linux")),
                 (label: "Operating system", value: "Windows Server", when: Equals("platform", "windows")),
             ],
+            notes: [
+                (
+                    text: "On virtual machines these can scale, so it is fine to start smaller and grow into them. VM-level backups are recommended; telling BES is not required, but it helps disaster planning.",
+                    when: Any([
+                        Equals("onprem_form", "virtualised"),
+                        Equals("onprem_form", "mixed"),
+                    ]),
+                ),
+            ],
             // Sized to the deployment. The figures track the recommended on-prem
             // tower tiers; the make is a suggestion, not a requirement.
             by_size: [
@@ -1246,7 +1241,16 @@
                 (label: "Operating system", value: "Linux", when: Equals("platform", "linux")),
                 (label: "Operating system", value: "Windows Server", when: Equals("platform", "windows")),
             ],
-            note: Some("Keeps working within the facility when the link to Central is down."),
+            notes: [
+                (text: "Keeps working within the facility when the link to Central is down."),
+                (
+                    text: "On virtual machines these can scale, so it is fine to start smaller and grow into them. VM-level backups are recommended; telling BES is not required, but it helps disaster planning.",
+                    when: Any([
+                        Equals("onprem_form", "virtualised"),
+                        Equals("onprem_form", "mixed"),
+                    ]),
+                ),
+            ],
             by_size: [
                 (
                     size: "Tiny",

@@ -19,8 +19,8 @@ pub use engine::{
 };
 pub use migrate::{Migration, migrate};
 pub use model::{
-	Audience, Consequence, ConsequenceType, Cost, Derivation, DerivationKind, Guidance, Opt,
-	Question, QuestionKind, Requirement, Rule, Ruleset, Section, Severity, SizeSpecs, Spec,
+	Audience, Consequence, ConsequenceType, Cost, Derivation, DerivationKind, Guidance, NoteRow,
+	Opt, Question, QuestionKind, Requirement, Rule, Ruleset, Section, Severity, SizeSpecs, Spec,
 	SpecRow, Status,
 };
 pub use resolver::{RULESET_PATH, ResolvedRuleset, RulesetResolver};

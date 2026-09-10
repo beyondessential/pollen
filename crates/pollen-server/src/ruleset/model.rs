@@ -251,9 +251,20 @@ pub struct Requirement {
 	/// for a class that is the same at every size (user devices, mobile, Iti).
 	#[serde(default)]
 	pub by_size: Vec<SizeSpecs>,
-	/// An optional caveat shown beneath the rows.
+	/// Hints shown beneath the rows. A hint may be gated on the answers, so
+	/// guidance that only applies to one way of provisioning (virtual machines,
+	/// say) sits with the figures it qualifies rather than in a separate list.
 	#[serde(default)]
-	pub note: Option<String>,
+	pub notes: Vec<NoteRow>,
+}
+
+/// One hint beneath a requirement's rows, optionally gated on the answers.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NoteRow {
+	pub text: String,
+	/// Included only when this holds. Defaults to always.
+	#[serde(default = "Condition::always")]
+	pub when: Condition,
 }
 
 /// The size-varying spec rows for one size band of a [`Requirement`].

@@ -795,7 +795,8 @@
         "required": [
           "id",
           "class",
-          "specs"
+          "specs",
+          "notes"
         ],
         "properties": {
           "class": {
@@ -804,11 +805,11 @@
           "id": {
             "type": "string"
           },
-          "note": {
-            "type": [
-              "string",
-              "null"
-            ]
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "specs": {
             "type": "array",

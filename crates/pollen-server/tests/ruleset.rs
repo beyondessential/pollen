@@ -105,7 +105,6 @@ fn demo_config_is_blocking() {
 		"int-capacity",
 		"region-other",
 		"plat-windows",
-		"prov-baremetal",
 		"iti-note",
 		"dns-client",
 		"remote-other",

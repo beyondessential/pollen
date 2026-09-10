@@ -266,7 +266,8 @@ A server's processor, memory and storage scale with the deployment's derived siz
 A row may instead be tied to an answer, so the operating system row names the platform the reader chose rather than listing what is available.
 
 A block can carry hints beneath its rows, and a hint may be tied to an answer the same way.
-Guidance about how to provision the figures belongs here rather than among the actions: that virtual machines can start smaller and grow into the figures qualifies the figures themselves, so it sits under them and appears only when the servers are virtual.
+Guidance about how to provision the figures belongs here rather than among the actions, because it qualifies the figures themselves: that virtual machines can start smaller and grow into them, or that physical hardware should be bought with headroom because it is hard to change later.
+Each appears only for the way of provisioning it describes, and a deployment with both kinds gets both.
 Such a hint states the guidance without restating the figures, which would contradict the rows above it.
 Working out what is needed is the tool's job, so the requirements state it plainly rather than hedging that a larger deployment might need more.
 The make of a server is a suggestion, never a requirement: the block leads with the specification a server must meet, not a product to buy.

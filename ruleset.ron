@@ -564,21 +564,6 @@
 
         // ── Client-hosted server provisioning ───────────────────────────────
         (
-            id: "prov-baremetal",
-            source: "topology",
-            when: Any([
-                Equals("onprem_form", "baremetal"),
-                Equals("onprem_form", "mixed"),
-            ]),
-            consequence: (
-                status: Requirement,
-                audience: Client,
-                types: [Operational],
-                title: "Provision the physical servers generously up front",
-                detail: "Disk and resources are hard to change on bare metal, so provision ahead: at least 500 GB SSD, 4 cores (prefer 8), and 16 GB RAM (prefer 32). Multiple disks and multiple TB are NOT usually required, though you may want to do RAID for redundancy.",
-            ),
-        ),
-        (
             id: "iti-note",
             source: "topology",
             when: Any([
@@ -1184,6 +1169,13 @@
                         Equals("onprem_form", "mixed"),
                     ]),
                 ),
+                (
+                    text: "Physical hardware is hard to change later, so buy with headroom above these figures rather than matching them exactly. Multiple disks or multiple terabytes are not usually needed, though RAID is worth considering for redundancy.",
+                    when: Any([
+                        Equals("onprem_form", "baremetal"),
+                        Equals("onprem_form", "mixed"),
+                    ]),
+                ),
             ],
             // Sized to the deployment. The figures track the recommended on-prem
             // tower tiers; the make is a suggestion, not a requirement.
@@ -1247,6 +1239,13 @@
                     text: "On virtual machines these can scale, so it is fine to start smaller and grow into them. VM-level backups are recommended; telling BES is not required, but it helps disaster planning.",
                     when: Any([
                         Equals("onprem_form", "virtualised"),
+                        Equals("onprem_form", "mixed"),
+                    ]),
+                ),
+                (
+                    text: "Physical hardware is hard to change later, so buy with headroom above these figures rather than matching them exactly. Multiple disks or multiple terabytes are not usually needed, though RAID is worth considering for redundancy.",
+                    when: Any([
+                        Equals("onprem_form", "baremetal"),
                         Equals("onprem_form", "mixed"),
                     ]),
                 ),

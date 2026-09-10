@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use super::answers::{Answer, Answers};
-use super::model::{Consequence, DerivationKind, QuestionKind, Ruleset, Severity, Spec};
+use super::model::{Consequence, DerivationKind, QuestionKind, Ruleset, Severity, Spec, SpecRow};
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Evaluation {
@@ -142,12 +142,23 @@ pub fn evaluate(ruleset: &Ruleset, answers: &Answers) -> Evaluation {
 				})
 				.flatten();
 			// Size-varying rows (processor, memory, storage) lead; the invariant
-			// rows (network, operating system) follow.
+			// rows (network, operating system) follow. A row gated on the answers
+			// is dropped unless it holds, so a requirement states the choice the
+			// reader made rather than every option.
+			let present = |rows: &[SpecRow]| -> Vec<Spec> {
+				rows.iter()
+					.filter(|row| row.when.eval(answers))
+					.map(|row| Spec {
+						label: row.label.clone(),
+						value: row.value.clone(),
+					})
+					.collect()
+			};
 			let mut specs = Vec::new();
 			if let Some(ss) = by_size {
-				specs.extend(ss.specs.iter().cloned());
+				specs.extend(present(&ss.specs));
 			}
-			specs.extend(r.specs.iter().cloned());
+			specs.extend(present(&r.specs));
 			// A band-specific note augments the profile's own.
 			let note = match (r.note.clone(), by_size.and_then(|ss| ss.note.clone())) {
 				(Some(base), Some(band)) => Some(format!("{base} {band}")),

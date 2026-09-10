@@ -732,7 +732,7 @@
       },
       "Spec": {
         "type": "object",
-        "description": "One row of a compute requirement: a labelled figure such as\n`(\"Memory\", \"16 GB\")`.",
+        "description": "One row of a compute requirement as presented: the engine has already\nresolved the size band and dropped the rows whose condition does not hold.",
         "required": [
           "label",
           "value"

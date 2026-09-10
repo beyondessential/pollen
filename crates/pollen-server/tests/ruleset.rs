@@ -1008,11 +1008,55 @@ fn the_smallest_band_advises_against_buying_a_server() {
 }
 
 #[test]
+fn the_operating_system_row_states_the_platform_chosen() {
+	// The requirement reports the reader's own selection rather than listing the
+	// options, so exactly one operating system row survives.
+	let os = |platform: &str| -> Vec<String> {
+		let eval = evaluate(
+			&v1(),
+			&with(
+				sized(),
+				json!({ "central": "clienthosted", "platform": platform }),
+			),
+		);
+		eval.requirements
+			.iter()
+			.find(|r| r.id == "req-central")
+			.expect("central present")
+			.specs
+			.iter()
+			.filter(|s| s.label == "Operating system")
+			.map(|s| s.value.clone())
+			.collect()
+	};
+
+	assert_eq!(os("linuxarm"), vec!["Linux on ARM64"]);
+	assert_eq!(os("linuxamd"), vec!["Linux on AMD64"]);
+	assert_eq!(os("windows"), vec!["Windows Server"]);
+}
+
+#[test]
+fn mobile_devices_need_android_13() {
+	let eval = evaluate(&v1(), &with(sized(), json!({ "mobile": "m2" })));
+	let mobile = eval
+		.requirements
+		.iter()
+		.find(|r| r.id == "req-mobile")
+		.expect("mobile present");
+	let os = mobile
+		.specs
+		.iter()
+		.find(|s| s.label == "Operating system")
+		.expect("has an OS row");
+	assert_eq!(os.value, "Android 13 or newer");
+}
+
+#[test]
 fn an_unsized_draft_falls_back_to_the_lightest_band() {
 	// A draft where the bands aren't answered yet has no derived size, so a sized
 	// server shows the lightest band's rows rather than none.
 	let eval = evaluate(&v1(), &answers(json!({ "central": "clienthosted" })));
-	assert!(eval.derived.get("size").is_none());
+	assert!(!eval.derived.contains_key("size"));
 	let central = eval
 		.requirements
 		.iter()

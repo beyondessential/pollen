@@ -324,8 +324,8 @@ export interface components {
          */
         Severity: "Default" | "NonDefault" | "Blocking";
         /**
-         * @description One row of a compute requirement: a labelled figure such as
-         *     `("Memory", "16 GB")`.
+         * @description One row of a compute requirement as presented: the engine has already
+         *     resolved the size band and dropped the rows whose condition does not hold.
          */
         Spec: {
             label: string;

@@ -15,9 +15,9 @@ import { listDone, recordDone } from "../doneItems";
 import { Chevron, ConsequenceCard, VerdictBanner } from "./visuals";
 import { Markup } from "../markup";
 
-// Warnings come first, so what the client is opting into is met before the work
-// it implies, but collapsed: they are context for the actions below, not the
-// task. They carry the off-default colour and run straight into those actions.
+// Warnings lead the sheet, so what the client is opting into is met before
+// anything else, but collapsed: they are context rather than a task. They carry
+// the off-default colour they carry everywhere else.
 const AUDIENCE_ORDER: Audience[] = ["Record", "Client", "Bes", "Pricing"];
 const COLLAPSED_ON_ARRIVAL: Audience[] = ["Record"];
 const WARNINGS: Audience = "Record";
@@ -60,6 +60,10 @@ export default function Artifact({ view }: { view: AppView }) {
 		() => groupConsequences(ev.consequences).filter((g) => g.items.length > 0),
 		[ev.consequences],
 	);
+	// Warnings lead the sheet: what the client is opting into is met before
+	// anything else. The rest are the work, and sit under "Next steps".
+	const warningGroup = groups.find((g) => g.key === WARNINGS);
+	const actionGroups = groups.filter((g) => g.key !== WARNINGS);
 
 	async function makeNewVersion() {
 		// Open the tab synchronously within the click so it isn't popup-blocked,
@@ -91,6 +95,41 @@ export default function Artifact({ view }: { view: AppView }) {
 				setTimeout(() => setCopied(false), 1800);
 			},
 			() => {},
+		);
+	}
+
+	function renderGroup(g: Group) {
+		const open = !shut[g.key];
+		const warn = g.key === WARNINGS;
+		return (
+			<section
+				key={g.key}
+				id={`s-${g.key}`}
+				className={`sheet-section${warn ? " sheet-section-flush" : ""}`}
+			>
+				<button
+					type="button"
+					className={`qexpand${warn ? " qexpand-warn" : ""}${open ? " on" : ""}`}
+					aria-expanded={open}
+					onClick={() => setShut({ ...shut, [g.key]: open })}
+				>
+					<Chevron size={17} />
+					<span>{g.label}</span>
+					<span className="group-count">{g.items.length}</span>
+				</button>
+				{/* Always rendered, hidden with CSS: printing must carry the whole
+				    record however the reader reached the print dialog. */}
+				<div className={`items${open ? "" : " shut"}`}>
+					{g.items.map((c) => (
+						<ConsequenceCard
+							key={c.id}
+							c={c.consequence}
+							done={done.includes(c.id)}
+							onToggle={warn ? undefined : () => toggleDone(c.id)}
+						/>
+					))}
+				</div>
+			</section>
 		);
 	}
 
@@ -126,6 +165,8 @@ export default function Artifact({ view }: { view: AppView }) {
 				</div>
 			)}
 
+			{warningGroup && renderGroup(warningGroup)}
+
 			{interim && (
 				<section className="sheet-section" id="s-open">
 					<h3 className="sheet-section-title">To confirm with BES</h3>
@@ -140,84 +181,55 @@ export default function Artifact({ view }: { view: AppView }) {
 				</section>
 			)}
 
-
-			{groups.length === 0 ? (
-				<section className="sheet-section">
-					<p className="ledger-empty">No consequences match your search.</p>
-				</section>
-			) : (
-				groups.map((g) => {
-					const open = !shut[g.key];
-					const warn = g.key === WARNINGS;
-					return (
-						<section
-							key={g.key}
-							id={`s-${g.key}`}
-							className={`sheet-section${warn ? " sheet-section-flush" : ""}`}
-						>
-							<button
-								type="button"
-								className={`qexpand${warn ? " qexpand-warn" : ""}${open ? " on" : ""}`}
-								aria-expanded={open}
-								onClick={() => setShut({ ...shut, [g.key]: open })}
-							>
-								<Chevron size={17} />
-								<span>{g.label}</span>
-								<span className="group-count">{g.items.length}</span>
-							</button>
-							{/* Always rendered, hidden with CSS: printing must carry the
-							    whole record however the reader reached the print dialog. */}
-							<div className={`items${open ? "" : " shut"}`}>
-								{g.items.map((c) => (
-									<ConsequenceCard
-										key={c.id}
-										c={c.consequence}
-										done={done.includes(c.id)}
-										onToggle={warn ? undefined : () => toggleDone(c.id)}
-									/>
-								))}
-							</div>
-						</section>
-					);
-				})
-			)}
-
 			{ev.requirements.length > 0 && (
 				<section className="sheet-section" id="s-compute">
 					<h3 className="sheet-section-title">Compute requirements</h3>
-					<p className="ledger-empty">
-						Recommended baseline for each server and device in this deployment. Larger
-						deployments may need more; BES advises on that separately.
-					</p>
+					<p className="sheet-caption">What this deployment needs, sized from your answers.</p>
 					<div className="reqs">
 						{ev.requirements.map((r) => (
-							<div className="req" key={r.id}>
-								<div className="req-head">
-									<span className="req-class">{r.class}</span>
+							<article className="req" key={r.id}>
+								<header className="req-head">
+									<h4 className="req-class">{r.class}</h4>
 									{r.summary && (
-										<span className="req-summary">
+										<p className="req-summary">
 											<Markup text={r.summary} />
-										</span>
+										</p>
 									)}
-								</div>
-								<div className="record">
+								</header>
+								<dl className="req-specs">
 									{r.specs.map((s) => (
-										<div className="record-row" key={s.label}>
-											<span>{s.label}</span>
-											<span>{s.value}</span>
+										<div className="req-spec" key={s.label}>
+											<dt>{s.label}</dt>
+											<dd>{s.value}</dd>
 										</div>
 									))}
-								</div>
+								</dl>
 								{r.note && (
 									<p className="req-note">
 										<Markup text={r.note} />
 									</p>
 								)}
-							</div>
+							</article>
 						))}
 					</div>
 				</section>
 			)}
+
+
+
+			{actionGroups.length > 0 && (
+				<div className="sheet-heading">
+					<h3 className="sheet-section-title">Next steps</h3>
+					<p className="sheet-caption">Who needs to do what to stand this deployment up.</p>
+				</div>
+			)}
+
+			{groups.length === 0 && (
+				<section className="sheet-section">
+					<p className="ledger-empty">No consequences match your search.</p>
+				</section>
+			)}
+			{actionGroups.map(renderGroup)}
 
 			{ev.assumed.length > 0 && (
 				<section className="sheet-section" id="s-assumed">

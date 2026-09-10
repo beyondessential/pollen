@@ -229,11 +229,13 @@ This comparison is the "what changed" summary the user sees on update: newly-req
 ### Finalised web view
 
 The canonical artifact is a live page.
-It presents every consequence in full, in four groups: warnings, being what the client is opting into by leaving the standard path, then what the client's IT team has to do, then what the BES technical team sets up, then what the BES pricing and partnerships team has to price or commit to.
+Warnings lead it: what the client is opting into by leaving the standard path is met before anything else.
+The compute requirements follow (see [Compute requirements](#compute-requirements)), being the answer the reader came for.
+Beneath those, under a **Next steps** heading that frames them as who does what, it presents the remaining consequences in full, in three groups: what the client's IT team has to do, then what the BES technical team sets up, then what the BES pricing and partnerships team has to price or commit to.
 An item states the action it asks for, so a group of required actions reads as a list of work rather than a list of observations.
 A choice off the standard path that also asks something of a team produces two items: the work, which sits with that team's actions, and the acknowledgement of what the choice costs, which sits with what is being opted into.
 Nothing off the standard path appears in a group of actions, because an acknowledgement is not something anyone does.
-Warnings come first and arrive collapsed, carrying the same off-default colour they carry everywhere else: they are context for the work below rather than the work itself, and a conflict that stops the configuration working is raised by the viability callout regardless.
+Warnings arrive collapsed, carrying the same off-default colour they carry everywhere else: they are context rather than the work itself, and a conflict that stops the configuration working is raised by the viability callout regardless.
 Each group can be collapsed, so a reader can skip past the groups addressed to someone else.
 A section can be linked to directly.
 
@@ -249,7 +251,6 @@ Its header surfaces non-identifying recognition facts so one artifact is disting
 A fact the engine assumed reads the same as one the reader chose, because it is the answer until they change it.
 Settings that exist to be acted on, such as the hosting region, appear with the work they imply rather than in the header.
 
-Below the consequence groups the page presents the compute requirements (see [Compute requirements](#compute-requirements)) for the deployment.
 
 ### Compute requirements
 
@@ -261,7 +262,9 @@ Which classes appear is driven by the answers, so a reader sees only what their 
 A class BES provisions itself, such as a central or facility server hosted in BES cloud, carries no block, because the client provides nothing for it.
 So the central server appears only when the client hosts it; a facility server appears when a client-hosted facility runs its own server rather than a mini-server; the Tamanu Iti mini-server, which the client buys from BES, appears when any site uses one; the user devices staff work at always appear; and mobile devices appear when the deployment has mobile users.
 
-A server's processor, memory and storage scale with the deployment's derived size band, drawn from the recommended per-band figures; its network and operating system rows are the same at every size.
+A server's processor, memory and storage scale with the deployment's derived size band, drawn from the recommended per-band figures; its network row is the same at every size.
+A row may instead be tied to an answer, so the operating system row names the platform the reader chose rather than listing what is available.
+Working out what is needed is the tool's job, so the requirements state it plainly rather than hedging that a larger deployment might need more.
 The make of a server is a suggestion, never a requirement: the block leads with the specification a server must meet, not a product to buy.
 For the smallest deployments the block advises hosting with BES or using a mini-server rather than buying a server at all, since dedicated hardware rarely pays off at that scale.
 Devices that do not scale, such as workstations and phones, state one recommended specification.
@@ -276,10 +279,10 @@ Its sections, in order:
 1. **Viability verdict**: any blocking conflicts, at the top.
 2. **Open questions**: on an interim artifact, what is still to be settled, before any of the detail that rests on it.
 3. **Warnings**: what the client is opting into by leaving the standard path.
-4. **Client IT team, required actions**: ports, outbound endpoints, DNS, remote access, time synchronisation.
-5. **BES technical team, setup decisions**: staging, topology, platform, backup and retention, region.
-6. **BES pricing and partnerships**: what has to be priced, and what BES can commit to supporting.
-7. **Compute requirements**: the specs for each server and device class the deployment uses.
+4. **Compute requirements**: the specs for each server and device class the deployment uses.
+5. **Client IT team, required actions**: ports, outbound endpoints, DNS, remote access, time synchronisation.
+6. **BES technical team, setup decisions**: staging, topology, platform, backup and retention, region.
+7. **BES pricing and partnerships**: what has to be priced, and what BES can commit to supporting.
 8. **Referrals**: items escalated to a separate conversation.
 9. **Assumptions**: the answers the engine filled in where the reader left a question blank.
 10. **Full decision record**: everything captured.

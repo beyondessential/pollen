@@ -1187,7 +1187,9 @@
             // Size-invariant rows; the processor, memory and storage scale below.
             specs: [
                 (label: "Network", value: "50 down / 20 up Mbps. Inbound TCP 80 and 443, and UDP 443. A public DNS name and TLS certificate."),
-                (label: "Operating system", value: "Ubuntu Linux 24.04 recommended; Windows Server supported. Follows the platform choice above."),
+                (label: "Operating system", value: "Linux on ARM64", when: Equals("platform", "linuxarm")),
+                (label: "Operating system", value: "Linux on AMD64", when: Equals("platform", "linuxamd")),
+                (label: "Operating system", value: "Windows Server", when: Equals("platform", "windows")),
             ],
             // Sized to the deployment. The figures track the recommended on-prem
             // tower tiers; the make is a suggestion, not a requirement.
@@ -1242,7 +1244,9 @@
             summary: Some("Provisioned by the client's IT team, one per facility that runs its own server."),
             specs: [
                 (label: "Network", value: "To Central: 20 down / 5 up Mbps, under 300ms latency. Inbound TCP 80 and 443, and UDP 443, internally."),
-                (label: "Operating system", value: "Ubuntu Linux 24.04 recommended; Windows Server supported. Follows the platform choice above."),
+                (label: "Operating system", value: "Linux on ARM64", when: Equals("platform", "linuxarm")),
+                (label: "Operating system", value: "Linux on AMD64", when: Equals("platform", "linuxamd")),
+                (label: "Operating system", value: "Windows Server", when: Equals("platform", "windows")),
             ],
             note: Some("Keeps working within the facility when the link to Central is down."),
             by_size: [
@@ -1319,7 +1323,7 @@
             class: "Mobile devices",
             summary: Some("Phones or tablets for community and field health workers. Provided by the client."),
             specs: [
-                (label: "Operating system", value: "Android 12 or newer"),
+                (label: "Operating system", value: "Android 13 or newer"),
                 (label: "Processor", value: "4 cores, ARM64"),
                 (label: "Memory", value: "2 GB"),
                 (label: "Storage", value: "8 GB"),

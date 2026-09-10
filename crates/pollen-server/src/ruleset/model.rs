@@ -246,7 +246,7 @@ pub struct Requirement {
 	/// Size-invariant spec rows (e.g. network, operating system). Shown after the
 	/// size-varying rows.
 	#[serde(default)]
-	pub specs: Vec<Spec>,
+	pub specs: Vec<SpecRow>,
 	/// Spec rows that scale with the deployment's size band, keyed by band. Empty
 	/// for a class that is the same at every size (user devices, mobile, Iti).
 	#[serde(default)]
@@ -263,15 +263,31 @@ pub struct SizeSpecs {
 	/// label, e.g. "Small").
 	pub size: String,
 	/// The size-varying rows (processor, memory, storage).
-	pub specs: Vec<Spec>,
+	pub specs: Vec<SpecRow>,
 	/// An optional note specific to this band (e.g. the smallest band advising a
 	/// hosted or mini-server option over buying a server).
 	#[serde(default)]
 	pub note: Option<String>,
 }
 
-/// One row of a compute requirement: a labelled figure such as
+/// One authored row of a compute requirement: a labelled figure such as
 /// `("Memory", "16 GB")`.
+///
+/// A row may be gated on the answers, so a requirement can state the choice the
+/// reader actually made rather than listing every option. Rows sharing a label
+/// (e.g. one operating system row per platform) are authored mutually
+/// exclusive, so exactly one survives.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpecRow {
+	pub label: String,
+	pub value: String,
+	/// Included only when this holds. Defaults to always.
+	#[serde(default = "Condition::always")]
+	pub when: Condition,
+}
+
+/// One row of a compute requirement as presented: the engine has already
+/// resolved the size band and dropped the rows whose condition does not hold.
 #[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct Spec {
 	pub label: String,

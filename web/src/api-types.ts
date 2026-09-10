@@ -352,7 +352,7 @@ export interface components {
         TriggeredRequirement: {
             class: string;
             id: string;
-            note?: string | null;
+            notes: string[];
             specs: components["schemas"]["Spec"][];
             summary?: string | null;
         };

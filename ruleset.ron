@@ -564,35 +564,6 @@
 
         // ── Client-hosted server provisioning ───────────────────────────────
         (
-            id: "prov-baremetal",
-            source: "topology",
-            when: Any([
-                Equals("onprem_form", "baremetal"),
-                Equals("onprem_form", "mixed"),
-            ]),
-            consequence: (
-                status: Requirement,
-                audience: Client,
-                types: [Operational],
-                title: "Provision the physical servers generously up front",
-                detail: "Disk and resources are hard to change on bare metal, so provision ahead: at least 500 GB SSD, 4 cores (prefer 8), and 16 GB RAM (prefer 32). Multiple disks and multiple TB are NOT usually required, though you may want to do RAID for redundancy.",
-            ),
-        ),
-        (
-            id: "prov-virtualised",
-            source: "topology",
-            when: Any([
-                Equals("onprem_form", "virtualised"),
-                Equals("onprem_form", "mixed"),
-            ]),
-            consequence: (
-                status: Advisory,
-                audience: Client,
-                title: "Start the virtual machines small, and back them up",
-                detail: "Resources can scale, so start around 50 GB / 4 cores / 16 GB and grow. VM-level backups are recommended; telling BES is not required but helps disaster planning.",
-            ),
-        ),
-        (
             id: "iti-note",
             source: "topology",
             when: Any([
@@ -1190,6 +1161,22 @@
                 (label: "Operating system", value: "Linux", when: Equals("platform", "linux")),
                 (label: "Operating system", value: "Windows Server", when: Equals("platform", "windows")),
             ],
+            notes: [
+                (
+                    text: "Aim for these figures; a virtual machine may sit slightly under if its host has room to grow. VM-level backups are recommended, and worth telling BES about for disaster planning.",
+                    when: Any([
+                        Equals("onprem_form", "virtualised"),
+                        Equals("onprem_form", "mixed"),
+                    ]),
+                ),
+                (
+                    text: "These figures are a minimum; buying more is wise to allow for growth. Multiple disks or terabytes are not usually needed, though RAID helps redundancy.",
+                    when: Any([
+                        Equals("onprem_form", "baremetal"),
+                        Equals("onprem_form", "mixed"),
+                    ]),
+                ),
+            ],
             // Sized to the deployment. The figures track the recommended on-prem
             // tower tiers; the make is a suggestion, not a requirement.
             by_size: [
@@ -1246,7 +1233,23 @@
                 (label: "Operating system", value: "Linux", when: Equals("platform", "linux")),
                 (label: "Operating system", value: "Windows Server", when: Equals("platform", "windows")),
             ],
-            note: Some("Keeps working within the facility when the link to Central is down."),
+            notes: [
+                (text: "Keeps working within the facility when the link to Central is down."),
+                (
+                    text: "Aim for these figures; a virtual machine may sit slightly under if its host has room to grow. VM-level backups are recommended, and worth telling BES about for disaster planning.",
+                    when: Any([
+                        Equals("onprem_form", "virtualised"),
+                        Equals("onprem_form", "mixed"),
+                    ]),
+                ),
+                (
+                    text: "These figures are a minimum; buying more is wise to allow for growth. Multiple disks or terabytes are not usually needed, though RAID helps redundancy.",
+                    when: Any([
+                        Equals("onprem_form", "baremetal"),
+                        Equals("onprem_form", "mixed"),
+                    ]),
+                ),
+            ],
             by_size: [
                 (
                     size: "Tiny",

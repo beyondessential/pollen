@@ -9,7 +9,9 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use super::answers::{Answer, Answers};
-use super::model::{Consequence, DerivationKind, QuestionKind, Ruleset, Severity, Spec, SpecRow};
+use super::model::{
+	Consequence, DerivationKind, NoteRow, QuestionKind, Ruleset, Severity, Spec, SpecRow,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Evaluation {
@@ -59,7 +61,7 @@ pub struct TriggeredRequirement {
 	pub class: String,
 	pub summary: Option<String>,
 	pub specs: Vec<Spec>,
-	pub note: Option<String>,
+	pub notes: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
@@ -159,17 +161,24 @@ pub fn evaluate(ruleset: &Ruleset, answers: &Answers) -> Evaluation {
 				specs.extend(present(&ss.specs));
 			}
 			specs.extend(present(&r.specs));
-			// A band-specific note augments the profile's own.
-			let note = match (r.note.clone(), by_size.and_then(|ss| ss.note.clone())) {
-				(Some(base), Some(band)) => Some(format!("{base} {band}")),
-				(base, band) => base.or(band),
-			};
+			// The band-specific hint leads, as the size-varying rows do; the
+			// profile's own hints follow, minus any whose condition fails.
+			let mut notes: Vec<String> = Vec::new();
+			if let Some(band) = by_size.and_then(|ss| ss.note.clone()) {
+				notes.push(band);
+			}
+			notes.extend(
+				r.notes
+					.iter()
+					.filter(|n: &&NoteRow| n.when.eval(answers))
+					.map(|n| n.text.clone()),
+			);
 			TriggeredRequirement {
 				id: r.id.clone(),
 				class: r.class.clone(),
 				summary: r.summary.clone(),
 				specs,
-				note,
+				notes,
 			}
 		})
 		.collect();

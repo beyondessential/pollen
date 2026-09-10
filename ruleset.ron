@@ -1163,14 +1163,14 @@
             ],
             notes: [
                 (
-                    text: "A virtual machine can be resized, so these figures are a target rather than a day-one commitment: storage especially can start smaller and grow. VM-level backups are recommended; telling BES is not required, but it helps disaster planning.",
+                    text: "Aim for these figures; a virtual machine may sit slightly under if its host has room to grow. VM-level backups are recommended, and worth telling BES about for disaster planning.",
                     when: Any([
                         Equals("onprem_form", "virtualised"),
                         Equals("onprem_form", "mixed"),
                     ]),
                 ),
                 (
-                    text: "Physical hardware is hard to change later, so buy with headroom above these figures rather than matching them exactly. Multiple disks or multiple terabytes are not usually needed, though RAID is worth considering for redundancy.",
+                    text: "Buy above these figures: physical hardware is hard to change later. Multiple disks or terabytes are not usually needed, though RAID helps redundancy.",
                     when: Any([
                         Equals("onprem_form", "baremetal"),
                         Equals("onprem_form", "mixed"),
@@ -1236,14 +1236,14 @@
             notes: [
                 (text: "Keeps working within the facility when the link to Central is down."),
                 (
-                    text: "A virtual machine can be resized, so these figures are a target rather than a day-one commitment: storage especially can start smaller and grow. VM-level backups are recommended; telling BES is not required, but it helps disaster planning.",
+                    text: "Aim for these figures; a virtual machine may sit slightly under if its host has room to grow. VM-level backups are recommended, and worth telling BES about for disaster planning.",
                     when: Any([
                         Equals("onprem_form", "virtualised"),
                         Equals("onprem_form", "mixed"),
                     ]),
                 ),
                 (
-                    text: "Physical hardware is hard to change later, so buy with headroom above these figures rather than matching them exactly. Multiple disks or multiple terabytes are not usually needed, though RAID is worth considering for redundancy.",
+                    text: "Buy above these figures: physical hardware is hard to change later. Multiple disks or terabytes are not usually needed, though RAID helps redundancy.",
                     when: Any([
                         Equals("onprem_form", "baremetal"),
                         Equals("onprem_form", "mixed"),

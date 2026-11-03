@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { callApi } from "../api";
+import { planUrl, useEdition } from "../edition";
 import {
 	type AnswerValue,
 	type AppView,
@@ -26,6 +27,7 @@ type Group = { key: string; label: string; items: TriggeredConsequence[] };
 
 export default function Artifact({ view }: { view: AppView }) {
 	const navigate = useNavigate();
+	const edition = useEdition();
 	const [busy, setBusy] = useState(false);
 	const [copied, setCopied] = useState(false);
 	// Groups open on arrival, bar the acknowledgements: those restate choices the
@@ -73,8 +75,8 @@ export default function Artifact({ view }: { view: AppView }) {
 		setBusy(true);
 		try {
 			const forked = await callApi("applications", "fork", { id: view.id });
-			if (tab) tab.location.href = `/a/${forked.id}`;
-			else navigate(`/a/${forked.id}`);
+			if (tab) tab.location.href = planUrl(edition, forked.id);
+			else navigate(planUrl(edition, forked.id));
 		} finally {
 			setBusy(false);
 		}

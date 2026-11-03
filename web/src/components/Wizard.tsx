@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import { callApi } from "../api";
 import { Markup } from "../markup";
@@ -15,9 +15,12 @@ import { Check, Chevron } from "./visuals";
 export default function Wizard({
 	view,
 	setView,
+	rail,
 }: {
 	view: AppView;
 	setView: (v: AppView) => void;
+	/// Extra content for the rail beneath the size, such as the running cost.
+	rail?: ReactNode;
 }) {
 	const [busy, setBusy] = useState(false);
 	// Sections the ruleset marks collapsed start closed: a non-technical user
@@ -91,6 +94,8 @@ export default function Wizard({
 					<span className="stat-k">Size</span>
 					<span className="stat-v">{ev.derived["size"] ?? "Not sized"}</span>
 				</div>
+
+				{rail}
 
 				{flagged.length > 0 && (
 					<>

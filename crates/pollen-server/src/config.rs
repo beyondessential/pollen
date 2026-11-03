@@ -25,6 +25,10 @@ pub struct Config {
 	/// How often to poll the production branch, in seconds (the first check runs
 	/// at startup). `0` disables polling; the bundled default is used as-is.
 	pub ruleset_poll_secs: u64,
+
+	/// The unguessable path segment the internal pricing edition lives under
+	/// (spec COST, Access). Unset switches the internal edition off.
+	pub pricing_path: Option<String>,
 }
 
 impl Config {
@@ -40,6 +44,26 @@ impl Config {
 				.ok()
 				.and_then(|s| s.parse().ok())
 				.unwrap_or(300),
+			pricing_path: match std::env::var("PRICING_PATH") {
+				Ok(path) if !path.is_empty() => Some(validate_pricing_path(path)?),
+				_ => None,
+			},
 		})
+	}
+}
+
+/// The pricing path is the only thing guarding the internal edition, so refuse
+/// one short enough to guess, or one that would not survive as a URL segment.
+fn validate_pricing_path(path: String) -> Result<String> {
+	let ok = path.len() >= 16
+		&& path
+			.chars()
+			.all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_'));
+	if ok {
+		Ok(path)
+	} else {
+		Err(AppError::custom(
+			"PRICING_PATH must be at least 16 characters of letters, digits, '-' or '_'",
+		))
 	}
 }

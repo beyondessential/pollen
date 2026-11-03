@@ -2,7 +2,9 @@ import { type ReactNode, useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { callApi, useApi } from "../api";
+import { planUrl, useEdition } from "../edition";
 import Artifact from "../components/Artifact";
+import PlanCostPanel from "../components/PlanCostPanel";
 import Wizard from "../components/Wizard";
 import { type RecentPlan, listRecentPlans, recordRecentPlan } from "../recentPlans";
 import type { AnswerValue, AppView } from "../types";
@@ -29,6 +31,7 @@ function Loaded({ initial }: { initial: AppView }) {
 	const [view, setView] = useState(initial);
 	const [params] = useSearchParams();
 	const navigate = useNavigate();
+	const edition = useEdition();
 	const [busy, setBusy] = useState(false);
 	const [resumeDismissed, setResumeDismissed] = useState(false);
 
@@ -72,7 +75,7 @@ function Loaded({ initial }: { initial: AppView }) {
 		setBusy(true);
 		try {
 			const forked = await callApi("applications", "fork", { id: view.id, ...args });
-			navigate(`/a/${forked.id}`, { replace: true });
+			navigate(planUrl(edition, forked.id), { replace: true });
 		} finally {
 			setBusy(false);
 		}
@@ -113,14 +116,38 @@ function Loaded({ initial }: { initial: AppView }) {
 			{showResume && previous != null && (
 				<ResumeBar
 					plan={previous}
-					onResume={() => navigate(`/a/${previous.id}`)}
+					onResume={() => navigate(planUrl(edition, previous.id))}
 					onDismiss={() => setResumeDismissed(true)}
 				/>
 			)}
 			{view.status === "finalised" ? (
-				<Artifact view={view} />
+				<>
+					{edition.pricingPath != null && edition.model && (
+						<div className="cost-strip">
+							<PlanCostPanel
+								pricingPath={edition.pricingPath}
+								model={edition.model}
+								view={view}
+							/>
+						</div>
+					)}
+					<Artifact view={view} />
+				</>
 			) : (
-				<Wizard view={view} setView={setView} />
+				<Wizard
+					view={view}
+					setView={setView}
+					rail={
+						edition.pricingPath != null &&
+						edition.model && (
+							<PlanCostPanel
+								pricingPath={edition.pricingPath}
+								model={edition.model}
+								view={view}
+							/>
+						)
+					}
+				/>
 			)}
 		</>
 	);

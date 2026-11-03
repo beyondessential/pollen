@@ -637,7 +637,8 @@ body {
 @media print {
 	.topbar,
 	.updatebar,
-	.sheet-actions {
+	.sheet-actions,
+	.cost-strip {
 		display: none;
 	}
 	/* A collapsed group is a reading convenience; the printed record is whole. */
@@ -944,4 +945,276 @@ body {
 .sheet-section-flush {
 	border-bottom: none;
 	padding-bottom: 0;
+}
+
+/* ── Internal pricing edition (spec COST) ────────────────────────────── */
+.brand-tag {
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--navy);
+	background: var(--sky-tint);
+	border: 1px solid #bfe4f8;
+	border-radius: 6px;
+	padding: 2px 7px;
+}
+.topbar-nav {
+	display: flex;
+	gap: 8px;
+}
+
+.cost {
+	display: flex;
+	flex-direction: column;
+}
+.cost-v {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: 34px;
+	letter-spacing: -0.02em;
+	margin-top: 3px;
+}
+.cost-compact .cost-v {
+	font-size: 27px;
+}
+.cost-v-none {
+	font-size: 20px;
+	color: var(--ink-faint);
+}
+.cost-compact .cost-v-none {
+	font-size: 18px;
+}
+.cost-annual {
+	font-size: 13px;
+	color: var(--ink-soft);
+	margin-top: 2px;
+}
+.cost-lines {
+	list-style: none;
+	margin: 16px 0 0;
+	padding: 12px 0 0;
+	border-top: 1px solid var(--line-soft);
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.cost-lines li {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	font-size: 13px;
+}
+.cost-line-label {
+	display: block;
+	color: var(--ink);
+}
+.cost-line-detail {
+	display: block;
+	font-size: 11.5px;
+	color: var(--ink-faint);
+	margin-top: 1px;
+}
+.cost-line-v {
+	font-variant-numeric: tabular-nums;
+	color: var(--ink-soft);
+	white-space: nowrap;
+}
+.cost-caveat {
+	font-size: 11.5px;
+	color: var(--ink-faint);
+	line-height: 1.45;
+	margin: 14px 0 0;
+}
+.cost-panel {
+	margin-bottom: 26px;
+}
+.cost-note {
+	font-size: 12px;
+	color: var(--open);
+	background: var(--open-bg);
+	border-radius: var(--radius-sm);
+	padding: 8px 10px;
+	line-height: 1.45;
+	margin: 12px 0 0;
+}
+.cost-control {
+	margin-top: 18px;
+}
+.cost-control-k {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 8px;
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--ink-soft);
+	margin-bottom: 8px;
+}
+.cost-control-hint {
+	font-weight: 400;
+	color: var(--ink-faint);
+	cursor: help;
+}
+.cost-control-reset {
+	font: inherit;
+	font-weight: 400;
+	color: var(--sky-deep);
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+}
+.cost-control .band {
+	padding: 8px 4px;
+	font-size: 12px;
+}
+.cost-strip {
+	max-width: 920px;
+	margin: 28px auto 0;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 16px;
+	padding: 22px 26px;
+}
+.cost-strip .cost-panel {
+	margin: 0;
+}
+
+.slider {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+.slider input {
+	flex: 1;
+	accent-color: var(--sky);
+}
+.slider-v {
+	min-width: 36px;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+	font-size: 13px;
+	font-weight: 500;
+}
+.band:disabled {
+	cursor: default;
+	opacity: 0.5;
+}
+
+.calc {
+	display: grid;
+	grid-template-columns: 1fr 340px;
+	gap: 24px;
+	max-width: 1080px;
+	margin: 0 auto;
+	padding: 30px 28px 96px;
+	align-items: start;
+}
+.calc-title {
+	font-family: var(--font-display);
+	font-size: 24px;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+	margin: 0 0 18px;
+}
+.calc-field {
+	display: grid;
+	grid-template-columns: 180px 1fr;
+	align-items: center;
+	gap: 14px;
+	margin-top: 14px;
+}
+.calc-label {
+	font-size: 13px;
+	color: var(--ink-soft);
+}
+.calc-result {
+	position: sticky;
+	top: 87px;
+}
+.assumptions .qexpand {
+	margin-bottom: 10px;
+}
+.assumptions-body {
+	padding: 18px 20px;
+}
+.assume {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 12px;
+	margin-bottom: 14px;
+}
+.assume th {
+	text-align: left;
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--ink-faint);
+	font-weight: 500;
+	padding-bottom: 6px;
+}
+.assume td {
+	padding: 4px 8px 4px 0;
+	border-top: 1px solid var(--line-soft);
+	color: var(--ink-soft);
+}
+.params {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+.param {
+	font-size: 12px;
+	border-top: 1px solid var(--line-soft);
+	padding-top: 10px;
+}
+.param-head {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+}
+.param-label {
+	font-weight: 500;
+}
+.param-v {
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+.param-basis {
+	display: block;
+	color: var(--ink-faint);
+	line-height: 1.45;
+	margin-top: 3px;
+}
+.conf {
+	display: inline-block;
+	font-size: 10px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	border-radius: 5px;
+	padding: 1px 6px;
+	margin-top: 5px;
+	background: var(--line-soft);
+	color: var(--ink-soft);
+}
+/* Shared-cost allocations and working assumptions read as unsettled. */
+.conf-estimated,
+.conf-assumed {
+	background: var(--open-bg);
+	color: var(--open);
+}
+
+@media (max-width: 860px) {
+	.calc {
+		grid-template-columns: 1fr;
+	}
+	.calc-result {
+		position: static;
+	}
+	.calc-field {
+		grid-template-columns: 1fr;
+		gap: 6px;
+	}
 }

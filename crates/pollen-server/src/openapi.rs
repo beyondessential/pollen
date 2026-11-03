@@ -15,6 +15,7 @@ use utoipa::OpenApi;
     tags(
         (name = "applications", description = "Onboarding artifacts: create, read, edit, finalise, fork."),
         (name = "meta", description = "Service metadata."),
+        (name = "pricing", description = "Internal hosting cost model. Answers only requests naming the configured pricing path."),
     ),
 )]
 pub struct ApiDoc;

@@ -6,6 +6,7 @@ use arc_swap::ArcSwap;
 use crate::config::Config;
 use crate::db::Db;
 use crate::error::{AppError, Result};
+use crate::pricing::{BUNDLED_PRICING, PricingConfig};
 use crate::ruleset::{BUNDLED_RULESET, GitHubSource, ResolvedRuleset, RulesetResolver};
 
 /// Shared application state handed to every handler.
@@ -20,6 +21,8 @@ pub struct AppState {
 	/// Preview resolver against the configured source repository. `None` when no
 	/// repository is configured, which disables `?config` previews.
 	pub resolver: Option<RulesetResolver<GitHubSource>>,
+	/// The hosting cost model's configuration, bundled at build time.
+	pub pricing: Arc<PricingConfig>,
 }
 
 impl AppState {
@@ -32,6 +35,11 @@ impl AppState {
 			ResolvedRuleset::from_ron(BUNDLED_RULESET)
 				.map_err(|e| AppError::custom(format!("bundled ruleset is invalid: {e}")))?,
 		));
+
+		let pricing = Arc::new(
+			PricingConfig::from_ron(BUNDLED_PRICING)
+				.map_err(|e| AppError::custom(format!("bundled pricing is invalid: {e}")))?,
+		);
 
 		let resolver = match &config.ruleset_repo {
 			Some(repo) => Some(RulesetResolver::new(GitHubSource::new(
@@ -61,6 +69,7 @@ impl AppState {
 			db,
 			default_ruleset,
 			resolver,
+			pricing,
 		})
 	}
 }

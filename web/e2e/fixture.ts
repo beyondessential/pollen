@@ -18,6 +18,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const FRONTEND_ROOT = resolve(__dirname, "..");
 const WORKSPACE_ROOT = resolve(FRONTEND_ROOT, "..");
 
+/** The internal pricing edition's path segment on the spawned server. */
+export const PRICING_PATH = "e2e-pricing-path-0123456789";
+
 export interface StackHandle {
 	/** Vite dev server URL (serves the SPA, proxies /api to the binary). */
 	baseUrl: string;
@@ -141,6 +144,7 @@ export async function startStack(): Promise<StackHandle> {
 				...process.env,
 				DATABASE_URL: databaseUrl,
 				BIND_ADDRESS: `127.0.0.1:${apiPort}`,
+				PRICING_PATH,
 				POLLEN_LOG: process.env.POLLEN_LOG ?? "pollen_server=info,warn",
 			},
 		});

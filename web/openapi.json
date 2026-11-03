@@ -218,6 +218,129 @@
           }
         }
       }
+    },
+    "/api/pricing/cost": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "summary": "Price inputs set directly (the calculator).",
+        "operationId": "pricing_cost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CostInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostBreakdown"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pricing/model": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "summary": "The pricing configuration.",
+        "operationId": "pricing_model",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelArgs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PricingModelView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pricing/plan": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "summary": "Price a plan from its answers (the priced wizard).",
+        "operationId": "pricing_plan",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanArgs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanCost"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsSchema"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -332,6 +455,25 @@
           "Record"
         ]
       },
+      "CloneMode": {
+        "type": "string",
+        "description": "The clone used to test upgrades.",
+        "enum": [
+          "off",
+          "standard",
+          "always_on"
+        ]
+      },
+      "Confidence": {
+        "type": "string",
+        "description": "How sure the model's owner is of a parameter's value.",
+        "enum": [
+          "Decided",
+          "Read",
+          "Estimated",
+          "Assumed"
+        ]
+      },
       "Consequence": {
         "type": "object",
         "required": [
@@ -401,6 +543,121 @@
           }
         }
       },
+      "CostBreakdown": {
+        "type": "object",
+        "required": [
+          "lines",
+          "monthly_usd",
+          "annual_usd",
+          "display"
+        ],
+        "properties": {
+          "annual_usd": {
+            "type": "number",
+            "format": "double"
+          },
+          "display": {
+            "$ref": "#/components/schemas/DisplayTotal"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CostLine"
+            }
+          },
+          "monthly_usd": {
+            "type": "number",
+            "format": "double",
+            "description": "The unrounded sum of the lines."
+          }
+        }
+      },
+      "CostInput": {
+        "type": "object",
+        "description": "What a deployment is priced from.",
+        "required": [
+          "band",
+          "central_in_cloud",
+          "cloud_facilities",
+          "clone",
+          "backups",
+          "tupaia"
+        ],
+        "properties": {
+          "backups": {
+            "type": "boolean"
+          },
+          "band": {
+            "type": "string",
+            "description": "A size band named in the pricing configuration."
+          },
+          "central_in_cloud": {
+            "type": "boolean",
+            "description": "Whether the central server is in BES cloud. A client-hosted central\nserver costs BES nothing, though its clone still runs in BES cloud."
+          },
+          "clone": {
+            "$ref": "#/components/schemas/CloneMode"
+          },
+          "clone_uptime": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "How much of the month a standard clone runs, as a fraction. Omitted\ntakes the configured share. Ignored unless the clone is standard."
+          },
+          "cloud_facilities": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Facility servers in BES cloud.",
+            "minimum": 0
+          },
+          "tupaia": {
+            "type": "boolean"
+          },
+          "windows_central": {
+            "type": "boolean",
+            "description": "A Windows central server. Applies only while the central is in BES cloud."
+          },
+          "windows_clone": {
+            "type": "boolean"
+          },
+          "windows_facilities": {
+            "type": "integer",
+            "format": "int32",
+            "description": "How many of the cloud facility servers run Windows (capped at their count).",
+            "minimum": 0
+          }
+        }
+      },
+      "CostLine": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "monthly_usd"
+        ],
+        "properties": {
+          "detail": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What the line is made of, such as the server and its storage."
+          },
+          "id": {
+            "$ref": "#/components/schemas/LineId"
+          },
+          "label": {
+            "type": "string"
+          },
+          "monthly_usd": {
+            "type": "number",
+            "format": "double",
+            "description": "Unrounded monthly cost to BES."
+          }
+        }
+      },
       "CreateArgs": {
         "type": "object",
         "properties": {
@@ -410,6 +667,67 @@
               "null"
             ],
             "description": "A ruleset branch to preview; omitted binds the bundled default."
+          }
+        }
+      },
+      "Display": {
+        "type": "object",
+        "description": "Applied to displayed figures only; the breakdown is always cost price.",
+        "required": [
+          "margin",
+          "currency",
+          "usd_to_currency",
+          "round_monthly_to",
+          "round_annual_to"
+        ],
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "margin": {
+            "type": "number",
+            "format": "double",
+            "description": "Margin over cost, as a fraction (0.2 is 20%)."
+          },
+          "round_annual_to": {
+            "type": "number",
+            "format": "double"
+          },
+          "round_monthly_to": {
+            "type": "number",
+            "format": "double"
+          },
+          "usd_to_currency": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DisplayTotal": {
+        "type": "object",
+        "description": "The displayed figures: margin and currency applied, then rounded.",
+        "required": [
+          "currency",
+          "margin",
+          "monthly",
+          "annual"
+        ],
+        "properties": {
+          "annual": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "margin": {
+            "type": "number",
+            "format": "double"
+          },
+          "monthly": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -491,6 +809,28 @@
           }
         }
       },
+      "FacilityGuess": {
+        "type": "object",
+        "description": "The guessed cloud facility server count and what it rests on.",
+        "required": [
+          "count",
+          "confidence",
+          "basis"
+        ],
+        "properties": {
+          "basis": {
+            "type": "string"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/Confidence"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
       "FinaliseArgs": {
         "type": "object",
         "required": [
@@ -538,6 +878,19 @@
           }
         }
       },
+      "LineId": {
+        "type": "string",
+        "description": "A line of the breakdown. Ids are stable, so tests and the UI can key on them.",
+        "enum": [
+          "central_box",
+          "cloud_facilities",
+          "clone",
+          "platform_share",
+          "backups_db_share",
+          "tupaia_reporting",
+          "windows_extra"
+        ]
+      },
       "MigrationView": {
         "type": "object",
         "description": "What a fork's migration changed (spec WIZ, stable-id migration).",
@@ -557,6 +910,35 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "ModelArgs": {
+        "type": "object"
+      },
+      "OpenLine": {
+        "type": "object",
+        "description": "A cost input resting on an answer still open, priced one way for now.",
+        "required": [
+          "id",
+          "label",
+          "included",
+          "monthly_usd"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/LineId"
+          },
+          "included": {
+            "type": "boolean",
+            "description": "Whether the line is in the figure as it stands."
+          },
+          "label": {
+            "type": "string"
+          },
+          "monthly_usd": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -596,6 +978,53 @@
           }
         }
       },
+      "Param": {
+        "type": "object",
+        "required": [
+          "label",
+          "unit",
+          "value",
+          "confidence",
+          "basis"
+        ],
+        "properties": {
+          "basis": {
+            "type": "string"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/Confidence"
+          },
+          "label": {
+            "type": "string"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/Unit"
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ParamView": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Param"
+          },
+          {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
       "PatchArgs": {
         "type": "object",
         "required": [
@@ -609,6 +1038,158 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "PlanArgs": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "overrides": {
+            "$ref": "#/components/schemas/PlanOverrides"
+          }
+        }
+      },
+      "PlanCost": {
+        "type": "object",
+        "required": [
+          "guess",
+          "open",
+          "notes"
+        ],
+        "properties": {
+          "cost": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CostBreakdown"
+              }
+            ]
+          },
+          "guess": {
+            "$ref": "#/components/schemas/FacilityGuess"
+          },
+          "input": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CostInput",
+                "description": "The inputs priced, overrides applied."
+              }
+            ]
+          },
+          "missing": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why there is no figure, when there is none."
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "open": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpenLine"
+            }
+          },
+          "size": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The derived size band, if the plan is sized."
+          }
+        }
+      },
+      "PlanOverrides": {
+        "type": "object",
+        "description": "What the person pricing sets beside the plan. Never stored with it.",
+        "properties": {
+          "clone": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CloneMode"
+              }
+            ]
+          },
+          "clone_uptime": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "cloud_facilities": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "PricingModelView": {
+        "type": "object",
+        "description": "The model's configuration, for the calculator's controls and the\nassumptions panel.",
+        "required": [
+          "model",
+          "bands",
+          "facility",
+          "params",
+          "display",
+          "max_cloud_facilities",
+          "clone_uptime"
+        ],
+        "properties": {
+          "bands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServerBox"
+            }
+          },
+          "clone_uptime": {
+            "type": "number",
+            "format": "double",
+            "description": "The configured share of the month a standard clone runs."
+          },
+          "display": {
+            "$ref": "#/components/schemas/Display"
+          },
+          "facility": {
+            "$ref": "#/components/schemas/ServerBox"
+          },
+          "max_cloud_facilities": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "model": {
+            "type": "string"
+          },
+          "params": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParamView"
+            }
           }
         }
       },
@@ -721,6 +1302,38 @@
           }
         }
       },
+      "ServerBox": {
+        "type": "object",
+        "description": "One server: its instance, hourly rate, storage, and how many copies of that\nstorage its snapshots hold.",
+        "required": [
+          "name",
+          "instance",
+          "usd_per_hour",
+          "volume_gb",
+          "snapshot_multiple"
+        ],
+        "properties": {
+          "instance": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "snapshot_multiple": {
+            "type": "number",
+            "format": "double"
+          },
+          "usd_per_hour": {
+            "type": "number",
+            "format": "double"
+          },
+          "volume_gb": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
       "Severity": {
         "type": "string",
         "description": "The viability axis (spec WIZ, Severity).",
@@ -825,6 +1438,17 @@
           }
         }
       },
+      "Unit": {
+        "type": "string",
+        "description": "What a parameter's value measures, so it can be shown in the right form.",
+        "enum": [
+          "Usd",
+          "UsdPerGbMonth",
+          "Share",
+          "Count",
+          "Multiple"
+        ]
+      },
       "Verdict": {
         "type": "string",
         "description": "The viability verdict: the worst severity present across triggered\nconsequences. Default-severity consequences don't move it off `Clear`.",
@@ -859,6 +1483,10 @@
     {
       "name": "meta",
       "description": "Service metadata."
+    },
+    {
+      "name": "pricing",
+      "description": "Internal hosting cost model. Answers only requests naming the configured pricing path."
     }
   ]
 }

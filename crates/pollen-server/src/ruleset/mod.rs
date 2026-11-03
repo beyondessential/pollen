@@ -15,7 +15,7 @@ pub use answers::{Answer, Answers};
 pub use condition::Condition;
 pub use engine::{
 	Assumed, Evaluation, TriggeredConsequence, TriggeredGuidance, TriggeredRequirement, Verdict,
-	evaluate,
+	effective_answers, evaluate,
 };
 pub use migrate::{Migration, migrate};
 pub use model::{

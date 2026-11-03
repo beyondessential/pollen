@@ -220,6 +220,21 @@ pub fn evaluate(ruleset: &Ruleset, answers: &Answers) -> Evaluation {
 	}
 }
 
+/// The answers the engine evaluates against: assumed answers filled in, and
+/// answers to questions no longer shown dropped, so a stale answer to a hidden
+/// question reads as no answer at all.
+pub fn effective_answers(ruleset: &Ruleset, answers: &Answers) -> Answers {
+	let (mut effective, _) = apply_defaults(ruleset, answers);
+	let visible: Vec<String> = ruleset
+		.questions
+		.iter()
+		.filter(|q| q.visible_if.eval(&effective))
+		.map(|q| q.id.clone())
+		.collect();
+	effective.0.retain(|qid, _| visible.contains(qid));
+	effective
+}
+
 /// Fill in the blessed-path answer for every visible question left blank that
 /// declares one (spec WIZ, assumed defaults).
 ///

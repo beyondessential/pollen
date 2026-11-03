@@ -26,10 +26,11 @@ export async function callApi<
 	fn: F,
 	params: ApiBody<M, F> | Record<string, unknown> = {},
 	signal?: AbortSignal,
+	headers: Record<string, string> = {},
 ): Promise<T> {
 	const response = await fetch(`/api/${module}/${fn}`, {
 		method: "POST",
-		headers: { "content-type": "application/json" },
+		headers: { "content-type": "application/json", ...headers },
 		body: JSON.stringify(params),
 		signal,
 	});

@@ -14,9 +14,13 @@ use diesel_async::{
 };
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness as _, embed_migrations};
 use pollen_server::config::Config;
+use pollen_server::pricing::{BUNDLED_PRICING, PricingConfig};
 use pollen_server::ruleset::{BUNDLED_RULESET, ResolvedRuleset};
 use pollen_server::state::AppState;
 use uuid::Uuid;
+
+/// The pricing path the test server is configured with.
+pub const PRICING_PATH: &str = "test-pricing-path-0123456789";
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
@@ -98,12 +102,14 @@ where
 			ruleset_repo_token: None,
 			ruleset_branch: "main".to_string(),
 			ruleset_poll_secs: 0,
+			pricing_path: Some(PRICING_PATH.to_string()),
 		}),
 		db: pollen_server::db::init(&tdb.url),
 		default_ruleset: Arc::new(ArcSwap::from_pointee(
 			ResolvedRuleset::from_ron(BUNDLED_RULESET).expect("bundled ruleset"),
 		)),
 		resolver: None,
+		pricing: Arc::new(PricingConfig::from_ron(BUNDLED_PRICING).expect("bundled pricing")),
 	};
 	let app = pollen_server::routes(state).expect("routes");
 	let server = TestServer::new(app);

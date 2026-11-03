@@ -114,6 +114,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/pricing/cost": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Price inputs set directly (the calculator). */
+        post: operations["pricing_cost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pricing/model": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The pricing configuration. */
+        post: operations["pricing_model"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pricing/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Price a plan from its answers (the priced wizard). */
+        post: operations["pricing_plan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -162,6 +213,16 @@ export interface components {
          * @enum {string}
          */
         Audience: "Client" | "Bes" | "Pricing" | "Record";
+        /**
+         * @description The clone used to test upgrades.
+         * @enum {string}
+         */
+        CloneMode: "off" | "standard" | "always_on";
+        /**
+         * @description How sure the model's owner is of a parameter's value.
+         * @enum {string}
+         */
+        Confidence: "Decided" | "Read" | "Estimated" | "Assumed";
         Consequence: {
             audience: components["schemas"]["Audience"];
             cost?: null | components["schemas"]["Cost"];
@@ -180,9 +241,88 @@ export interface components {
             ballpark?: string | null;
             tier: string;
         };
+        CostBreakdown: {
+            /** Format: double */
+            annual_usd: number;
+            display: components["schemas"]["DisplayTotal"];
+            lines: components["schemas"]["CostLine"][];
+            /**
+             * Format: double
+             * @description The unrounded sum of the lines.
+             */
+            monthly_usd: number;
+        };
+        /** @description What a deployment is priced from. */
+        CostInput: {
+            backups: boolean;
+            /** @description A size band named in the pricing configuration. */
+            band: string;
+            /**
+             * @description Whether the central server is in BES cloud. A client-hosted central
+             *     server costs BES nothing, though its clone still runs in BES cloud.
+             */
+            central_in_cloud: boolean;
+            clone: components["schemas"]["CloneMode"];
+            /**
+             * Format: double
+             * @description How much of the month a standard clone runs, as a fraction. Omitted
+             *     takes the configured share. Ignored unless the clone is standard.
+             */
+            clone_uptime?: number | null;
+            /**
+             * Format: int32
+             * @description Facility servers in BES cloud.
+             */
+            cloud_facilities: number;
+            tupaia: boolean;
+            /** @description A Windows central server. Applies only while the central is in BES cloud. */
+            windows_central?: boolean;
+            windows_clone?: boolean;
+            /**
+             * Format: int32
+             * @description How many of the cloud facility servers run Windows (capped at their count).
+             */
+            windows_facilities?: number;
+        };
+        CostLine: {
+            /** @description What the line is made of, such as the server and its storage. */
+            detail?: string | null;
+            id: components["schemas"]["LineId"];
+            label: string;
+            /**
+             * Format: double
+             * @description Unrounded monthly cost to BES.
+             */
+            monthly_usd: number;
+        };
         CreateArgs: {
             /** @description A ruleset branch to preview; omitted binds the bundled default. */
             config_branch?: string | null;
+        };
+        /** @description Applied to displayed figures only; the breakdown is always cost price. */
+        Display: {
+            currency: string;
+            /**
+             * Format: double
+             * @description Margin over cost, as a fraction (0.2 is 20%).
+             */
+            margin: number;
+            /** Format: double */
+            round_annual_to: number;
+            /** Format: double */
+            round_monthly_to: number;
+            /** Format: double */
+            usd_to_currency: number;
+        };
+        /** @description The displayed figures: margin and currency applied, then rounded. */
+        DisplayTotal: {
+            /** Format: double */
+            annual: number;
+            currency: string;
+            /** Format: double */
+            margin: number;
+            /** Format: double */
+            monthly: number;
         };
         Evaluation: {
             /**
@@ -220,6 +360,13 @@ export interface components {
              */
             visible_questions: string[];
         };
+        /** @description The guessed cloud facility server count and what it rests on. */
+        FacilityGuess: {
+            basis: string;
+            confidence: components["schemas"]["Confidence"];
+            /** Format: int32 */
+            count: number;
+        };
         FinaliseArgs: {
             /** Format: uuid */
             id: string;
@@ -239,10 +386,25 @@ export interface components {
             /** Format: uuid */
             id: string;
         };
+        /**
+         * @description A line of the breakdown. Ids are stable, so tests and the UI can key on them.
+         * @enum {string}
+         */
+        LineId: "central_box" | "cloud_facilities" | "clone" | "platform_share" | "backups_db_share" | "tupaia_reporting" | "windows_extra";
         /** @description What a fork's migration changed (spec WIZ, stable-id migration). */
         MigrationView: {
             dropped: string[];
             new_questions: string[];
+        };
+        ModelArgs: Record<string, never>;
+        /** @description A cost input resting on an answer still open, priced one way for now. */
+        OpenLine: {
+            id: components["schemas"]["LineId"];
+            /** @description Whether the line is in the figure as it stands. */
+            included: boolean;
+            label: string;
+            /** Format: double */
+            monthly_usd: number;
         };
         Opt: {
             /**
@@ -264,11 +426,64 @@ export interface components {
              */
             warn?: string | null;
         };
+        Param: {
+            basis: string;
+            confidence: components["schemas"]["Confidence"];
+            label: string;
+            unit: components["schemas"]["Unit"];
+            /** Format: double */
+            value: number;
+        };
+        ParamView: components["schemas"]["Param"] & {
+            id: string;
+        };
         PatchArgs: {
             /** @description Answers keyed by question id; each value is an option id or a list of them. */
             answers: unknown;
             /** Format: uuid */
             id: string;
+        };
+        PlanArgs: {
+            /** Format: uuid */
+            id: string;
+            overrides?: components["schemas"]["PlanOverrides"];
+        };
+        PlanCost: {
+            cost?: null | components["schemas"]["CostBreakdown"];
+            guess: components["schemas"]["FacilityGuess"];
+            input?: null | components["schemas"]["CostInput"];
+            /** @description Why there is no figure, when there is none. */
+            missing?: string | null;
+            notes: string[];
+            open: components["schemas"]["OpenLine"][];
+            /** @description The derived size band, if the plan is sized. */
+            size?: string | null;
+        };
+        /** @description What the person pricing sets beside the plan. Never stored with it. */
+        PlanOverrides: {
+            clone?: null | components["schemas"]["CloneMode"];
+            /** Format: double */
+            clone_uptime?: number | null;
+            /** Format: int32 */
+            cloud_facilities?: number | null;
+        };
+        /**
+         * @description The model's configuration, for the calculator's controls and the
+         *     assumptions panel.
+         */
+        PricingModelView: {
+            bands: components["schemas"]["ServerBox"][];
+            /**
+             * Format: double
+             * @description The configured share of the month a standard clone runs.
+             */
+            clone_uptime: number;
+            display: components["schemas"]["Display"];
+            facility: components["schemas"]["ServerBox"];
+            /** Format: int32 */
+            max_cloud_facilities: number;
+            model: string;
+            params: components["schemas"]["ParamView"][];
         };
         /**
          * @description Wire-shape mirror of [`problem_details::ProblemDetails`] for OpenAPI.
@@ -319,6 +534,20 @@ export interface components {
             label: string;
         };
         /**
+         * @description One server: its instance, hourly rate, storage, and how many copies of that
+         *     storage its snapshots hold.
+         */
+        ServerBox: {
+            instance: string;
+            name: string;
+            /** Format: double */
+            snapshot_multiple: number;
+            /** Format: double */
+            usd_per_hour: number;
+            /** Format: double */
+            volume_gb: number;
+        };
+        /**
          * @description The viability axis (spec WIZ, Severity).
          * @enum {string}
          */
@@ -356,6 +585,11 @@ export interface components {
             specs: components["schemas"]["Spec"][];
             summary?: string | null;
         };
+        /**
+         * @description What a parameter's value measures, so it can be shown in the right form.
+         * @enum {string}
+         */
+        Unit: "Usd" | "UsdPerGbMonth" | "Share" | "Count" | "Multiple";
         /**
          * @description The viability verdict: the worst severity present across triggered
          *     consequences. Default-severity consequences don't move it off `Clear`.
@@ -529,6 +763,99 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VersionInfo"];
+                };
+            };
+        };
+    };
+    pricing_cost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CostInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostBreakdown"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
+                };
+            };
+        };
+    };
+    pricing_model: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModelArgs"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PricingModelView"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
+                };
+            };
+        };
+    };
+    pricing_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanArgs"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanCost"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
                 };
             };
         };

@@ -90,6 +90,8 @@ export function Slider({
 	format = String,
 	label,
 	disabled = false,
+	startLabel,
+	endLabel,
 }: {
 	value: number;
 	min: number;
@@ -99,19 +101,30 @@ export function Slider({
 	format?: (v: number) => string;
 	label: string;
 	disabled?: boolean;
+	/// Names for what each end of the track means.
+	startLabel?: string;
+	endLabel?: string;
 }) {
 	return (
 		<div className="slider">
-			<input
-				type="range"
-				aria-label={label}
-				min={min}
-				max={max}
-				step={step}
-				value={value}
-				disabled={disabled}
-				onChange={(e) => onChange(Number(e.target.value))}
-			/>
+			<div className="slider-track">
+				<input
+					type="range"
+					aria-label={label}
+					min={min}
+					max={max}
+					step={step}
+					value={value}
+					disabled={disabled}
+					onChange={(e) => onChange(Number(e.target.value))}
+				/>
+				{(startLabel || endLabel) && (
+					<div className="slider-ends">
+						<span>{startLabel}</span>
+						<span>{endLabel}</span>
+					</div>
+				)}
+			</div>
 			<span className="slider-v">{format(value)}</span>
 		</div>
 	);

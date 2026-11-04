@@ -154,6 +154,9 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 									min={0}
 									max={Math.max(model.max_cloud_facilities, cloudFacilities)}
 									onChange={setMixCount}
+									startLabel="Client hosted"
+									endLabel="BES cloud"
+									format={(n) => `${n} in BES cloud`}
 								/>
 							)}
 						</div>

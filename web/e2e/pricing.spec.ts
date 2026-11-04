@@ -73,6 +73,8 @@ test("the calculator asks where facility servers run, and estimates the size", a
 	// A mix starts at half of that, and the slider moves it.
 	await group("Facility servers").getByRole("radio", { name: "A mix" }).click();
 	await expect(slider).toHaveValue("5");
+	await expect(page.locator(".calc-field .slider")).toContainText("Client hosted");
+	await expect(page.locator(".calc-field .slider")).toContainText("5 in BES cloud");
 	await expect(lines).toContainText("5 × t4g.medium");
 	await slider.fill("2");
 	await expect(lines).toContainText("2 × t4g.medium");

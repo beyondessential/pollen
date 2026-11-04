@@ -126,6 +126,9 @@ export function FacilityServersControl({
 				min={0}
 				max={Math.max(model.max_cloud_facilities, count)}
 				onChange={(facilities) => onSettings({ ...settings, facilities })}
+									startLabel="Client hosted"
+									endLabel="BES cloud"
+									format={(n) => `${n} in BES cloud`}
 			/>
 		</div>
 	);

@@ -1,28 +1,55 @@
 import { type ReactNode, useEffect, useState } from "react";
 
-import { CLONE_OPTIONS, CostSummary, Segmented, Slider } from "../components/Cost";
+import { CostSummary, Segmented, Slider } from "../components/Cost";
 import { Chevron } from "../components/visuals";
 import { callPricing, useEdition } from "../edition";
 import type { CostBreakdown, CostInput, ParamView, PricingModelView, Unit } from "../types";
 
+type FacilityMode = "cloud" | "client" | "mix";
+
+/// The estimator's answers: option ids by sizing question, and whether other
+/// systems connect.
+type Estimate = { answers: Record<string, string>; integrations: boolean };
+const NO_ESTIMATE: Estimate = { answers: {}, integrations: false };
+
 /// Price a handful of inputs directly (spec COST, The calculator).
 export default function Calculator({ model }: { model: PricingModelView }) {
 	const { pricingPath } = useEdition();
-	const [input, setInput] = useState<CostInput>(() => ({
-		band: model.bands[0]?.name ?? "",
-		central_in_cloud: true,
-		cloud_facilities: 0,
-		clone: "standard",
-		clone_uptime: model.clone_uptime,
-		backups: true,
-		tupaia: false,
-		windows_central: false,
-		windows_facilities: 0,
-		windows_clone: false,
-	}));
+	const [band, setBand] = useState(model.bands[0]?.name ?? "");
+	const [estimate, setEstimate] = useState<Estimate>(NO_ESTIMATE);
+	// Facility servers if they all ran in BES cloud, from the estimator's
+	// facilities answer. Without one, the band's typical number stands in.
+	const [estimated, setEstimated] = useState<number | null>(null);
+	const [centralInCloud, setCentralInCloud] = useState(true);
+	const [facilityMode, setFacilityMode] = useState<FacilityMode>("client");
+	const [mixCount, setMixCount] = useState<number | null>(null);
+	const [backups, setBackups] = useState(true);
+	const [smokeTesting, setSmokeTesting] = useState(true);
+	const [tupaia, setTupaia] = useState(true);
+	const [estimating, setEstimating] = useState(false);
+
 	const [cost, setCost] = useState<CostBreakdown | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [showAssumptions, setShowAssumptions] = useState(false);
+
+	const bandIx = Math.max(0, model.bands.findIndex((b) => b.name === band));
+	const allInCloud = estimated ?? model.facility_guess_by_band[bandIx] ?? 0;
+	const mixDefault = Math.round(allInCloud * model.mix_share);
+	const cloudFacilities =
+		facilityMode === "cloud" ? allInCloud : facilityMode === "mix" ? (mixCount ?? mixDefault) : 0;
+
+	const input: CostInput = {
+		band,
+		central_in_cloud: centralInCloud,
+		cloud_facilities: cloudFacilities,
+		clone: smokeTesting ? "standard" : "off",
+		clone_uptime: null,
+		backups,
+		tupaia,
+		windows_central: false,
+		windows_facilities: 0,
+		windows_clone: false,
+	};
 
 	useEffect(() => {
 		if (!pricingPath) return;
@@ -36,9 +63,28 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 				if (!controller.signal.aborted) setError(e instanceof Error ? e.message : String(e));
 			});
 		return () => controller.abort();
-	}, [pricingPath, input]);
+		// biome-ignore lint/correctness/useExhaustiveDependencies: input is built from the state listed
+	}, [pricingPath, band, centralInCloud, cloudFacilities, smokeTesting, backups, tupaia]);
 
-	const set = (patch: Partial<CostInput>) => setInput((prev) => ({ ...prev, ...patch }));
+	// The band comes from the server, which applies the wizard's own derivation.
+	function estimateSize(next: Estimate) {
+		setEstimate(next);
+		if (!pricingPath) return;
+		callPricing(pricingPath, "size", next)
+			.then((r) => {
+				setEstimated(r.cloud_facilities);
+				if (r.band) setBand(r.band);
+			})
+			.catch(() => {});
+	}
+
+	// Choosing a band directly replaces whatever was estimated.
+	function chooseBand(name: string) {
+		setBand(name);
+		setEstimate(NO_ESTIMATE);
+		setEstimated(null);
+	}
+
 	const yesNo = [
 		{ id: "yes" as const, label: "Yes" },
 		{ id: "no" as const, label: "No" },
@@ -53,12 +99,62 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 				<div className="card">
 					<h3 className="qtitle">Deployment</h3>
 					<Field label="Size">
-						<Segmented
-							label="Size"
-							options={model.bands.map((b) => ({ id: b.name, label: b.name }))}
-							value={input.band}
-							onChange={(band) => set({ band })}
-						/>
+						<div className="calc-stack">
+							<Segmented
+								label="Size"
+								options={model.bands.map((b) => ({ id: b.name, label: b.name }))}
+								value={band}
+								onChange={chooseBand}
+							/>
+							<button
+								type="button"
+								className={`calc-disclose${estimating ? " on" : ""}`}
+								aria-expanded={estimating}
+								onClick={() => setEstimating(!estimating)}
+							>
+								<Chevron size={14} />
+								<span>Estimate size</span>
+							</button>
+							{estimating && (
+								<div className="estimator">
+									{model.estimator.sizing.map((q) => (
+										<label key={q.id} className="estimator-row">
+											<span>{q.label}</span>
+											<select
+												value={estimate.answers[q.id] ?? ""}
+												onChange={(e) => {
+													const answers = { ...estimate.answers };
+													if (e.target.value) answers[q.id] = e.target.value;
+													else delete answers[q.id];
+													estimateSize({ ...estimate, answers });
+												}}
+											>
+												<option value="">Not sure</option>
+												{q.options.map((o) => (
+													<option key={o.id} value={o.id}>
+														{o.label}
+													</option>
+												))}
+											</select>
+										</label>
+									))}
+									{model.estimator.integrations_label && (
+										<label className="estimator-row">
+											<span>{model.estimator.integrations_label}</span>
+											<select
+												value={yn(estimate.integrations)}
+												onChange={(e) =>
+													estimateSize({ ...estimate, integrations: e.target.value === "yes" })
+												}
+											>
+												<option value="no">No</option>
+												<option value="yes">Yes</option>
+											</select>
+										</label>
+									)}
+								</div>
+							)}
+						</div>
 					</Field>
 					<Field label="Central server">
 						<Segmented
@@ -67,96 +163,59 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 								{ id: "cloud", label: "BES cloud" },
 								{ id: "client", label: "Client hosted" },
 							]}
-							value={input.central_in_cloud ? "cloud" : "client"}
-							onChange={(v) => set({ central_in_cloud: v === "cloud" })}
+							value={centralInCloud ? "cloud" : "client"}
+							onChange={(v) => setCentralInCloud(v === "cloud")}
 						/>
 					</Field>
-					<Field label="Facility servers in BES cloud">
-						<Slider
-							label="Facility servers in BES cloud"
-							value={input.cloud_facilities}
-							min={0}
-							max={model.max_cloud_facilities}
-							onChange={(n) =>
-								set({
-									cloud_facilities: n,
-									windows_facilities: Math.min(input.windows_facilities, n),
-								})
-							}
-						/>
+					<Field label="Facility servers">
+						<div className="calc-stack">
+							<Segmented
+								label="Facility servers"
+								options={[
+									{ id: "cloud" as const, label: "BES cloud" },
+									{ id: "client" as const, label: "Client hosted" },
+									{ id: "mix" as const, label: "A mix" },
+								]}
+								value={facilityMode}
+								onChange={setFacilityMode}
+							/>
+							{facilityMode === "mix" && (
+								<Slider
+									label="Facility servers in BES cloud"
+									value={cloudFacilities}
+									min={0}
+									max={Math.max(model.max_cloud_facilities, cloudFacilities)}
+									onChange={setMixCount}
+								/>
+							)}
+						</div>
 					</Field>
 				</div>
 
 				<div className="card">
 					<h3 className="qtitle">Services</h3>
-					<Field label="Clone">
-						<Segmented
-							label="Clone"
-							options={CLONE_OPTIONS}
-							value={input.clone}
-							onChange={(clone) => set({ clone })}
-						/>
-					</Field>
-					{input.clone === "standard" && (
-						<Field label="Clone running">
-							<Slider
-								label="Share of the month the clone runs"
-								value={Math.round((input.clone_uptime ?? model.clone_uptime) * 100)}
-								min={0}
-								max={100}
-								step={5}
-								format={(v) => `${v}%`}
-								onChange={(v) => set({ clone_uptime: v / 100 })}
-							/>
-						</Field>
-					)}
 					<Field label="BES takes backups">
 						<Segmented
 							label="BES takes backups"
 							options={yesNo}
-							value={yn(input.backups)}
-							onChange={(v) => set({ backups: v === "yes" })}
+							value={yn(backups)}
+							onChange={(v) => setBackups(v === "yes")}
 						/>
 					</Field>
-					<Field label="Feeds Tupaia">
+					<Field label="Upgrade smoke testing on a clone">
 						<Segmented
-							label="Feeds Tupaia"
+							label="Upgrade smoke testing on a clone"
 							options={yesNo}
-							value={yn(input.tupaia)}
-							onChange={(v) => set({ tupaia: v === "yes" })}
+							value={yn(smokeTesting)}
+							onChange={(v) => setSmokeTesting(v === "yes")}
 						/>
 					</Field>
-				</div>
-
-				<div className="card">
-					<h3 className="qtitle">Legacy Windows</h3>
-					<p className="qhelp">For existing deployments still on Windows.</p>
-					<Field label="Windows central server">
+					<Field label="Tupaia reporting">
 						<Segmented
-							label="Windows central server"
+							label="Tupaia reporting"
 							options={yesNo}
-							value={yn(input.windows_central && input.central_in_cloud)}
-							disabled={!input.central_in_cloud}
-							onChange={(v) => set({ windows_central: v === "yes" })}
-						/>
-					</Field>
-					<Field label="Windows facility servers">
-						<Slider
-							label="Windows facility servers"
-							value={input.windows_facilities}
-							min={0}
-							max={input.cloud_facilities}
-							disabled={input.cloud_facilities === 0}
-							onChange={(n) => set({ windows_facilities: n })}
-						/>
-					</Field>
-					<Field label="Windows clone">
-						<Segmented
-							label="Windows clone"
-							options={yesNo}
-							value={yn(input.windows_clone && input.clone !== "off")}
-							disabled={input.clone === "off"}
-							onChange={(v) => set({ windows_clone: v === "yes" })}
+							value={yn(tupaia)}
+							onChange={(v) => setTupaia(v === "yes")}
 						/>
 					</Field>
 				</div>

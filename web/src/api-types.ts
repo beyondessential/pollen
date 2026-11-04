@@ -165,6 +165,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/pricing/size": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Work out the size band, and facility servers, from sizing answers (the
+         *     calculator's estimator).
+         */
+        post: operations["pricing_size"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -324,6 +344,22 @@ export interface components {
             /** Format: double */
             monthly: number;
         };
+        EstimatorOption: {
+            id: string;
+            label: string;
+        };
+        /** @description A sizing question as the estimator offers it. */
+        EstimatorQuestion: {
+            id: string;
+            label: string;
+            options: components["schemas"]["EstimatorOption"][];
+        };
+        /** @description The questions the estimator asks, taken from the ruleset. */
+        EstimatorView: {
+            /** @description The label of the yes/no about connected systems. */
+            integrations_label?: string | null;
+            sizing: components["schemas"]["EstimatorQuestion"][];
+        };
         Evaluation: {
             /**
              * @description Visible questions left unanswered whose blessed-path default the engine
@@ -479,9 +515,23 @@ export interface components {
              */
             clone_uptime: number;
             display: components["schemas"]["Display"];
+            /** @description The sizing questions the calculator's estimator asks. */
+            estimator: components["schemas"]["EstimatorView"];
             facility: components["schemas"]["ServerBox"];
+            /**
+             * @description For each band, in order, the facility servers if they all run in BES
+             *     cloud.
+             */
+            facility_guess_by_band: number[];
+            /** @description The wizard question the cloud facility slider takes the place of. */
+            facility_slider_question: string;
             /** Format: int32 */
             max_cloud_facilities: number;
+            /**
+             * Format: double
+             * @description The share of the facility servers in BES cloud for a mix of both.
+             */
+            mix_share: number;
             model: string;
             params: components["schemas"]["ParamView"][];
         };
@@ -552,6 +602,24 @@ export interface components {
          * @enum {string}
          */
         Severity: "Default" | "NonDefault" | "Blocking";
+        SizeArgs: {
+            /** @description Option ids keyed by sizing question id. Questions left out are unanswered. */
+            answers?: {
+                [key: string]: string;
+            };
+            /** @description Whether any other system connects. */
+            integrations?: boolean;
+        };
+        SizeEstimate: {
+            /** @description The derived band; none until a sizing question is answered. */
+            band?: string | null;
+            /**
+             * Format: int32
+             * @description Facility servers in BES cloud if they all run there, once the facilities
+             *     question is answered.
+             */
+            cloud_facilities?: number | null;
+        };
         /**
          * @description One row of a compute requirement as presented: the engine has already
          *     resolved the size band and dropped the rows whose condition does not hold.
@@ -848,6 +916,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlanCost"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
+                };
+            };
+        };
+    };
+    pricing_size: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SizeArgs"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SizeEstimate"];
                 };
             };
             404: {

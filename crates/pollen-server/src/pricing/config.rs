@@ -24,7 +24,20 @@ pub struct PricingConfig {
 	pub params: Params,
 	pub display: Display,
 	pub max_cloud_facilities: u32,
+	pub estimator: Estimator,
 	pub wizard: WizardMapping,
+}
+
+/// The calculator's size estimator: which ruleset questions it asks.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Estimator {
+	/// The sizing questions, in the order they are asked.
+	pub sizing: Vec<String>,
+	/// The multi-select whose answering with any system bumps the size.
+	pub integrations: String,
+	/// The sizing question whose answer also gives the facility server count.
+	pub facilities: String,
 }
 
 /// One server: its instance, hourly rate, storage, and how many copies of that
@@ -137,8 +150,33 @@ pub struct WizardMapping {
 	pub backups: Toggle,
 	pub tupaia: Toggle,
 	pub facility_count: Lookup,
-	pub cloud_share: Lookup,
+	pub cloud_share: CloudShare,
+	/// The question the cloud facility slider takes the place of.
+	pub slider_in_place_of: String,
 	pub notes: Vec<Note>,
+}
+
+/// What share of the facility servers are in BES cloud, read from where they run.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CloudShare {
+	pub all: Condition,
+	pub mix: Condition,
+	pub mix_share: f64,
+	pub confidence: Confidence,
+	pub basis: String,
+}
+
+impl CloudShare {
+	pub fn pick(&self, answers: &crate::ruleset::Answers) -> f64 {
+		if self.all.eval(answers) {
+			1.0
+		} else if self.mix.eval(answers) {
+			self.mix_share
+		} else {
+			0.0
+		}
+	}
 }
 
 /// A yes/no input read from the answers, and whether the answer behind it is

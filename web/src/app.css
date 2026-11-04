@@ -1218,3 +1218,69 @@ body {
 		gap: 6px;
 	}
 }
+
+/* Calculator: stacked controls and the size estimator. */
+.calc-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	min-width: 0;
+}
+.calc-disclose {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	align-self: flex-start;
+	font: inherit;
+	font-size: 12.5px;
+	color: var(--sky-deep);
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+}
+.calc-disclose svg {
+	transition: transform 0.16s;
+}
+.calc-disclose.on svg {
+	transform: rotate(180deg);
+}
+.estimator {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 14px;
+	background: var(--paper);
+	border: 1px solid var(--line);
+	border-radius: 10px;
+}
+.estimator-row {
+	display: grid;
+	grid-template-columns: 1fr 160px;
+	align-items: center;
+	gap: 12px;
+	font-size: 12.5px;
+	color: var(--ink-soft);
+}
+.estimator-row select {
+	font: inherit;
+	font-size: 12.5px;
+	color: var(--ink);
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	padding: 7px 8px;
+}
+.estimator-row select:focus-visible {
+	outline: 2px solid var(--sky);
+	outline-offset: 1px;
+}
+.cost-control-flow {
+	margin-top: 8px;
+}
+.calc-field:has(.calc-stack) {
+	align-items: start;
+}
+.calc-field:has(.calc-stack) .calc-label {
+	padding-top: 11px;
+}

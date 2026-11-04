@@ -14,7 +14,8 @@ use super::applications::load_ruleset;
 use crate::db::Application;
 use crate::error::{AppError, Result};
 use crate::pricing::{
-	CostBreakdown, CostInput, Display, Param, PlanCost, PlanOverrides, ServerBox, price_plan,
+	CostBreakdown, CostInput, Display, EstimatorView, Param, PlanCost, PlanOverrides, ServerBox,
+	SizeArgs, SizeEstimate, price_plan,
 };
 use crate::ruleset::Answers;
 use crate::state::AppState;
@@ -68,6 +69,15 @@ pub struct PricingModelView {
 	pub max_cloud_facilities: u32,
 	/// The configured share of the month a standard clone runs.
 	pub clone_uptime: f64,
+	/// The sizing questions the calculator's estimator asks.
+	pub estimator: EstimatorView,
+	/// For each band, in order, the facility servers if they all run in BES
+	/// cloud.
+	pub facility_guess_by_band: Vec<u32>,
+	/// The share of the facility servers in BES cloud for a mix of both.
+	pub mix_share: f64,
+	/// The wizard question the cloud facility slider takes the place of.
+	pub facility_slider_question: String,
 }
 
 #[derive(Debug, Deserialize, ToSchema)]
@@ -85,6 +95,8 @@ pub async fn model(
 	Json(_args): Json<ModelArgs>,
 ) -> Result<Json<PricingModelView>> {
 	let c = &state.pricing;
+	let ruleset = state.default_ruleset.load_full();
+	let ruleset = &ruleset.ruleset;
 	Ok(Json(PricingModelView {
 		model: c.model.clone(),
 		bands: c.bands.clone(),
@@ -101,6 +113,10 @@ pub async fn model(
 		display: c.display.clone(),
 		max_cloud_facilities: c.max_cloud_facilities,
 		clone_uptime: c.params.clone_uptime.value,
+		estimator: c.estimator_view(ruleset),
+		facility_guess_by_band: c.band_facility_guesses(ruleset),
+		mix_share: c.wizard.cloud_share.mix_share,
+		facility_slider_question: c.wizard.slider_in_place_of.clone(),
 	}))
 }
 
@@ -116,6 +132,22 @@ pub async fn cost(
 	Json(input): Json<CostInput>,
 ) -> Result<Json<CostBreakdown>> {
 	Ok(Json(state.pricing.cost(&input)?))
+}
+
+/// Work out the size band, and facility servers, from sizing answers (the
+/// calculator's estimator).
+#[utoipa::path(
+    post, path = "/size", operation_id = "pricing_size", tag = "pricing",
+    request_body = SizeArgs,
+    responses((status = 200, body = SizeEstimate), (status = 404, body = crate::error::ProblemDetailsSchema)),
+)]
+pub async fn size(
+	_access: PricingAccess,
+	State(state): State<AppState>,
+	Json(args): Json<SizeArgs>,
+) -> Result<Json<SizeEstimate>> {
+	let ruleset = state.default_ruleset.load_full();
+	Ok(Json(state.pricing.estimate_size(&ruleset.ruleset, &args)))
 }
 
 #[derive(Debug, Deserialize, ToSchema)]
@@ -152,5 +184,6 @@ pub fn routes() -> OpenApiRouter<AppState> {
 	OpenApiRouter::new()
 		.routes(routes!(model))
 		.routes(routes!(cost))
+		.routes(routes!(size))
 		.routes(routes!(plan))
 }

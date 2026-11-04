@@ -150,6 +150,16 @@
     // The calculator's facility server control runs from none to this.
     max_cloud_facilities: 20,
 
+    // The calculator's size estimator: the questions it asks, answered with
+    // the ruleset's option ids, from which the server derives the band with the
+    // ruleset's own derivation. The facilities question also gives the number
+    // of facility servers.
+    estimator: (
+        sizing: ["catchment", "facilities", "mobile"],
+        integrations: "integrations",
+        facilities: "facilities",
+    ),
+
     // How the priced wizard reads a plan's answers (assumed answers count as
     // chosen ones; answers to hidden questions are ignored). Conditions use the
     // ruleset's condition language and its stable question and option ids.
@@ -178,15 +188,15 @@
             basis: "A representative facility count for each facilities band, assuming each facility has its own server.",
         ),
         cloud_share: (
-            value: [
-                (when: Equals("hosting_where", "allbes"), value: 1.0),
-                (when: Equals("hosting_balance", "mostlybes"), value: 0.75),
-                (when: Equals("hosting_balance", "half"), value: 0.5),
-                (when: Equals("hosting_balance", "mostlyclient"), value: 0.25),
-            ],
+            all: Equals("hosting_where", "allbes"),
+            mix: Equals("hosting_where", "mix"),
+            mix_share: 0.5,
             confidence: Assumed,
-            basis: "The share of facility servers in BES cloud implied by where they run.",
+            basis: "All facility servers are in BES cloud when they all run there, and half of them when they are a mix.",
         ),
+        // In the priced wizard a slider for the cloud count takes the place of
+        // this question, which asks for the same thing as a rough balance.
+        slider_in_place_of: "hosting_balance",
 
         notes: [
             (

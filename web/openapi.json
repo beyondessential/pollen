@@ -341,6 +341,47 @@
           }
         }
       }
+    },
+    "/api/pricing/size": {
+      "post": {
+        "tags": [
+          "pricing"
+        ],
+        "summary": "Work out the size band, and facility servers, from sizing answers (the\ncalculator's estimator).",
+        "operationId": "pricing_size",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SizeArgs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SizeEstimate"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsSchema"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -728,6 +769,66 @@
           "monthly": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "EstimatorOption": {
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
+      "EstimatorQuestion": {
+        "type": "object",
+        "description": "A sizing question as the estimator offers it.",
+        "required": [
+          "id",
+          "label",
+          "options"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EstimatorOption"
+            }
+          }
+        }
+      },
+      "EstimatorView": {
+        "type": "object",
+        "description": "The questions the estimator asks, taken from the ruleset.",
+        "required": [
+          "sizing"
+        ],
+        "properties": {
+          "integrations_label": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The label of the yes/no about connected systems."
+          },
+          "sizing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EstimatorQuestion"
+            }
           }
         }
       },
@@ -1157,7 +1258,11 @@
           "params",
           "display",
           "max_cloud_facilities",
-          "clone_uptime"
+          "clone_uptime",
+          "estimator",
+          "facility_guess_by_band",
+          "mix_share",
+          "facility_slider_question"
         ],
         "properties": {
           "bands": {
@@ -1174,13 +1279,35 @@
           "display": {
             "$ref": "#/components/schemas/Display"
           },
+          "estimator": {
+            "$ref": "#/components/schemas/EstimatorView",
+            "description": "The sizing questions the calculator's estimator asks."
+          },
           "facility": {
             "$ref": "#/components/schemas/ServerBox"
+          },
+          "facility_guess_by_band": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            },
+            "description": "For each band, in order, the facility servers if they all run in BES\ncloud."
+          },
+          "facility_slider_question": {
+            "type": "string",
+            "description": "The wizard question the cloud facility slider takes the place of."
           },
           "max_cloud_facilities": {
             "type": "integer",
             "format": "int32",
             "minimum": 0
+          },
+          "mix_share": {
+            "type": "number",
+            "format": "double",
+            "description": "The share of the facility servers in BES cloud for a mix of both."
           },
           "model": {
             "type": "string"
@@ -1342,6 +1469,46 @@
           "NonDefault",
           "Blocking"
         ]
+      },
+      "SizeArgs": {
+        "type": "object",
+        "properties": {
+          "answers": {
+            "type": "object",
+            "description": "Option ids keyed by sizing question id. Questions left out are unanswered.",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "integrations": {
+            "type": "boolean",
+            "description": "Whether any other system connects."
+          }
+        }
+      },
+      "SizeEstimate": {
+        "type": "object",
+        "properties": {
+          "band": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The derived band; none until a sizing question is answered."
+          },
+          "cloud_facilities": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Facility servers in BES cloud if they all run there, once the facilities\nquestion is answered.",
+            "minimum": 0
+          }
+        }
       },
       "Spec": {
         "type": "object",

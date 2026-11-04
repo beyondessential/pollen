@@ -80,19 +80,27 @@ Each parameter carries the basis for its value and one of these confidence tags:
 
 ## The calculator
 
-The calculator prices inputs set directly, for costing a proposal or an existing deployment.
+The calculator prices inputs set directly, for costing a proposal.
 Its controls are:
 
-- the size band, one of the configured bands;
+- the size band, one of the configured bands, with an estimator that works the band out from the sizing questions the wizard asks (the catchment, the facilities, the mobile users and whether other systems connect), using the wizard's own derivation of size;
 - whether the central server is in BES cloud or client hosted;
-- the number of facility servers in BES cloud, from none to twenty;
-- the clone: off, standard or always on, and for a standard clone how much of the month it runs, starting at the configured share;
+- where the facility servers run: BES cloud, client hosted, or a mix, where a mix brings up a slider for how many of them are in BES cloud, from none to twenty;
 - whether BES takes backups, on by default;
-- whether the deployment feeds Tupaia;
-- for existing deployments still on Windows: a Windows central server, how many of the cloud facility servers run Windows, and a Windows clone.
+- whether upgrade smoke testing runs on a clone, on by default, priced as a standard clone at the configured share of the month;
+- whether the deployment has Tupaia reporting, on by default.
+
+Facility servers in BES cloud are counted from the facilities answer of the estimator, or, when the size band was chosen directly, from a typical number for that band.
+A mix starts at a configured share of that count.
 
 - [ ] Changing any control updates the figure and breakdown straight away.
-- [ ] The Windows central server control applies only while the central server is in BES cloud, and the Windows facility count never exceeds the cloud facility count.
+- [ ] Choosing the facility servers as BES cloud prices a count that follows the facilities estimate, or the size band when nothing has been estimated.
+- [ ] Choosing client hosted prices no facility servers.
+- [ ] Choosing a mix shows the slider, starting at the configured share of the BES cloud count.
+- [ ] The estimator sets the size band to the band the wizard would derive from the same answers.
+- [ ] Choosing a size band directly clears the estimator's answers.
+- [ ] Turning backups off removes only the backups share.
+- [ ] Turning off upgrade smoke testing removes the clone.
 
 ## The priced wizard
 
@@ -106,13 +114,16 @@ The cost is read from the answers, with an assumed answer counting the same as a
 - a hosting region other than the primary one is priced at the primary region's rates, with a note that the difference is confirmed separately;
 - BES-hosted integrations are not priced, since they are referred to a separate conversation.
 
-The wizard asks where facility servers run, not how many there are, so the number of cloud facility servers starts as a guess from the facilities band and the share of facility servers in BES cloud, both set in the pricing configuration.
-A control beside the cost overrides the guess, and the clone mode can be set there too, since neither is a client choice.
-These overrides belong to the person pricing, not to the plan, and are not stored with it.
+The wizard asks where facility servers run, not how many there are, so the number of cloud facility servers is a guess from the facilities band and the share of facility servers in BES cloud, both set in the pricing configuration.
+When facility servers are a mix of both, a slider for how many are in BES cloud takes the place of the question about the balance, starting at the guess.
+The clone mode can be set beside the cost, since it is not a client choice.
+These settings belong to the person pricing, not to the plan, and are not stored with it.
 
 - [ ] The running cost updates as each answer changes.
 - [ ] Before the deployment is sized, the cost asks for the sizing answers instead of showing a figure.
-- [ ] With every facility server client hosted, the guessed cloud facility count is none.
-- [ ] Overriding the cloud facility count or the clone mode changes the figure without changing the plan.
+- [ ] With every facility server client hosted, the cloud facility count is none.
+- [ ] With every facility server in BES cloud, the cloud facility count is the guess for the facilities band.
+- [ ] With a mix, the slider appears where the balance question would, and moving it changes the figure without changing the plan.
+- [ ] Setting the clone mode changes the figure without changing the plan.
 - [ ] A finalised plan opened in the priced edition shows its cost too.
 - [ ] An answer left open that would change the cost, such as whether to feed Tupaia, is noted beside the figure.

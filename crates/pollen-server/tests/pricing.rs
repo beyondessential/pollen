@@ -314,6 +314,15 @@ async fn plan_reads_its_answers() {
 		assert_eq!(cloud["input"]["cloud_facilities"], 3);
 		assert_eq!(cloud["input"]["tupaia"], false);
 
+		// A mix of both is half the all-cloud guess: 6-20 facilities guesses ten.
+		let mix = plan_cost(
+			&server,
+			json!({ "catchment": "c0", "facilities": "f2", "hosting_where": "mix", "tupaia": "no" }),
+			json!({}),
+		)
+		.await;
+		assert_eq!(mix["guess"]["count"], 5);
+
 		// Overrides change the figure without touching the plan.
 		let overridden = plan_cost(
 			&server,
@@ -354,6 +363,60 @@ async fn plan_reads_its_answers() {
 			no_backups["cost"]["monthly_usd"].as_f64().unwrap(),
 			204.12,
 		);
+	})
+	.await;
+}
+
+async fn size(server: &axum_test::TestServer, body: Value) -> Value {
+	server
+		.post("/api/pricing/size")
+		.add_header("x-pricing-path", PRICING_PATH)
+		.json(&body)
+		.await
+		.json()
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn estimator_derives_the_band_the_wizard_would() {
+	run_server(|server, _conn| async move {
+		// Nothing answered: no band to offer.
+		let none = size(&server, json!({})).await;
+		assert!(none["band"].is_null());
+		assert!(none["cloud_facilities"].is_null());
+
+		// The highest band reached across the sizing questions wins.
+		let got = size(&server, json!({ "answers": { "catchment": "c0", "facilities": "f2" } })).await;
+		assert_eq!(got["band"], "Medium");
+		assert_eq!(got["cloud_facilities"], 10);
+
+		// "I'm not sure" contributes nothing, and a connected system bumps one band.
+		let got = size(
+			&server,
+			json!({ "answers": { "catchment": "c1", "mobile": "m_unsure" }, "integrations": true }),
+		)
+		.await;
+		assert_eq!(got["band"], "Medium");
+		assert!(got["cloud_facilities"].is_null());
+
+		// The bump is capped at the top band, and unknown ids are ignored.
+		let got = size(
+			&server,
+			json!({ "answers": { "catchment": "c3", "facilities": "nope", "region": "sydney" }, "integrations": true }),
+		)
+		.await;
+		assert_eq!(got["band"], "Large");
+
+		// The model carries what the estimator asks, and a typical count per band.
+		let model: Value = server
+			.post("/api/pricing/model")
+			.add_header("x-pricing-path", PRICING_PATH)
+			.json(&json!({}))
+			.await
+			.json();
+		assert_eq!(model["estimator"]["sizing"].as_array().unwrap().len(), 3);
+		assert_eq!(model["facility_guess_by_band"], json!([1, 3, 10, 20]));
+		assert_eq!(model["mix_share"], 0.5);
+		assert_eq!(model["facility_slider_question"], "hosting_balance");
 	})
 	.await;
 }

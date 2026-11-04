@@ -5,7 +5,8 @@ Port the Tamanu hosting cost model into pollen as an internal edition: a calcula
 ## Decisions (Edwin, 3 Nov 2026)
 
 - **Gating:** an unguessable path segment, set by `PRICING_PATH` (at least 16 URL-safe characters). The SPA serves the edition at `/<path>/` (the calculator), `/<path>/new` and `/<path>/a/<id>`. The pricing endpoints take the same segment in an `x-pricing-path` header and answer 404 otherwise. With it unset, the edition is off.
-- **Cloud facility servers:** a slider in both tools. In the wizard it starts as a guess, (facilities in the band) × (share in BES cloud), with both tables in `pricing.ron` and tagged Assumed.
+- **Cloud facility servers:** the wizard guesses (facilities in the band) × (share in BES cloud), with both tables in `pricing.ron` and tagged Assumed. A slider appears only for a mix, in place of the balance question in the wizard and under "A mix" in the calculator.
+- **Calculator simplified (5 Nov):** no Windows controls, no always-on clone (one "Upgrade smoke testing on a clone" yes/no at the default uptime), Tupaia reporting on by default, and a size estimator whose band comes from the ruleset's own derivation via `pricing/size`. The model and API still price Windows and always-on.
 - **Backups and clone are independent.** Turning backups off drops only the backups share, so backups never look more expensive than they are.
 - **Large keeps the Slab box** (m6g.2xlarge, 1,500 GB). It's editable in the band table, where a fifth band can also go.
 

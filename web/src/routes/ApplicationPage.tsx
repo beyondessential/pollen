@@ -4,7 +4,13 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { callApi, useApi } from "../api";
 import { planUrl, useEdition } from "../edition";
 import Artifact from "../components/Artifact";
-import PlanCostPanel from "../components/PlanCostPanel";
+import PlanCostPanel, {
+	DEFAULT_SETTINGS,
+	FacilityServersCard,
+	FacilityServersControl,
+	type PlanSettings,
+	usePlanCost,
+} from "../components/PlanCostPanel";
 import Wizard from "../components/Wizard";
 import { type RecentPlan, listRecentPlans, recordRecentPlan } from "../recentPlans";
 import type { AnswerValue, AppView } from "../types";
@@ -34,6 +40,16 @@ function Loaded({ initial }: { initial: AppView }) {
 	const edition = useEdition();
 	const [busy, setBusy] = useState(false);
 	const [resumeDismissed, setResumeDismissed] = useState(false);
+
+	// The internal edition's pricing: the person pricing's own settings, and the
+	// cost they give. The facility slider takes the place of one question, so it
+	// shows only while that question would.
+	const [settings, setSettings] = useState<PlanSettings>(DEFAULT_SETTINGS);
+	const { model, pricingPath } = edition;
+	const sliderQuestion = model?.facility_slider_question;
+	const sliderShowing =
+		sliderQuestion != null && view.evaluation.visible_questions.includes(sliderQuestion);
+	const plan = usePlanCost(pricingPath, view, settings, sliderShowing);
 
 	const answers = view.answers as unknown as Record<string, AnswerValue>;
 	const started = Object.values(answers).some((v) =>
@@ -122,13 +138,17 @@ function Loaded({ initial }: { initial: AppView }) {
 			)}
 			{view.status === "finalised" ? (
 				<>
-					{edition.pricingPath != null && edition.model && (
+					{pricingPath != null && model && (
 						<div className="cost-strip">
-							<PlanCostPanel
-								pricingPath={edition.pricingPath}
-								model={edition.model}
-								view={view}
-							/>
+							<PlanCostPanel plan={plan} settings={settings} onSettings={setSettings} />
+							{sliderShowing && (
+								<FacilityServersControl
+									plan={plan}
+									model={model}
+									settings={settings}
+									onSettings={setSettings}
+								/>
+							)}
 						</div>
 					)}
 					<Artifact view={view} />
@@ -138,14 +158,23 @@ function Loaded({ initial }: { initial: AppView }) {
 					view={view}
 					setView={setView}
 					rail={
-						edition.pricingPath != null &&
-						edition.model && (
-							<PlanCostPanel
-								pricingPath={edition.pricingPath}
-								model={edition.model}
-								view={view}
-							/>
+						pricingPath != null && (
+							<PlanCostPanel plan={plan} settings={settings} onSettings={setSettings} />
 						)
+					}
+					replace={
+						sliderQuestion != null && model && sliderShowing
+							? {
+									[sliderQuestion]: (
+										<FacilityServersCard
+											plan={plan}
+											model={model}
+											settings={settings}
+											onSettings={setSettings}
+										/>
+									),
+								}
+							: undefined
 					}
 				/>
 			)}

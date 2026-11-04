@@ -20,15 +20,22 @@
 
 ## Calculator
 
-- [x] Changing size, backups and central updates the figure and breakdown (verifies spec: COST)
-- [x] The Windows central control is disabled while the central server is client hosted (verifies spec: COST)
+- [x] Defaults are backups on, smoke testing on a clone on, and Tupaia reporting on (verifies spec: COST)
+- [x] Changing size, backups, smoke testing and central updates the figure and breakdown (verifies spec: COST)
+- [x] Turning backups off removes only the backups share; turning smoke testing off removes the clone (verifies spec: COST)
+- [x] Facility servers as BES cloud follow the estimator's facilities answer; client hosted prices none (verifies spec: COST)
+- [x] A mix brings up the slider, starting at half the BES cloud count (verifies spec: COST)
+- [x] The estimator sets the band the wizard would derive, bumps it for a connected system, and ignores "I'm not sure" (verifies spec: COST)
+- [x] Choosing a band directly clears the estimator (verifies spec: COST)
+- [ ] BES cloud facility servers with no estimate follow the band's typical count
 - [x] The assumptions panel lists parameters with their tags (verifies spec: COST)
 
 ## Priced wizard
 
 - [x] Unsized plan asks for the sizing answers instead of a figure (verifies spec: COST)
 - [x] All facility servers in BES cloud at 2–5 facilities guesses three; all client hosted guesses none (verifies spec: COST)
-- [x] Overriding the facility count or clone moves the figure, not the plan (verifies spec: COST)
+- [x] A mix shows the slider in place of the balance question, starting at half the guess (verifies spec: COST)
+- [x] Moving the slider or setting the clone moves the figure, not the plan; leaving the mix drops the slider's setting (verifies spec: COST)
 - [x] Tupaia left open is noted and left out (verifies spec: COST)
 - [ ] A finalised plan opened in the priced edition shows its cost (verifies spec: COST)
 - [ ] Another AWS region shows the "confirmed separately" note (verifies spec: COST)

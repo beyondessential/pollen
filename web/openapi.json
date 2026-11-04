@@ -810,6 +810,21 @@
           }
         }
       },
+      "EstimatorToggle": {
+        "type": "object",
+        "required": [
+          "label",
+          "hint"
+        ],
+        "properties": {
+          "hint": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
       "EstimatorView": {
         "type": "object",
         "description": "The questions the estimator asks, taken from the ruleset.",
@@ -817,12 +832,16 @@
           "sizing"
         ],
         "properties": {
-          "integrations_label": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "The label of the yes/no about connected systems."
+          "integrations": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EstimatorToggle",
+                "description": "The yes/no about connected systems."
+              }
+            ]
           },
           "sizing": {
             "type": "array",

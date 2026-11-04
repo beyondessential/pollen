@@ -414,6 +414,7 @@ async fn estimator_derives_the_band_the_wizard_would() {
 			.await
 			.json();
 		assert_eq!(model["estimator"]["sizing"].as_array().unwrap().len(), 3);
+		assert_eq!(model["estimator"]["integrations"]["hint"], "e.g. SENAITE, mSupply, DHIS2");
 		assert_eq!(model["facility_guess_by_band"], json!([1, 3, 10, 20]));
 		assert_eq!(model["mix_share"], 0.5);
 		assert_eq!(model["facility_slider_question"], "hosting_balance");

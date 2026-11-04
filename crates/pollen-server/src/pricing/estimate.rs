@@ -29,8 +29,14 @@ pub struct EstimatorOption {
 #[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct EstimatorView {
 	pub sizing: Vec<EstimatorQuestion>,
-	/// The label of the yes/no about connected systems.
-	pub integrations_label: Option<String>,
+	/// The yes/no about connected systems.
+	pub integrations: Option<EstimatorToggle>,
+}
+
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub struct EstimatorToggle {
+	pub label: String,
+	pub hint: String,
 }
 
 #[derive(Debug, Deserialize, ToSchema)]
@@ -71,9 +77,8 @@ impl PricingConfig {
 			.map(|q| EstimatorQuestion {
 				id: q.id.clone(),
 				label: q.label.clone(),
-				options: q
-					.options
-					.iter()
+				// Clearing a choice is how a question goes back to "not sure".
+				options: Self::real_options(q)
 					.map(|o| EstimatorOption {
 						id: o.id.clone(),
 						label: o.label.clone(),
@@ -83,9 +88,12 @@ impl PricingConfig {
 			.collect();
 		EstimatorView {
 			sizing,
-			integrations_label: ruleset
+			integrations: ruleset
 				.question(&self.estimator.integrations)
-				.map(|q| q.label.clone()),
+				.map(|_| EstimatorToggle {
+					label: self.estimator.integrations_label.clone(),
+					hint: self.estimator.integrations_hint.clone(),
+				}),
 		}
 	}
 

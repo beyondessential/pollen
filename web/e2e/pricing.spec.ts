@@ -63,7 +63,8 @@ test("the calculator asks where facility servers run, and estimates the size", a
 
 	// The estimator sets the band, and the facilities answer sizes the count.
 	await page.getByRole("button", { name: "Estimate size" }).click();
-	await page.getByLabel("How many facilities will use Tamanu?").selectOption({ label: "6 - 20" });
+	const facilities = page.getByRole("group", { name: "How many facilities will use Tamanu?" });
+	await facilities.getByRole("button", { name: "6 - 20" }).click();
 	await expect(page.getByRole("radio", { name: "Medium" })).toBeChecked();
 	await group("Facility servers").getByRole("radio", { name: "BES cloud" }).click();
 	await expect(lines).toContainText("10 × t4g.medium");
@@ -82,10 +83,12 @@ test("the calculator asks where facility servers run, and estimates the size", a
 
 	// A connected system bumps the estimate one band; choosing a band directly
 	// clears the estimator.
-	await page.getByLabel("Does Tamanu need to connect to other systems?").selectOption("yes");
+	const systems = page.getByRole("group", { name: "Connected systems" });
+	await expect(systems).toContainText("e.g. SENAITE, mSupply, DHIS2");
+	await systems.getByRole("button", { name: "Yes" }).click();
 	await expect(page.getByRole("radio", { name: "Large" })).toBeChecked();
 	await page.getByRole("radio", { name: "Small" }).click();
-	await expect(page.getByLabel("How many facilities will use Tamanu?")).toHaveValue("");
+	await expect(facilities.getByRole("button", { name: "6 - 20" })).toHaveAttribute("aria-pressed", "false");
 	await expect(figure).not.toHaveText("Not priced");
 });
 

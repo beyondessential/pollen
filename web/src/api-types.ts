@@ -354,10 +354,13 @@ export interface components {
             label: string;
             options: components["schemas"]["EstimatorOption"][];
         };
+        EstimatorToggle: {
+            hint: string;
+            label: string;
+        };
         /** @description The questions the estimator asks, taken from the ruleset. */
         EstimatorView: {
-            /** @description The label of the yes/no about connected systems. */
-            integrations_label?: string | null;
+            integrations?: null | components["schemas"]["EstimatorToggle"];
             sizing: components["schemas"]["EstimatorQuestion"][];
         };
         Evaluation: {

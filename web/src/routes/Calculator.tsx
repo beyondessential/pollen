@@ -115,47 +115,15 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 								<Chevron size={14} />
 								<span>Estimate size</span>
 							</button>
-							{estimating && (
-								<div className="estimator">
-									{model.estimator.sizing.map((q) => (
-										<label key={q.id} className="estimator-row">
-											<span>{q.label}</span>
-											<select
-												value={estimate.answers[q.id] ?? ""}
-												onChange={(e) => {
-													const answers = { ...estimate.answers };
-													if (e.target.value) answers[q.id] = e.target.value;
-													else delete answers[q.id];
-													estimateSize({ ...estimate, answers });
-												}}
-											>
-												<option value="">Not sure</option>
-												{q.options.map((o) => (
-													<option key={o.id} value={o.id}>
-														{o.label}
-													</option>
-												))}
-											</select>
-										</label>
-									))}
-									{model.estimator.integrations_label && (
-										<label className="estimator-row">
-											<span>{model.estimator.integrations_label}</span>
-											<select
-												value={yn(estimate.integrations)}
-												onChange={(e) =>
-													estimateSize({ ...estimate, integrations: e.target.value === "yes" })
-												}
-											>
-												<option value="no">No</option>
-												<option value="yes">Yes</option>
-											</select>
-										</label>
-									)}
-								</div>
-							)}
 						</div>
 					</Field>
+					{estimating && (
+						<Estimator
+							model={model}
+							estimate={estimate}
+							onChange={estimateSize}
+						/>
+					)}
 					<Field label="Central server">
 						<Segmented
 							label="Central server"
@@ -239,6 +207,76 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 					{showAssumptions && <Assumptions model={model} />}
 				</section>
 			</aside>
+		</div>
+	);
+}
+
+/// The sizing questions, each a row of choices like the wizard's. Choosing the
+/// selected option again clears it, which is how a question goes back to "not
+/// sure".
+function Estimator({
+	model,
+	estimate,
+	onChange,
+}: {
+	model: PricingModelView;
+	estimate: Estimate;
+	onChange: (e: Estimate) => void;
+}) {
+	const { sizing, integrations } = model.estimator;
+	return (
+		<div className="estimator">
+			{sizing.map((q) => {
+				const chosen = estimate.answers[q.id];
+				return (
+					<div key={q.id} className="est-q" role="group" aria-label={q.label}>
+						<span className="est-label">{q.label}</span>
+						<div className="bandrow est-row">
+							{q.options.map((o) => (
+									<button
+										type="button"
+										key={o.id}
+										aria-pressed={chosen === o.id}
+										className={`band${chosen === o.id ? " on" : ""}`}
+										onClick={() => {
+											const answers = { ...estimate.answers };
+											if (chosen === o.id) delete answers[q.id];
+											else answers[q.id] = o.id;
+											onChange({ ...estimate, answers });
+										}}
+									>
+										{o.label}
+									</button>
+								))}
+						</div>
+					</div>
+				);
+			})}
+			{integrations && (
+				<div className="est-q" role="group" aria-label={integrations.label}>
+					<span className="est-label">{integrations.label}</span>
+					<span className="est-hint">{integrations.hint}</span>
+					<div className="bandrow est-row est-row-two">
+						{[
+							{ id: "no", label: "No" },
+							{ id: "yes", label: "Yes" },
+						].map((o) => {
+							const on = estimate.integrations === (o.id === "yes");
+							return (
+								<button
+									type="button"
+									key={o.id}
+									aria-pressed={on}
+									className={`band${on ? " on" : ""}`}
+									onClick={() => onChange({ ...estimate, integrations: o.id === "yes" })}
+								>
+									{o.label}
+								</button>
+							);
+						})}
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

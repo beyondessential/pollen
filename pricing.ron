@@ -157,9 +157,7 @@
     estimator: (
         sizing: ["catchment", "facilities", "mobile"],
         integrations: "integrations",
-        // The wizard's own question is long; the calculator asks it as a yes/no
-        // with a short label and examples.
-        integrations_label: "Connected systems",
+        // The calculator asks the wizard's question as a yes/no, with examples.
         integrations_hint: "e.g. SENAITE, mSupply, DHIS2",
         facilities: "facilities",
     ),

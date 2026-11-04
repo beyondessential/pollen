@@ -83,7 +83,7 @@ test("the calculator asks where facility servers run, and estimates the size", a
 
 	// A connected system bumps the estimate one band; choosing a band directly
 	// clears the estimator.
-	const systems = page.getByRole("group", { name: "Connected systems" });
+	const systems = page.getByRole("group", { name: "Does Tamanu need to connect to other systems?" });
 	await expect(systems).toContainText("e.g. SENAITE, mSupply, DHIS2");
 	await systems.getByRole("button", { name: "Yes" }).click();
 	await expect(page.getByRole("radio", { name: "Large" })).toBeChecked();

@@ -36,9 +36,7 @@ pub struct Estimator {
 	pub sizing: Vec<String>,
 	/// The multi-select whose answering with any system bumps the size.
 	pub integrations: String,
-	/// How the calculator labels the yes/no about connected systems, and the
-	/// examples beneath it.
-	pub integrations_label: String,
+	/// The examples beneath the yes/no about connected systems.
 	pub integrations_hint: String,
 	/// The sizing question whose answer also gives the facility server count.
 	pub facilities: String,

@@ -90,8 +90,8 @@ impl PricingConfig {
 			sizing,
 			integrations: ruleset
 				.question(&self.estimator.integrations)
-				.map(|_| EstimatorToggle {
-					label: self.estimator.integrations_label.clone(),
+				.map(|q| EstimatorToggle {
+					label: q.label.clone(),
 					hint: self.estimator.integrations_hint.clone(),
 				}),
 		}

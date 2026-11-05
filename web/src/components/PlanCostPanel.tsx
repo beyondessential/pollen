@@ -111,7 +111,7 @@ export default function PlanCostPanel({
 		<div className="cost-panel">
 			<PlanCostSummary plan={plan} />
 			{plan.cost && <PlanCostControls settings={settings} onSettings={onSettings} />}
-			<CostCaveat display={plan.cost?.display} />
+			<CostCaveat cost={plan.cost} />
 		</div>
 	);
 }

@@ -15,7 +15,8 @@
 // the arithmetic to the cent. Changing a value here changes what they expect,
 // so regenerate them alongside.
 (
-    model: "Tamanu hosting cost model v2",
+    model: "Tamanu hosting cost model v2.3",
+    version: "v2.3 (5 Nov 2026)",
 
     // The internal pricing edition lives at /<access_path> (calculator), with
     // priced plans beneath it, and its API answers only requests naming it.
@@ -30,15 +31,23 @@
     // calculator offers them. A band the ruleset does not derive yet (an
     // "Enterprise" above Large, say) can be added here first.
     //
+    // `db_gb` is the database size estimated from the band. It is not an input:
+    // it carries the size into the backups and Tupaia shares. PROVISIONAL.
+    //
     // OPEN: Large uses the Slab price-list box. Deployments that feel Large
     // today run Medium-class centrals with up to about 1 TB; whether Large
     // keeps headroom or follows what is running is undecided.
     bands: [
-        (name: "Tiny", instance: "t4g.medium (2 vCPU, 4 GB)", usd_per_hour: 0.0424, volume_gb: 200.0, snapshot_multiple: 2.0),
-        (name: "Small", instance: "t4g.medium (2 vCPU, 4 GB)", usd_per_hour: 0.0424, volume_gb: 200.0, snapshot_multiple: 2.0),
-        (name: "Medium", instance: "t4g.xlarge (4 vCPU, 16 GB)", usd_per_hour: 0.1696, volume_gb: 750.0, snapshot_multiple: 2.0),
-        (name: "Large", instance: "m6g.2xlarge (8 vCPU, 32 GB)", usd_per_hour: 0.3834, volume_gb: 1500.0, snapshot_multiple: 2.0),
+        (name: "Tiny", instance: "t4g.medium (2 vCPU, 4 GB)", usd_per_hour: 0.0424, volume_gb: 200.0, snapshot_multiple: 2.0, db_gb: 2.0),
+        (name: "Small", instance: "t4g.medium (2 vCPU, 4 GB)", usd_per_hour: 0.0424, volume_gb: 200.0, snapshot_multiple: 2.0, db_gb: 10.0),
+        (name: "Medium", instance: "t4g.xlarge (4 vCPU, 16 GB)", usd_per_hour: 0.1696, volume_gb: 750.0, snapshot_multiple: 2.0, db_gb: 80.0),
+        (name: "Large", instance: "m6g.2xlarge (8 vCPU, 32 GB)", usd_per_hour: 0.3834, volume_gb: 1500.0, snapshot_multiple: 2.0, db_gb: 125.0),
     ],
+
+    db_size_by_band: (
+        confidence: Estimated,
+        basis: "Taken from the replica sizes measured in the current fleet (the largest known for Large); the band, not an input. Edwin, 5 Nov 2026.",
+    ),
 
     // A facility server in BES cloud, whatever the deployment's size.
     facility: (name: "Facility", instance: "t4g.medium (2 vCPU, 4 GB)", usd_per_hour: 0.0424, volume_gb: 200.0, snapshot_multiple: 1.0),
@@ -79,40 +88,45 @@
             confidence: Estimated,
             basis: "Canopy backups and replica management, AMIs, BES Primary and a tamanu-meta-prod share, over 19 deployments (about 36), rounded up.",
         ),
-        backups_db_pool_usd: (
-            value: 732.0,
+        tupaia_prod_compute_usd: (
+            value: 1168.0,
             confidence: Estimated,
-            basis: "Multi-AZ db.t4g.xlarge (tamanu-replicas). In the base price when backups are on. Edwin, 3 Nov 2026.",
+            basis: "Tupaia prod compute: app t3.2xlarge about 314 plus Multi-AZ db.r8g.xlarge instances about 854 (Oct). Excludes storage, backups, ELB and IPv4 (about 369): the stored data is mostly MediTrak and DataTrak survey data, not Tamanu.",
         ),
-        backups_db_deployments: (
-            value: 19.0,
-            confidence: Assumed,
-            basis: "Every deployment assumed to have backups on (Edwin, 4 Nov 2026). Canopy has 15 deployment backup buckets today.",
-        ),
-        tupaia_prod_pool_usd: (
-            value: 1537.0,
-            confidence: Estimated,
-            basis: "Tupaia prod stack: app t3.2xlarge, Multi-AZ db.r8g.xlarge, and a share of ELB, IPv4 and backups.",
-        ),
-        tupaia_prod_share: (
-            value: 0.05,
+        tamanu_share_of_tupaia_compute: (
+            value: 0.4,
             confidence: Decided,
-            basis: "5% of Tupaia prod per Tamanu deployment that feeds Tupaia. Edwin, 3 Nov 2026.",
+            basis: "Share of Tupaia prod compute (reports, dashboards) that is Tamanu reporting. Edwin and Juliana, 5 Nov 2026. Split evenly across the deployments with a replica.",
         ),
-        reporting_pipeline_pool_usd: (
-            value: 1642.0,
+        pgro_pool_usd: (
+            value: 1800.0,
             confidence: Estimated,
-            basis: "Analytics replicas and data-warehouse-prod (October 2026). Expected to drop to about 1,450 from the November run-rate.",
+            basis: "pgro: the k8s data cluster for Tamanu replicas on shared EC2. Current cost (Edwin, 5 Nov): the account ran about 2,000 to 2,100 a month on 1 to 3 Nov as replicas were added, less about 240 of RDS. Replaces the tamanu-replicas RDS (shut down late Oct) and, within 1 to 2 months, the data warehouse for Tamanu data.",
+        ),
+        pgro_replicas: (
+            value: 9.0,
+            confidence: Read,
+            basis: "Deployments with a long-lived reporting replica in Canopy (5 Nov). Splits the flat parts of the Tupaia add-on (prod compute share, Dagster).",
+        ),
+        pgro_replica_gb_total: (
+            value: 580.8,
+            confidence: Estimated,
+            basis: "Total DB size of those 9 replicas: 6 measured (296 GB, Oct) and 3 not yet measured, estimated by band (285 GB). Denominator for the reporting rate.",
+        ),
+        fleet_db_gb_total: (
+            value: 708.8,
+            confidence: Estimated,
+            basis: "Total DB size across the 18 deployments whose backups BES runs: measured where known, otherwise estimated by band. Denominator for the backups rate.",
+        ),
+        pgro_ops_share: (
+            value: 0.1,
+            confidence: Estimated,
+            basis: "Share of pgro spent taking backups and feeding clones (base price, when backups are on); the rest hosts long-lived replicas for Tupaia (Tupaia add-on). Both by DB size (Edwin, 5 Nov). Felix, 5 Nov: about 10% of the account is k8s overhead common to both (left pro rata), and of the rest 80 to 90% is long-lived replicas; Edwin and Felix settled on about 10% for backups. The backups themselves sit in S3 (platform share); pgro only controls taking them.",
         ),
         dagster_pool_usd: (
             value: 265.0,
             confidence: Estimated,
-            basis: "Dagster r6a.xlarge including overhead. Tamanu-specific (Edwin, 3 Nov 2026).",
-        ),
-        replicas_sharing_pipeline: (
-            value: 6.0,
-            confidence: Read,
-            basis: "Deployments with an analytics replica today.",
+            basis: "Dagster r6a.xlarge including overhead. Tamanu-specific (Edwin, 3 Nov). Partly shut down early Nov (Felix), so this may fall.",
         ),
     ),
 
@@ -134,9 +148,6 @@
     // of facility servers.
     estimator: (
         sizing: ["catchment", "facilities", "mobile"],
-        integrations: "integrations",
-        // The calculator asks the wizard's question as a yes/no, with examples.
-        integrations_hint: "e.g. SENAITE, mSupply, DHIS2",
         facilities: "facilities",
     ),
 
@@ -144,6 +155,11 @@
     // chosen ones; answers to hidden questions are ignored). Conditions use the
     // ruleset's condition language and its stable question and option ids.
     wizard: (
+        // Questions whose answers do not count towards the size band for
+        // pricing. Connected systems no longer move the band (Edwin, 5 Nov);
+        // the ruleset's own size, and the compute requirements it sets, still do
+        // until that is decided.
+        band_ignores: ["integrations"],
         central_in_cloud: Equals("central", "bescloud"),
         backups: (
             on: Not(Equals("backup_capability", "no")),

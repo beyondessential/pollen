@@ -161,7 +161,7 @@ function Loaded({ initial }: { initial: AppView }) {
 						<div className="cost-strip">
 							<div>
 								<PlanCostSummary plan={plan} />
-								<CostCaveat display={plan.cost?.display} />
+								<CostCaveat cost={plan.cost} />
 							</div>
 							<div className="cost-strip-controls">
 								<PlanCostControls settings={settings} onSettings={setSettings} />

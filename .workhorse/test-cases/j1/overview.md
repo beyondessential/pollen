@@ -2,7 +2,7 @@
 
 ## Cost model
 
-- [x] Every reference fixture (9 examples, 288 grid cases) matches lines, monthly and annual to the cent (verifies spec: COST)
+- [x] Every reference fixture (11 examples including a parameter override, 288 grid cases) matches lines, monthly and annual to the cent (verifies spec: COST)
 - [x] Backups off removes only the backups share; the clone stays (verifies spec: COST)
 - [x] A client-hosted Windows central, Windows facilities beyond the cloud count, and a Windows clone with the clone off add nothing (verifies spec: COST)
 - [x] Clone uptime scales compute only; always-on equals 100%; out-of-range uptime is refused
@@ -38,6 +38,14 @@
 - [ ] BES cloud facility servers with no estimate follow the band's typical count
 - [x] Breakdown lines resting on estimated or assumed parameters carry their tag (verifies spec: COST)
 - [x] The mix slider cannot pass the number of facility servers, and reads "N of total in BES cloud" (verifies spec: COST)
+
+## Model v2.3
+
+- [x] The pricing band ignores connected systems, though the ruleset's own size counts them (verifies spec: COST)
+- [x] The estimator does not ask about connected systems
+- [x] The version of the model shows with the line beneath the figure (verifies spec: COST)
+- [x] A backups share that rounds to nothing is left out of the lines
+- [ ] The catchment help text shows on the public wizard
 
 ## Priced wizard
 

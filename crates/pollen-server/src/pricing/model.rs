@@ -54,7 +54,7 @@ pub enum LineId {
 	CloudFacilities,
 	Clone,
 	PlatformShare,
-	BackupsDbShare,
+	BackupsOpsShare,
 	TupaiaReporting,
 	WindowsExtra,
 }
@@ -87,6 +87,8 @@ pub struct DisplayTotal {
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct CostBreakdown {
+	/// The version of the model these figures come from.
+	pub model_version: String,
 	pub lines: Vec<CostLine>,
 	/// The unrounded sum of the lines.
 	pub monthly_usd: f64,
@@ -140,15 +142,38 @@ impl PricingConfig {
 			+ uptime * (self.compute(central) + self.compute(&self.facility))
 	}
 
-	pub fn backups_share(&self) -> f64 {
-		self.params.backups_db_pool_usd.value / self.params.backups_db_deployments.value
+	/// The reporting part of pgro over the DB size of the deployments that have
+	/// a replica, per GB per month.
+	pub fn pgro_reporting_usd_per_gb(&self) -> f64 {
+		let p = &self.params;
+		p.pgro_pool_usd.value * (1.0 - p.pgro_ops_share.value) / p.pgro_replica_gb_total.value
 	}
 
-	pub fn tupaia_addon(&self) -> f64 {
+	/// The backups part of pgro over the DB size of every deployment with
+	/// backups on, per GB per month.
+	pub fn pgro_backups_usd_per_gb(&self) -> f64 {
 		let p = &self.params;
-		p.tupaia_prod_share.value * p.tupaia_prod_pool_usd.value
-			+ (p.reporting_pipeline_pool_usd.value + p.dagster_pool_usd.value)
-				/ p.replicas_sharing_pipeline.value
+		p.pgro_pool_usd.value * p.pgro_ops_share.value / p.fleet_db_gb_total.value
+	}
+
+	/// The parts of the Tupaia add-on that do not scale with DB size, split
+	/// evenly across the deployments with a replica.
+	pub fn tupaia_flat(&self) -> f64 {
+		let p = &self.params;
+		(p.tamanu_share_of_tupaia_compute.value * p.tupaia_prod_compute_usd.value
+			+ p.dagster_pool_usd.value)
+			/ p.pgro_replicas.value
+	}
+
+	/// What reporting adds over and above backups: the flat share plus the
+	/// reporting part of pgro by DB size.
+	pub fn tupaia_addon(&self, db_gb: f64) -> f64 {
+		self.tupaia_flat() + self.pgro_reporting_usd_per_gb() * db_gb
+	}
+
+	/// Taking backups and feeding clones: the Tamanu-ops part of pgro by DB size.
+	pub fn backups_share(&self, db_gb: f64) -> f64 {
+		self.pgro_backups_usd_per_gb() * db_gb
 	}
 
 	/// A cost as displayed: margin and currency applied, then rounded to the
@@ -242,28 +267,34 @@ impl PricingConfig {
 			monthly_usd: p.platform_share_usd.value,
 			confidence: p.platform_share_usd.confidence,
 		});
-		if input.backups {
+		let db_gb = central.db_gb;
+		// A share that rounds away to nothing is not a line.
+		if input.backups && self.backups_share(db_gb) > 0.0 {
 			lines.push(CostLine {
-				id: LineId::BackupsDbShare,
-				label: "Backups share".into(),
-				detail: Some("Backups database".into()),
-				monthly_usd: self.backups_share(),
-				confidence: weakest(&[&p.backups_db_pool_usd, &p.backups_db_deployments]),
+				id: LineId::BackupsOpsShare,
+				label: "Backups and clone feeding".into(),
+				detail: Some("Share of the data cluster, by database size".into()),
+				monthly_usd: self.backups_share(db_gb),
+				confidence: weakest(&[&p.pgro_pool_usd, &p.pgro_ops_share, &p.fleet_db_gb_total])
+					.max(self.db_size_by_band.confidence),
 			});
 		}
 		if input.tupaia {
 			lines.push(CostLine {
 				id: LineId::TupaiaReporting,
 				label: "Tupaia reporting".into(),
-				detail: Some("Dashboards and reporting".into()),
-				monthly_usd: self.tupaia_addon(),
+				detail: Some("Over and above backups".into()),
+				monthly_usd: self.tupaia_addon(db_gb),
 				confidence: weakest(&[
-					&p.tupaia_prod_pool_usd,
-					&p.tupaia_prod_share,
-					&p.reporting_pipeline_pool_usd,
+					&p.tupaia_prod_compute_usd,
+					&p.tamanu_share_of_tupaia_compute,
+					&p.pgro_pool_usd,
+					&p.pgro_ops_share,
+					&p.pgro_replicas,
+					&p.pgro_replica_gb_total,
 					&p.dagster_pool_usd,
-					&p.replicas_sharing_pipeline,
-				]),
+				])
+				.max(self.db_size_by_band.confidence),
 			});
 		}
 
@@ -309,6 +340,7 @@ impl PricingConfig {
 			.collect();
 		let display_monthly: f64 = display_lines.iter().sum();
 		Ok(CostBreakdown {
+			model_version: self.version.clone(),
 			lines,
 			monthly_usd,
 			annual_usd,

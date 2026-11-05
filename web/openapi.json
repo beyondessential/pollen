@@ -587,6 +587,7 @@
       "CostBreakdown": {
         "type": "object",
         "required": [
+          "model_version",
           "lines",
           "monthly_usd",
           "annual_usd",
@@ -605,6 +606,10 @@
             "items": {
               "$ref": "#/components/schemas/CostLine"
             }
+          },
+          "model_version": {
+            "type": "string",
+            "description": "The version of the model these figures come from."
           },
           "monthly_usd": {
             "type": "number",
@@ -790,21 +795,6 @@
           }
         }
       },
-      "EstimatorToggle": {
-        "type": "object",
-        "required": [
-          "label",
-          "hint"
-        ],
-        "properties": {
-          "hint": {
-            "type": "string"
-          },
-          "label": {
-            "type": "string"
-          }
-        }
-      },
       "EstimatorView": {
         "type": "object",
         "description": "The questions the estimator asks, taken from the ruleset.",
@@ -812,17 +802,6 @@
           "sizing"
         ],
         "properties": {
-          "integrations": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/EstimatorToggle",
-                "description": "The yes/no about connected systems."
-              }
-            ]
-          },
           "sizing": {
             "type": "array",
             "items": {
@@ -994,7 +973,7 @@
           "cloud_facilities",
           "clone",
           "platform_share",
-          "backups_db_share",
+          "backups_ops_share",
           "tupaia_reporting",
           "windows_extra"
         ]
@@ -1380,6 +1359,11 @@
           "snapshot_multiple"
         ],
         "properties": {
+          "db_gb": {
+            "type": "number",
+            "format": "double",
+            "description": "The database size estimated from the band (not an input). Only bands have one."
+          },
           "instance": {
             "type": "string"
           },
@@ -1422,10 +1406,6 @@
             "propertyNames": {
               "type": "string"
             }
-          },
-          "integrations": {
-            "type": "boolean",
-            "description": "Whether any other system connects."
           }
         }
       },

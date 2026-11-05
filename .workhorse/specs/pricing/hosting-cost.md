@@ -32,6 +32,8 @@ It is never presented as a price to the client.
 - [ ] Each line is displayed rounded to a step set in the pricing configuration, the monthly figure is the sum of the displayed lines, and the annual figure is twelve times it, so what is shown adds up.
 - [ ] A figure quoted anywhere beside the breakdown, such as a cost still depending on an unsettled answer, is displayed the same way as the lines.
 - [ ] The line beneath the figure says it is USD at cost and not a price to the client, and says instead that it includes the margin once a margin is applied.
+- [ ] The same line names the version of the model the figures come from.
+- [ ] A line that rounds to nothing is left out.
 
 A margin and a currency conversion are part of the configuration, applied to the displayed figures only.
 While the margin is zero and the currency is US dollars, neither is shown.
@@ -47,17 +49,19 @@ A deployment's monthly cost is the sum of these lines.
   Its storage is always paid for; its compute is paid for only while it runs.
   A standard clone is stopped by default and runs for a fixed share of the month; an always-on clone runs all month.
 - **Platform share**: a fixed share of the BES infrastructure every deployment uses.
-- **Backups share**: an equal share of the shared backups database, when BES takes backups.
-- **Tupaia reporting**: a share of Tupaia and of the reporting pipeline, when the deployment feeds Tupaia.
+- **Backups and clone feeding**: a share of the shared data cluster that takes backups and feeds clones, by the deployment's database size, when BES takes backups.
+- **Tupaia reporting**: over and above backups, a flat share of Tupaia's compute and the reporting pipeline plus the reporting part of the data cluster by database size, when the deployment has Tupaia reporting.
+
+The database size is estimated from the size band and is never entered.
 - **Windows**: the extra compute cost of a Windows server, for each server in BES cloud that runs Windows, with a clone's share scaled by how long it runs.
   It applies to compute only; storage costs the same on either platform.
 
-Backups and the clone are priced independently, so turning backups off removes only the backups share.
+Backups and the clone are priced independently, so turning backups off removes only the backups and clone feeding share.
 
 - [ ] The breakdown lists each line that applies with its monthly figure, and the total is their sum.
 - [ ] The central server line appears only when the central server is in BES cloud.
 - [ ] The clone is priced from the central server's size band even when the central server is client hosted.
-- [ ] Turning backups off removes the backups share and leaves the clone as it was.
+- [ ] Turning backups off removes the backups and clone feeding share and leaves the clone as it was.
 - [ ] A Windows server adds cost to compute only.
 - [ ] Every input combination in the reference fixtures produces the fixture's lines, monthly and annual figures to the cent.
 
@@ -85,7 +89,7 @@ Each parameter carries the basis for its value and one of these confidence tags:
 The calculator prices inputs set directly, for costing a proposal.
 Its controls are:
 
-- the size band, one of the configured bands, with an estimator that works the band out from the sizing questions the wizard asks (the catchment, the facilities, the mobile users and whether other systems connect), using the wizard's own derivation of size;
+- the size band, one of the configured bands, with an estimator that works the band out from the sizing questions the wizard asks (the catchment, the facilities and the mobile users), using the wizard's own derivation of size;
 - whether the central server is in BES cloud or client hosted;
 - where the facility servers run: BES cloud, client hosted, or a mix, where a mix brings up a slider that splits the deployment's facility servers between client hosted and BES cloud;
 - whether BES takes backups, on by default;
@@ -102,7 +106,7 @@ A mix starts with a configured share of them in BES cloud, and the slider runs f
 - [ ] The slider cannot put more facility servers in BES cloud than there are, and returns to its starting share when the size or the estimate changes.
 - [ ] The estimator sets the size band to the band the wizard would derive from the same answers.
 - [ ] Choosing a size band directly clears the estimator's answers.
-- [ ] Turning backups off removes only the backups share.
+- [ ] Turning backups off removes only the backups and clone feeding share.
 - [ ] Turning off upgrade smoke testing removes the clone.
 
 ## The priced wizard
@@ -110,10 +114,10 @@ A mix starts with a configured share of them in BES cloud, and the slider runs f
 The priced wizard is the wizard of [WIZ](../wizard/onboarding.md), with the same questions, flow and artifact, plus a running cost beside the questions that follows the answers.
 The cost is read from the answers, with an assumed answer counting the same as a chosen one:
 
-- the size band is the band the wizard derives; until it is derived, the cost reads as needing the sizing answers rather than pricing at the lightest band;
+- the size band is the highest band the catchment, facilities and mobile answers reach, without the extra band the wizard adds for connected systems, which do not size a deployment for costing; until it is derived, the cost reads as needing the sizing answers rather than pricing at the lightest band;
 - the central server is in BES cloud when that is where the wizard puts it;
 - backups are on unless BES may not take them;
-- Tupaia is included only when it is asked for;
+- Tupaia reporting is included unless it is declined;
 - a hosting region other than the primary one is priced at the primary region's rates, with a note that the difference is confirmed separately;
 - BES-hosted integrations are not priced, since they are referred to a separate conversation.
 

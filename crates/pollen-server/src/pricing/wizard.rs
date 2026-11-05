@@ -64,9 +64,13 @@ pub fn price_plan(
 	answers: &Answers,
 	overrides: &PlanOverrides,
 ) -> Result<PlanCost> {
-	let evaluation = evaluate(ruleset, answers);
-	let answers = effective_answers(ruleset, answers);
 	let w = &config.wizard;
+	// The band for pricing leaves out the answers the model does not size by
+	// (connected systems), whatever the ruleset's own size makes of them.
+	let mut sizing = answers.clone();
+	sizing.0.retain(|qid, _| !w.band_ignores.contains(qid));
+	let evaluation = evaluate(ruleset, &sizing);
+	let answers = effective_answers(ruleset, answers);
 
 	let max = f64::from(config.max_cloud_facilities);
 	let total = w.facility_count.pick(&answers).round().clamp(0.0, max);
@@ -118,13 +122,14 @@ pub fn price_plan(
 	};
 	let cost = config.cost(&input)?;
 
+	let db_gb = config.band(&input.band).map_or(0.0, |b| b.db_gb);
 	let mut open = Vec::new();
 	if w.backups.open.eval(&answers) {
 		open.push(OpenLine {
-			id: LineId::BackupsDbShare,
-			label: "Backups share".into(),
+			id: LineId::BackupsOpsShare,
+			label: "Backups and clone feeding".into(),
 			included: input.backups,
-			display_monthly: config.display_amount(config.backups_share()),
+			display_monthly: config.display_amount(config.backups_share(db_gb)),
 		});
 	}
 	if w.tupaia.open.eval(&answers) {
@@ -132,7 +137,7 @@ pub fn price_plan(
 			id: LineId::TupaiaReporting,
 			label: "Tupaia reporting".into(),
 			included: input.tupaia,
-			display_monthly: config.display_amount(config.tupaia_addon()),
+			display_monthly: config.display_amount(config.tupaia_addon(db_gb)),
 		});
 	}
 

@@ -1,70 +1,97 @@
 {
   "examples": [
     {
-      "name": "Small, BES cloud, standard clone, backups",
+      "name": "Small, BES cloud, standard clone, backups, Tupaia",
       "input": {
         "band": "small"
       },
+      "params_override": {},
       "expected": {
-        "monthly_usd": 242.65,
-        "annual_usd": 2911.79,
+        "monthly_usd": 315.91,
+        "annual_usd": 3790.93,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
     {
-      "name": "Medium, BES cloud, standard clone, backups",
+      "name": "Medium, BES cloud, standard clone, backups, Tupaia",
       "input": {
         "band": "medium"
       },
+      "params_override": {},
       "expected": {
-        "monthly_usd": 544.59,
-        "annual_usd": 6535.05,
+        "monthly_usd": 830.87,
+        "annual_usd": 9970.48,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 0.0,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
     {
-      "name": "Large, BES cloud, standard clone, backups",
+      "name": "Large, BES cloud, standard clone, backups, Tupaia",
       "input": {
         "band": "large"
       },
+      "params_override": {},
       "expected": {
-        "monthly_usd": 994.61,
-        "annual_usd": 11935.3,
+        "monthly_usd": 1417.84,
+        "annual_usd": 17014.06,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 0.0,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
     {
-      "name": "Tiny, BES cloud, no clone, backups",
+      "name": "Small, BES cloud, standard clone, backups, no Tupaia",
+      "input": {
+        "band": "small",
+        "tupaia": false
+      },
+      "params_override": {},
+      "expected": {
+        "monthly_usd": 206.66,
+        "annual_usd": 2479.95,
+        "lines": {
+          "central_box": 80.15,
+          "cloud_facilities": 0.0,
+          "clone": 83.97,
+          "platform_share": 40.0,
+          "backups_ops_share": 2.54
+        }
+      }
+    },
+    {
+      "name": "Tiny, BES cloud, no clone, backups, no Tupaia",
       "input": {
         "band": "tiny",
-        "clone": "off"
+        "clone": "off",
+        "tupaia": false
       },
+      "params_override": {},
       "expected": {
-        "monthly_usd": 158.68,
-        "annual_usd": 1904.14,
+        "monthly_usd": 120.66,
+        "annual_usd": 1447.92,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -72,54 +99,58 @@
       "name": "Medium, BES cloud, 2 cloud facilities, standard clone, backups, Tupaia",
       "input": {
         "band": "medium",
-        "cloud_facilities": 2,
-        "tupaia": true
+        "cloud_facilities": 2
       },
+      "params_override": {},
       "expected": {
-        "monthly_usd": 1077.57,
-        "annual_usd": 12930.9,
+        "monthly_usd": 969.18,
+        "annual_usd": 11630.12,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 138.3,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
     {
-      "name": "Large, central on-prem, clone only, backups",
+      "name": "Large, central on-prem, clone only, backups, no Tupaia",
       "input": {
         "band": "large",
-        "central": "onprem"
+        "central": "onprem",
+        "tupaia": false
       },
+      "params_override": {},
       "expected": {
-        "monthly_usd": 397.73,
-        "annual_usd": 4772.72,
+        "monthly_usd": 390.94,
+        "annual_usd": 4691.33,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
     {
-      "name": "Medium, BES cloud, always-on clone, backups",
+      "name": "Medium, BES cloud, always-on clone, backups, no Tupaia",
       "input": {
         "band": "medium",
-        "clone": "always_on"
+        "clone": "always_on",
+        "tupaia": false
       },
+      "params_override": {},
       "expected": {
-        "monthly_usd": 652.92,
-        "annual_usd": 7835.03,
+        "monthly_usd": 634.71,
+        "annual_usd": 7616.51,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 0.0,
           "clone": 288.09,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -130,28 +161,32 @@
         "cloud_facilities": 1,
         "windows_central": true,
         "windows_facilities": 1,
-        "windows_clone": true
+        "windows_clone": true,
+        "tupaia": false
       },
+      "params_override": {},
       "expected": {
-        "monthly_usd": 356.06,
-        "annual_usd": 4272.75,
+        "monthly_usd": 320.08,
+        "annual_usd": 3840.91,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
+          "backups_ops_share": 2.54,
           "windows_extra": 44.26
         }
       }
     },
     {
-      "name": "Medium, BES cloud, backups off (so no clone)",
+      "name": "Medium, BES cloud, backups off (so no clone), no Tupaia",
       "input": {
         "band": "medium",
         "clone": "off",
-        "backups": false
+        "backups": false,
+        "tupaia": false
       },
+      "params_override": {},
       "expected": {
         "monthly_usd": 326.31,
         "annual_usd": 3915.7,
@@ -159,6 +194,27 @@
           "central_box": 286.31,
           "cloud_facilities": 0.0,
           "platform_share": 40.0
+        }
+      }
+    },
+    {
+      "name": "Medium, BES cloud, standard clone, backups, Tupaia, pgro ops share 20% (top of Felix's range)",
+      "input": {
+        "band": "medium"
+      },
+      "params_override": {
+        "pgro_ops_share": 0.2
+      },
+      "expected": {
+        "monthly_usd": 826.4,
+        "annual_usd": 9916.75,
+        "lines": {
+          "central_box": 286.31,
+          "cloud_facilities": 0.0,
+          "clone": 179.75,
+          "platform_share": 40.0,
+          "backups_ops_share": 40.63,
+          "tupaia_reporting": 279.7
         }
       }
     }
@@ -174,13 +230,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 158.68,
-        "annual_usd": 1904.14,
+        "monthly_usd": 120.66,
+        "annual_usd": 1447.92,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -194,13 +250,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 227.83,
-        "annual_usd": 2733.96,
+        "monthly_usd": 189.81,
+        "annual_usd": 2277.74,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -214,13 +270,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 366.13,
-        "annual_usd": 4393.61,
+        "monthly_usd": 328.12,
+        "annual_usd": 3937.39,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -234,14 +290,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 553.36,
-        "annual_usd": 6640.34,
+        "monthly_usd": 207.59,
+        "annual_usd": 2491.13,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -255,14 +311,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 622.51,
-        "annual_usd": 7470.16,
+        "monthly_usd": 276.75,
+        "annual_usd": 3320.95,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -276,14 +332,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 760.82,
-        "annual_usd": 9129.81,
+        "monthly_usd": 415.05,
+        "annual_usd": 4980.6,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -354,13 +410,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 514.84,
-        "annual_usd": 6178.02,
+        "monthly_usd": 207.09,
+        "annual_usd": 2485.03,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -374,13 +430,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 583.99,
-        "annual_usd": 7007.85,
+        "monthly_usd": 276.24,
+        "annual_usd": 3314.86,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -394,13 +450,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 722.29,
-        "annual_usd": 8667.5,
+        "monthly_usd": 414.54,
+        "annual_usd": 4974.5,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -414,14 +470,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 242.65,
-        "annual_usd": 2911.79,
+        "monthly_usd": 204.63,
+        "annual_usd": 2455.57,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -435,14 +491,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 311.8,
-        "annual_usd": 3741.62,
+        "monthly_usd": 273.78,
+        "annual_usd": 3285.4,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -456,14 +512,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 450.11,
-        "annual_usd": 5401.27,
+        "monthly_usd": 412.09,
+        "annual_usd": 4945.05,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -477,15 +533,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 637.33,
-        "annual_usd": 7647.99,
+        "monthly_usd": 291.57,
+        "annual_usd": 3498.78,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -499,15 +555,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 706.48,
-        "annual_usd": 8477.82,
+        "monthly_usd": 360.72,
+        "annual_usd": 4328.61,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -521,15 +577,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 844.79,
-        "annual_usd": 10137.47,
+        "monthly_usd": 499.02,
+        "annual_usd": 5988.25,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -603,14 +659,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 598.81,
-        "annual_usd": 7185.68,
+        "monthly_usd": 291.06,
+        "annual_usd": 3492.69,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "clone": 83.97,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -624,14 +680,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 667.96,
-        "annual_usd": 8015.5,
+        "monthly_usd": 360.21,
+        "annual_usd": 4322.51,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "clone": 83.97,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -645,14 +701,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 806.26,
-        "annual_usd": 9675.15,
+        "monthly_usd": 498.51,
+        "annual_usd": 5982.16,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "clone": 83.97,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -666,14 +722,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 285.98,
-        "annual_usd": 3431.79,
+        "monthly_usd": 247.96,
+        "annual_usd": 2975.57,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -687,14 +743,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 355.13,
-        "annual_usd": 4261.61,
+        "monthly_usd": 317.12,
+        "annual_usd": 3805.39,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -708,14 +764,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 493.44,
-        "annual_usd": 5921.26,
+        "monthly_usd": 455.42,
+        "annual_usd": 5465.04,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -729,15 +785,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 680.67,
-        "annual_usd": 8167.99,
+        "monthly_usd": 334.9,
+        "annual_usd": 4018.78,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -751,15 +807,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 749.82,
-        "annual_usd": 8997.81,
+        "monthly_usd": 404.05,
+        "annual_usd": 4848.6,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -773,15 +829,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 888.12,
-        "annual_usd": 10657.46,
+        "monthly_usd": 542.35,
+        "annual_usd": 6508.25,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -855,14 +911,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 642.14,
-        "annual_usd": 7705.67,
+        "monthly_usd": 334.39,
+        "annual_usd": 4012.68,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "clone": 127.3,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -876,14 +932,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 711.29,
-        "annual_usd": 8535.5,
+        "monthly_usd": 403.54,
+        "annual_usd": 4842.5,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "clone": 127.3,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -897,14 +953,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 849.6,
-        "annual_usd": 10195.14,
+        "monthly_usd": 541.85,
+        "annual_usd": 6502.15,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "clone": 127.3,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -918,12 +974,12 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 78.53,
-        "annual_usd": 942.32,
+        "monthly_usd": 40.51,
+        "annual_usd": 486.09,
         "lines": {
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -937,12 +993,12 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 147.68,
-        "annual_usd": 1772.14,
+        "monthly_usd": 109.66,
+        "annual_usd": 1315.92,
         "lines": {
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -956,12 +1012,12 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 285.98,
-        "annual_usd": 3431.79,
+        "monthly_usd": 247.96,
+        "annual_usd": 2975.57,
         "lines": {
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -975,13 +1031,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 473.21,
-        "annual_usd": 5678.52,
+        "monthly_usd": 127.44,
+        "annual_usd": 1529.3,
         "lines": {
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -995,13 +1051,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 542.36,
-        "annual_usd": 6508.34,
+        "monthly_usd": 196.59,
+        "annual_usd": 2359.13,
         "lines": {
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1015,13 +1071,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 680.67,
-        "annual_usd": 8167.99,
+        "monthly_usd": 334.9,
+        "annual_usd": 4018.78,
         "lines": {
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1089,12 +1145,12 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 434.68,
-        "annual_usd": 5216.2,
+        "monthly_usd": 126.93,
+        "annual_usd": 1523.21,
         "lines": {
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1108,12 +1164,12 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 503.84,
-        "annual_usd": 6046.02,
+        "monthly_usd": 196.09,
+        "annual_usd": 2353.03,
         "lines": {
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1127,12 +1183,12 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 642.14,
-        "annual_usd": 7705.67,
+        "monthly_usd": 334.39,
+        "annual_usd": 4012.68,
         "lines": {
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1146,13 +1202,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 162.5,
-        "annual_usd": 1949.97,
+        "monthly_usd": 124.48,
+        "annual_usd": 1493.75,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -1166,13 +1222,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 231.65,
-        "annual_usd": 2779.79,
+        "monthly_usd": 193.63,
+        "annual_usd": 2323.57,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -1186,13 +1242,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 369.95,
-        "annual_usd": 4439.44,
+        "monthly_usd": 331.94,
+        "annual_usd": 3983.22,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -1206,14 +1262,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 557.18,
-        "annual_usd": 6686.17,
+        "monthly_usd": 211.41,
+        "annual_usd": 2536.96,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1227,14 +1283,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 626.33,
-        "annual_usd": 7515.99,
+        "monthly_usd": 280.57,
+        "annual_usd": 3366.78,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1248,14 +1304,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 764.64,
-        "annual_usd": 9175.64,
+        "monthly_usd": 418.87,
+        "annual_usd": 5026.43,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1326,13 +1382,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 518.65,
-        "annual_usd": 6223.85,
+        "monthly_usd": 210.91,
+        "annual_usd": 2530.86,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 83.97,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1346,13 +1402,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 587.81,
-        "annual_usd": 7053.68,
+        "monthly_usd": 280.06,
+        "annual_usd": 3360.69,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 83.97,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1366,13 +1422,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 726.11,
-        "annual_usd": 8713.33,
+        "monthly_usd": 418.36,
+        "annual_usd": 5020.34,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 83.97,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1386,13 +1442,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 205.83,
-        "annual_usd": 2469.96,
+        "monthly_usd": 167.81,
+        "annual_usd": 2013.74,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -1406,13 +1462,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 274.98,
-        "annual_usd": 3299.79,
+        "monthly_usd": 236.96,
+        "annual_usd": 2843.57,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -1426,13 +1482,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 413.29,
-        "annual_usd": 4959.44,
+        "monthly_usd": 375.27,
+        "annual_usd": 4503.21,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 0.51
         }
       }
     },
@@ -1446,14 +1502,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 600.51,
-        "annual_usd": 7206.16,
+        "monthly_usd": 254.75,
+        "annual_usd": 3056.95,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1467,14 +1523,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 669.67,
-        "annual_usd": 8035.99,
+        "monthly_usd": 323.9,
+        "annual_usd": 3886.78,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1488,14 +1544,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 807.97,
-        "annual_usd": 9695.64,
+        "monthly_usd": 462.2,
+        "annual_usd": 5546.42,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 0.51,
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1566,13 +1622,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 561.99,
-        "annual_usd": 6743.85,
+        "monthly_usd": 254.24,
+        "annual_usd": 3050.86,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 127.3,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1586,13 +1642,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 631.14,
-        "annual_usd": 7573.67,
+        "monthly_usd": 323.39,
+        "annual_usd": 3880.68,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 127.3,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1606,13 +1662,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 769.44,
-        "annual_usd": 9233.32,
+        "monthly_usd": 461.69,
+        "annual_usd": 5540.33,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 127.3,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 86.93
         }
       }
     },
@@ -1626,13 +1682,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 158.68,
-        "annual_usd": 1904.14,
+        "monthly_usd": 122.69,
+        "annual_usd": 1472.3,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -1646,13 +1702,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 227.83,
-        "annual_usd": 2733.96,
+        "monthly_usd": 191.84,
+        "annual_usd": 2302.12,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -1666,13 +1722,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 366.13,
-        "annual_usd": 4393.61,
+        "monthly_usd": 330.15,
+        "annual_usd": 3961.77,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -1686,14 +1742,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 553.36,
-        "annual_usd": 6640.34,
+        "monthly_usd": 231.94,
+        "annual_usd": 2783.28,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -1707,14 +1763,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 622.51,
-        "annual_usd": 7470.16,
+        "monthly_usd": 301.09,
+        "annual_usd": 3613.1,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -1728,14 +1784,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 760.82,
-        "annual_usd": 9129.81,
+        "monthly_usd": 439.4,
+        "annual_usd": 5272.75,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -1806,13 +1862,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 514.84,
-        "annual_usd": 6178.02,
+        "monthly_usd": 229.4,
+        "annual_usd": 2752.8,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -1826,13 +1882,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 583.99,
-        "annual_usd": 7007.85,
+        "monthly_usd": 298.55,
+        "annual_usd": 3582.63,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -1846,13 +1902,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 722.29,
-        "annual_usd": 8667.5,
+        "monthly_usd": 436.86,
+        "annual_usd": 5242.27,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -1866,14 +1922,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 242.65,
-        "annual_usd": 2911.79,
+        "monthly_usd": 206.66,
+        "annual_usd": 2479.95,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -1887,14 +1943,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 311.8,
-        "annual_usd": 3741.62,
+        "monthly_usd": 275.81,
+        "annual_usd": 3309.78,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -1908,14 +1964,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 450.11,
-        "annual_usd": 5401.27,
+        "monthly_usd": 414.12,
+        "annual_usd": 4969.42,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -1929,15 +1985,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 637.33,
-        "annual_usd": 7647.99,
+        "monthly_usd": 315.91,
+        "annual_usd": 3790.93,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -1951,15 +2007,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 706.48,
-        "annual_usd": 8477.82,
+        "monthly_usd": 385.06,
+        "annual_usd": 4620.75,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -1973,15 +2029,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 844.79,
-        "annual_usd": 10137.47,
+        "monthly_usd": 523.37,
+        "annual_usd": 6280.4,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2055,14 +2111,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 598.81,
-        "annual_usd": 7185.68,
+        "monthly_usd": 313.37,
+        "annual_usd": 3760.46,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "clone": 83.97,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2076,14 +2132,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 667.96,
-        "annual_usd": 8015.5,
+        "monthly_usd": 382.52,
+        "annual_usd": 4590.28,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "clone": 83.97,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2097,14 +2153,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 806.26,
-        "annual_usd": 9675.15,
+        "monthly_usd": 520.83,
+        "annual_usd": 6249.93,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "clone": 83.97,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2118,14 +2174,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 285.98,
-        "annual_usd": 3431.79,
+        "monthly_usd": 250.0,
+        "annual_usd": 2999.95,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -2139,14 +2195,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 355.13,
-        "annual_usd": 4261.61,
+        "monthly_usd": 319.15,
+        "annual_usd": 3829.77,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -2160,14 +2216,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 493.44,
-        "annual_usd": 5921.26,
+        "monthly_usd": 457.45,
+        "annual_usd": 5489.42,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -2181,15 +2237,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 680.67,
-        "annual_usd": 8167.99,
+        "monthly_usd": 359.24,
+        "annual_usd": 4310.92,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2203,15 +2259,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 749.82,
-        "annual_usd": 8997.81,
+        "monthly_usd": 428.4,
+        "annual_usd": 5140.75,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2225,15 +2281,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 888.12,
-        "annual_usd": 10657.46,
+        "monthly_usd": 566.7,
+        "annual_usd": 6800.4,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2307,14 +2363,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 642.14,
-        "annual_usd": 7705.67,
+        "monthly_usd": 356.7,
+        "annual_usd": 4280.45,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 0.0,
           "clone": 127.3,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2328,14 +2384,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 711.29,
-        "annual_usd": 8535.5,
+        "monthly_usd": 425.86,
+        "annual_usd": 5110.27,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 69.15,
           "clone": 127.3,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2349,14 +2405,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 849.6,
-        "annual_usd": 10195.14,
+        "monthly_usd": 564.16,
+        "annual_usd": 6769.92,
         "lines": {
           "central_box": 80.15,
           "cloud_facilities": 207.46,
           "clone": 127.3,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2370,12 +2426,12 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 78.53,
-        "annual_usd": 942.32,
+        "monthly_usd": 42.54,
+        "annual_usd": 510.47,
         "lines": {
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -2389,12 +2445,12 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 147.68,
-        "annual_usd": 1772.14,
+        "monthly_usd": 111.69,
+        "annual_usd": 1340.3,
         "lines": {
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -2408,12 +2464,12 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 285.98,
-        "annual_usd": 3431.79,
+        "monthly_usd": 250.0,
+        "annual_usd": 2999.95,
         "lines": {
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -2427,13 +2483,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 473.21,
-        "annual_usd": 5678.52,
+        "monthly_usd": 151.79,
+        "annual_usd": 1821.45,
         "lines": {
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2447,13 +2503,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 542.36,
-        "annual_usd": 6508.34,
+        "monthly_usd": 220.94,
+        "annual_usd": 2651.28,
         "lines": {
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2467,13 +2523,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 680.67,
-        "annual_usd": 8167.99,
+        "monthly_usd": 359.24,
+        "annual_usd": 4310.92,
         "lines": {
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2541,12 +2597,12 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 434.68,
-        "annual_usd": 5216.2,
+        "monthly_usd": 149.25,
+        "annual_usd": 1790.98,
         "lines": {
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2560,12 +2616,12 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 503.84,
-        "annual_usd": 6046.02,
+        "monthly_usd": 218.4,
+        "annual_usd": 2620.8,
         "lines": {
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2579,12 +2635,12 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 642.14,
-        "annual_usd": 7705.67,
+        "monthly_usd": 356.7,
+        "annual_usd": 4280.45,
         "lines": {
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2598,13 +2654,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 162.5,
-        "annual_usd": 1949.97,
+        "monthly_usd": 126.51,
+        "annual_usd": 1518.13,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -2618,13 +2674,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 231.65,
-        "annual_usd": 2779.79,
+        "monthly_usd": 195.66,
+        "annual_usd": 2347.95,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -2638,13 +2694,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 369.95,
-        "annual_usd": 4439.44,
+        "monthly_usd": 333.97,
+        "annual_usd": 4007.6,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -2658,14 +2714,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 557.18,
-        "annual_usd": 6686.17,
+        "monthly_usd": 235.76,
+        "annual_usd": 2829.11,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2679,14 +2735,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 626.33,
-        "annual_usd": 7515.99,
+        "monthly_usd": 304.91,
+        "annual_usd": 3658.93,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2700,14 +2756,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 764.64,
-        "annual_usd": 9175.64,
+        "monthly_usd": 443.21,
+        "annual_usd": 5318.58,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 83.97,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2778,13 +2834,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 518.65,
-        "annual_usd": 6223.85,
+        "monthly_usd": 233.22,
+        "annual_usd": 2798.63,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 83.97,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2798,13 +2854,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 587.81,
-        "annual_usd": 7053.68,
+        "monthly_usd": 302.37,
+        "annual_usd": 3628.46,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 83.97,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2818,13 +2874,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 726.11,
-        "annual_usd": 8713.33,
+        "monthly_usd": 440.68,
+        "annual_usd": 5288.1,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 83.97,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2838,13 +2894,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 205.83,
-        "annual_usd": 2469.96,
+        "monthly_usd": 169.84,
+        "annual_usd": 2038.12,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -2858,13 +2914,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 274.98,
-        "annual_usd": 3299.79,
+        "monthly_usd": 239.0,
+        "annual_usd": 2867.95,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -2878,13 +2934,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 413.29,
-        "annual_usd": 4959.44,
+        "monthly_usd": 377.3,
+        "annual_usd": 4527.59,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 2.54
         }
       }
     },
@@ -2898,14 +2954,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 600.51,
-        "annual_usd": 7206.16,
+        "monthly_usd": 279.09,
+        "annual_usd": 3349.1,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2919,14 +2975,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 669.67,
-        "annual_usd": 8035.99,
+        "monthly_usd": 348.24,
+        "annual_usd": 4178.92,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -2940,14 +2996,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 807.97,
-        "annual_usd": 9695.64,
+        "monthly_usd": 486.55,
+        "annual_usd": 5838.57,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 127.3,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 2.54,
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -3018,13 +3074,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 561.99,
-        "annual_usd": 6743.85,
+        "monthly_usd": 276.55,
+        "annual_usd": 3318.63,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 127.3,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -3038,13 +3094,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 631.14,
-        "annual_usd": 7573.67,
+        "monthly_usd": 345.7,
+        "annual_usd": 4148.45,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 127.3,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -3058,13 +3114,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 769.44,
-        "annual_usd": 9233.32,
+        "monthly_usd": 484.01,
+        "annual_usd": 5808.1,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 127.3,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 109.25
         }
       }
     },
@@ -3078,13 +3134,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 364.83,
-        "annual_usd": 4378.01,
+        "monthly_usd": 346.62,
+        "annual_usd": 4159.49,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -3098,13 +3154,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 433.99,
-        "annual_usd": 5207.84,
+        "monthly_usd": 415.78,
+        "annual_usd": 4989.31,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -3118,13 +3174,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 572.29,
-        "annual_usd": 6867.48,
+        "monthly_usd": 554.08,
+        "annual_usd": 6648.96,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -3138,14 +3194,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 759.52,
-        "annual_usd": 9114.21,
+        "monthly_usd": 651.12,
+        "annual_usd": 7813.44,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3159,14 +3215,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 828.67,
-        "annual_usd": 9944.04,
+        "monthly_usd": 720.27,
+        "annual_usd": 8643.26,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3180,14 +3236,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 966.97,
-        "annual_usd": 11603.68,
+        "monthly_usd": 858.58,
+        "annual_usd": 10302.91,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3258,13 +3314,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 720.99,
-        "annual_usd": 8651.9,
+        "monthly_usd": 630.8,
+        "annual_usd": 7569.65,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3278,13 +3334,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 790.14,
-        "annual_usd": 9481.72,
+        "monthly_usd": 699.96,
+        "annual_usd": 8399.47,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3298,13 +3354,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 928.45,
-        "annual_usd": 11141.37,
+        "monthly_usd": 838.26,
+        "annual_usd": 10059.12,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3318,14 +3374,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 544.59,
-        "annual_usd": 6535.05,
+        "monthly_usd": 526.38,
+        "annual_usd": 6316.52,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 0.0,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -3339,14 +3395,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 613.74,
-        "annual_usd": 7364.87,
+        "monthly_usd": 595.53,
+        "annual_usd": 7146.35,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 69.15,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -3360,14 +3416,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 752.04,
-        "annual_usd": 9024.52,
+        "monthly_usd": 733.83,
+        "annual_usd": 8806.0,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 207.46,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -3381,15 +3437,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 939.27,
-        "annual_usd": 11271.25,
+        "monthly_usd": 830.87,
+        "annual_usd": 9970.48,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 0.0,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3403,15 +3459,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1008.42,
-        "annual_usd": 12101.07,
+        "monthly_usd": 900.03,
+        "annual_usd": 10800.3,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 69.15,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3425,15 +3481,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1146.73,
-        "annual_usd": 13760.72,
+        "monthly_usd": 1038.33,
+        "annual_usd": 12459.95,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 207.46,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3507,14 +3563,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 900.74,
-        "annual_usd": 10808.93,
+        "monthly_usd": 810.56,
+        "annual_usd": 9726.68,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 0.0,
           "clone": 179.75,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3528,14 +3584,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 969.9,
-        "annual_usd": 11638.76,
+        "monthly_usd": 879.71,
+        "annual_usd": 10556.51,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 69.15,
           "clone": 179.75,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3549,14 +3605,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1108.2,
-        "annual_usd": 13298.4,
+        "monthly_usd": 1018.01,
+        "annual_usd": 12216.16,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 207.46,
           "clone": 179.75,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3570,14 +3626,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 652.92,
-        "annual_usd": 7835.03,
+        "monthly_usd": 634.71,
+        "annual_usd": 7616.51,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 0.0,
           "clone": 288.09,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -3591,14 +3647,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 722.07,
-        "annual_usd": 8664.86,
+        "monthly_usd": 703.86,
+        "annual_usd": 8446.33,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 69.15,
           "clone": 288.09,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -3612,14 +3668,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 860.38,
-        "annual_usd": 10324.5,
+        "monthly_usd": 842.17,
+        "annual_usd": 10105.98,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 207.46,
           "clone": 288.09,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -3633,15 +3689,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1047.6,
-        "annual_usd": 12571.23,
+        "monthly_usd": 939.21,
+        "annual_usd": 11270.46,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 0.0,
           "clone": 288.09,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3655,15 +3711,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1116.75,
-        "annual_usd": 13401.06,
+        "monthly_usd": 1008.36,
+        "annual_usd": 12100.28,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 69.15,
           "clone": 288.09,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3677,15 +3733,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1255.06,
-        "annual_usd": 15060.7,
+        "monthly_usd": 1146.66,
+        "annual_usd": 13759.93,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 207.46,
           "clone": 288.09,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3759,14 +3815,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1009.08,
-        "annual_usd": 12108.92,
+        "monthly_usd": 918.89,
+        "annual_usd": 11026.67,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 0.0,
           "clone": 288.09,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3780,14 +3836,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1078.23,
-        "annual_usd": 12938.74,
+        "monthly_usd": 988.04,
+        "annual_usd": 11856.49,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 69.15,
           "clone": 288.09,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3801,14 +3857,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1216.53,
-        "annual_usd": 14598.39,
+        "monthly_usd": 1126.35,
+        "annual_usd": 13516.14,
         "lines": {
           "central_box": 286.31,
           "cloud_facilities": 207.46,
           "clone": 288.09,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3822,12 +3878,12 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 78.53,
-        "annual_usd": 942.32,
+        "monthly_usd": 60.32,
+        "annual_usd": 723.79,
         "lines": {
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -3841,12 +3897,12 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 147.68,
-        "annual_usd": 1772.14,
+        "monthly_usd": 129.47,
+        "annual_usd": 1553.62,
         "lines": {
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -3860,12 +3916,12 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 285.98,
-        "annual_usd": 3431.79,
+        "monthly_usd": 267.77,
+        "annual_usd": 3213.26,
         "lines": {
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -3879,13 +3935,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 473.21,
-        "annual_usd": 5678.52,
+        "monthly_usd": 364.81,
+        "annual_usd": 4377.74,
         "lines": {
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3899,13 +3955,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 542.36,
-        "annual_usd": 6508.34,
+        "monthly_usd": 433.96,
+        "annual_usd": 5207.57,
         "lines": {
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3919,13 +3975,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 680.67,
-        "annual_usd": 8167.99,
+        "monthly_usd": 572.27,
+        "annual_usd": 6867.22,
         "lines": {
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -3993,12 +4049,12 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 434.68,
-        "annual_usd": 5216.2,
+        "monthly_usd": 344.5,
+        "annual_usd": 4133.95,
         "lines": {
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4012,12 +4068,12 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 503.84,
-        "annual_usd": 6046.02,
+        "monthly_usd": 413.65,
+        "annual_usd": 4963.78,
         "lines": {
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4031,12 +4087,12 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 642.14,
-        "annual_usd": 7705.67,
+        "monthly_usd": 551.95,
+        "annual_usd": 6623.42,
         "lines": {
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4050,13 +4106,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 258.28,
-        "annual_usd": 3099.35,
+        "monthly_usd": 240.07,
+        "annual_usd": 2880.83,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -4070,13 +4126,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 327.43,
-        "annual_usd": 3929.18,
+        "monthly_usd": 309.22,
+        "annual_usd": 3710.65,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -4090,13 +4146,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 465.74,
-        "annual_usd": 5588.82,
+        "monthly_usd": 447.53,
+        "annual_usd": 5370.3,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -4110,14 +4166,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 652.96,
-        "annual_usd": 7835.55,
+        "monthly_usd": 544.57,
+        "annual_usd": 6534.78,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4131,14 +4187,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 722.11,
-        "annual_usd": 8665.38,
+        "monthly_usd": 613.72,
+        "annual_usd": 7364.6,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4152,14 +4208,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 860.42,
-        "annual_usd": 10325.02,
+        "monthly_usd": 752.02,
+        "annual_usd": 9024.25,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 179.75,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4230,13 +4286,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 614.44,
-        "annual_usd": 7373.24,
+        "monthly_usd": 524.25,
+        "annual_usd": 6290.99,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 179.75,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4250,13 +4306,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 683.59,
-        "annual_usd": 8203.06,
+        "monthly_usd": 593.4,
+        "annual_usd": 7120.81,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 179.75,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4270,13 +4326,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 821.89,
-        "annual_usd": 9862.71,
+        "monthly_usd": 731.71,
+        "annual_usd": 8780.46,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 179.75,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4290,13 +4346,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 366.61,
-        "annual_usd": 4399.34,
+        "monthly_usd": 348.4,
+        "annual_usd": 4180.81,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 288.09,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -4310,13 +4366,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 435.76,
-        "annual_usd": 5229.16,
+        "monthly_usd": 417.55,
+        "annual_usd": 5010.64,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 288.09,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -4330,13 +4386,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 574.07,
-        "annual_usd": 6888.81,
+        "monthly_usd": 555.86,
+        "annual_usd": 6670.28,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 288.09,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 20.32
         }
       }
     },
@@ -4350,14 +4406,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 761.29,
-        "annual_usd": 9135.54,
+        "monthly_usd": 652.9,
+        "annual_usd": 7834.76,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 288.09,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4371,14 +4427,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 830.45,
-        "annual_usd": 9965.36,
+        "monthly_usd": 722.05,
+        "annual_usd": 8664.59,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 288.09,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4392,14 +4448,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 968.75,
-        "annual_usd": 11625.01,
+        "monthly_usd": 860.35,
+        "annual_usd": 10324.24,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 288.09,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 20.32,
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4470,13 +4526,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 722.77,
-        "annual_usd": 8673.22,
+        "monthly_usd": 632.58,
+        "annual_usd": 7590.97,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 288.09,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4490,13 +4546,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 791.92,
-        "annual_usd": 9503.04,
+        "monthly_usd": 701.73,
+        "annual_usd": 8420.8,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 288.09,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4510,13 +4566,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 930.22,
-        "annual_usd": 11162.69,
+        "monthly_usd": 840.04,
+        "annual_usd": 10080.44,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 288.09,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 304.5
         }
       }
     },
@@ -4530,13 +4586,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 675.41,
-        "annual_usd": 8104.9,
+        "monthly_usd": 668.63,
+        "annual_usd": 8023.51,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -4550,13 +4606,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 744.56,
-        "annual_usd": 8934.72,
+        "monthly_usd": 737.78,
+        "annual_usd": 8853.33,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -4570,13 +4626,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 882.86,
-        "annual_usd": 10594.37,
+        "monthly_usd": 876.08,
+        "annual_usd": 10512.98,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -4590,14 +4646,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1070.09,
-        "annual_usd": 12841.1,
+        "monthly_usd": 1098.64,
+        "annual_usd": 13183.66,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -4611,14 +4667,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1139.24,
-        "annual_usd": 13670.92,
+        "monthly_usd": 1167.79,
+        "annual_usd": 14013.48,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -4632,14 +4688,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1277.55,
-        "annual_usd": 15330.57,
+        "monthly_usd": 1306.09,
+        "annual_usd": 15673.13,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -4710,13 +4766,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1031.57,
-        "annual_usd": 12378.78,
+        "monthly_usd": 1066.89,
+        "annual_usd": 12802.73,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -4730,13 +4786,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1100.72,
-        "annual_usd": 13208.61,
+        "monthly_usd": 1136.05,
+        "annual_usd": 13632.56,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -4750,13 +4806,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1239.02,
-        "annual_usd": 14868.26,
+        "monthly_usd": 1274.35,
+        "annual_usd": 15292.21,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -4770,14 +4826,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 994.61,
-        "annual_usd": 11935.3,
+        "monthly_usd": 987.83,
+        "annual_usd": 11853.91,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 0.0,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -4791,14 +4847,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 1063.76,
-        "annual_usd": 12765.13,
+        "monthly_usd": 1056.98,
+        "annual_usd": 12683.74,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 69.15,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -4812,14 +4868,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 1202.06,
-        "annual_usd": 14424.77,
+        "monthly_usd": 1195.28,
+        "annual_usd": 14343.38,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 207.46,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -4833,15 +4889,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1389.29,
-        "annual_usd": 16671.5,
+        "monthly_usd": 1417.84,
+        "annual_usd": 17014.06,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 0.0,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -4855,15 +4911,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1458.44,
-        "annual_usd": 17501.33,
+        "monthly_usd": 1486.99,
+        "annual_usd": 17843.89,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 69.15,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -4877,15 +4933,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1596.75,
-        "annual_usd": 19160.97,
+        "monthly_usd": 1625.29,
+        "annual_usd": 19503.53,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 207.46,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -4959,14 +5015,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1350.77,
-        "annual_usd": 16209.19,
+        "monthly_usd": 1386.09,
+        "annual_usd": 16633.14,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 0.0,
           "clone": 319.2,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -4980,14 +5036,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1419.92,
-        "annual_usd": 17039.01,
+        "monthly_usd": 1455.25,
+        "annual_usd": 17462.96,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 69.15,
           "clone": 319.2,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5001,14 +5057,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1558.22,
-        "annual_usd": 18698.66,
+        "monthly_usd": 1593.55,
+        "annual_usd": 19122.61,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 207.46,
           "clone": 319.2,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5022,14 +5078,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 1212.19,
-        "annual_usd": 14546.31,
+        "monthly_usd": 1205.41,
+        "annual_usd": 14464.92,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 0.0,
           "clone": 536.78,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -5043,14 +5099,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 1281.34,
-        "annual_usd": 15376.13,
+        "monthly_usd": 1274.56,
+        "annual_usd": 15294.74,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 69.15,
           "clone": 536.78,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -5064,14 +5120,14 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 1419.65,
-        "annual_usd": 17035.78,
+        "monthly_usd": 1412.87,
+        "annual_usd": 16954.39,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 207.46,
           "clone": 536.78,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -5085,15 +5141,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1606.88,
-        "annual_usd": 19282.51,
+        "monthly_usd": 1635.42,
+        "annual_usd": 19625.07,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 0.0,
           "clone": 536.78,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5107,15 +5163,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1676.03,
-        "annual_usd": 20112.33,
+        "monthly_usd": 1704.57,
+        "annual_usd": 20454.89,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 69.15,
           "clone": 536.78,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5129,15 +5185,15 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1814.33,
-        "annual_usd": 21771.98,
+        "monthly_usd": 1842.88,
+        "annual_usd": 22114.54,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 207.46,
           "clone": 536.78,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5211,14 +5267,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1568.35,
-        "annual_usd": 18820.19,
+        "monthly_usd": 1603.68,
+        "annual_usd": 19244.14,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 0.0,
           "clone": 536.78,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5232,14 +5288,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1637.5,
-        "annual_usd": 19650.02,
+        "monthly_usd": 1672.83,
+        "annual_usd": 20073.97,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 69.15,
           "clone": 536.78,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5253,14 +5309,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1775.81,
-        "annual_usd": 21309.66,
+        "monthly_usd": 1811.13,
+        "annual_usd": 21733.61,
         "lines": {
           "central_box": 596.88,
           "cloud_facilities": 207.46,
           "clone": 536.78,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5274,12 +5330,12 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 78.53,
-        "annual_usd": 942.32,
+        "monthly_usd": 71.74,
+        "annual_usd": 860.93,
         "lines": {
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -5293,12 +5349,12 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 147.68,
-        "annual_usd": 1772.14,
+        "monthly_usd": 140.9,
+        "annual_usd": 1690.75,
         "lines": {
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -5312,12 +5368,12 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 285.98,
-        "annual_usd": 3431.79,
+        "monthly_usd": 279.2,
+        "annual_usd": 3350.4,
         "lines": {
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -5331,13 +5387,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 473.21,
-        "annual_usd": 5678.52,
+        "monthly_usd": 501.76,
+        "annual_usd": 6021.08,
         "lines": {
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5351,13 +5407,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 542.36,
-        "annual_usd": 6508.34,
+        "monthly_usd": 570.91,
+        "annual_usd": 6850.9,
         "lines": {
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5371,13 +5427,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 680.67,
-        "annual_usd": 8167.99,
+        "monthly_usd": 709.21,
+        "annual_usd": 8510.55,
         "lines": {
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5445,12 +5501,12 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 434.68,
-        "annual_usd": 5216.2,
+        "monthly_usd": 470.01,
+        "annual_usd": 5640.15,
         "lines": {
           "cloud_facilities": 0.0,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5464,12 +5520,12 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 503.84,
-        "annual_usd": 6046.02,
+        "monthly_usd": 539.16,
+        "annual_usd": 6469.97,
         "lines": {
           "cloud_facilities": 69.15,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5483,12 +5539,12 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 642.14,
-        "annual_usd": 7705.67,
+        "monthly_usd": 677.47,
+        "annual_usd": 8129.62,
         "lines": {
           "cloud_facilities": 207.46,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5502,13 +5558,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 397.73,
-        "annual_usd": 4772.72,
+        "monthly_usd": 390.94,
+        "annual_usd": 4691.33,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -5522,13 +5578,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 466.88,
-        "annual_usd": 5602.54,
+        "monthly_usd": 460.1,
+        "annual_usd": 5521.15,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -5542,13 +5598,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 605.18,
-        "annual_usd": 7262.19,
+        "monthly_usd": 598.4,
+        "annual_usd": 7180.8,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -5562,14 +5618,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 792.41,
-        "annual_usd": 9508.92,
+        "monthly_usd": 820.96,
+        "annual_usd": 9851.48,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5583,14 +5639,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 861.56,
-        "annual_usd": 10338.74,
+        "monthly_usd": 890.11,
+        "annual_usd": 10681.3,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5604,14 +5660,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 999.87,
-        "annual_usd": 11998.39,
+        "monthly_usd": 1028.41,
+        "annual_usd": 12340.95,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 319.2,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5682,13 +5738,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 753.88,
-        "annual_usd": 9046.6,
+        "monthly_usd": 789.21,
+        "annual_usd": 9470.55,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 319.2,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5702,13 +5758,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 823.04,
-        "annual_usd": 9876.43,
+        "monthly_usd": 858.36,
+        "annual_usd": 10300.38,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 319.2,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5722,13 +5778,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 961.34,
-        "annual_usd": 11536.07,
+        "monthly_usd": 996.67,
+        "annual_usd": 11960.03,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 319.2,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5742,13 +5798,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 615.31,
-        "annual_usd": 7383.72,
+        "monthly_usd": 608.53,
+        "annual_usd": 7302.33,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 536.78,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -5762,13 +5818,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 684.46,
-        "annual_usd": 8213.55,
+        "monthly_usd": 677.68,
+        "annual_usd": 8132.16,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 536.78,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -5782,13 +5838,13 @@
         "tupaia": false
       },
       "expected": {
-        "monthly_usd": 822.77,
-        "annual_usd": 9873.2,
+        "monthly_usd": 815.98,
+        "annual_usd": 9791.81,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 536.78,
           "platform_share": 40.0,
-          "backups_db_share": 38.53
+          "backups_ops_share": 31.74
         }
       }
     },
@@ -5802,14 +5858,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1009.99,
-        "annual_usd": 12119.92,
+        "monthly_usd": 1038.54,
+        "annual_usd": 12462.48,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 536.78,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5823,14 +5879,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1079.15,
-        "annual_usd": 12949.75,
+        "monthly_usd": 1107.69,
+        "annual_usd": 13292.31,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 536.78,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5844,14 +5900,14 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1217.45,
-        "annual_usd": 14609.4,
+        "monthly_usd": 1246.0,
+        "annual_usd": 14951.96,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 536.78,
           "platform_share": 40.0,
-          "backups_db_share": 38.53,
-          "tupaia_reporting": 394.68
+          "backups_ops_share": 31.74,
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5922,13 +5978,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 971.47,
-        "annual_usd": 11657.61,
+        "monthly_usd": 1006.8,
+        "annual_usd": 12081.56,
         "lines": {
           "cloud_facilities": 0.0,
           "clone": 536.78,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5942,13 +5998,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1040.62,
-        "annual_usd": 12487.43,
+        "monthly_usd": 1075.95,
+        "annual_usd": 12911.38,
         "lines": {
           "cloud_facilities": 69.15,
           "clone": 536.78,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     },
@@ -5962,13 +6018,13 @@
         "tupaia": true
       },
       "expected": {
-        "monthly_usd": 1178.92,
-        "annual_usd": 14147.08,
+        "monthly_usd": 1214.25,
+        "annual_usd": 14571.03,
         "lines": {
           "cloud_facilities": 207.46,
           "clone": 536.78,
           "platform_share": 40.0,
-          "tupaia_reporting": 394.68
+          "tupaia_reporting": 430.01
         }
       }
     }

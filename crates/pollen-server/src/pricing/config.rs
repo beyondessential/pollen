@@ -16,11 +16,15 @@ pub const BUNDLED_PRICING: &str =
 #[serde(deny_unknown_fields)]
 pub struct PricingConfig {
 	pub model: String,
+	/// The model's version as shown beside a figure.
+	pub version: String,
 	/// The path segment the internal edition lives under.
 	pub access_path: String,
 	pub hours_per_month: f64,
 	/// Size band to server to storage, in the order the calculator offers them.
 	pub bands: Vec<ServerBox>,
+	/// How sure the bands' estimated database sizes are.
+	pub db_size_by_band: Tagged,
 	/// A facility server in BES cloud, whatever the deployment's size.
 	pub facility: ServerBox,
 	pub params: Params,
@@ -36,10 +40,6 @@ pub struct PricingConfig {
 pub struct Estimator {
 	/// The sizing questions, in the order they are asked.
 	pub sizing: Vec<String>,
-	/// The multi-select whose answering with any system bumps the size.
-	pub integrations: String,
-	/// The examples beneath the yes/no about connected systems.
-	pub integrations_hint: String,
 	/// The sizing question whose answer also gives the facility server count.
 	pub facilities: String,
 }
@@ -54,6 +54,17 @@ pub struct ServerBox {
 	pub usd_per_hour: f64,
 	pub volume_gb: f64,
 	pub snapshot_multiple: f64,
+	/// The database size estimated from the band (not an input). Only bands have one.
+	#[serde(default)]
+	pub db_gb: f64,
+}
+
+/// A confidence and its basis, for something that is not a single number.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Tagged {
+	pub confidence: Confidence,
+	pub basis: String,
 }
 
 /// How sure the model's owner is of a parameter's value.
@@ -88,13 +99,14 @@ pub struct Params {
 	pub clone_uptime: Param,
 	pub windows_uplift_on_compute: Param,
 	pub platform_share_usd: Param,
-	pub backups_db_pool_usd: Param,
-	pub backups_db_deployments: Param,
-	pub tupaia_prod_pool_usd: Param,
-	pub tupaia_prod_share: Param,
-	pub reporting_pipeline_pool_usd: Param,
+	pub tupaia_prod_compute_usd: Param,
+	pub tamanu_share_of_tupaia_compute: Param,
+	pub pgro_pool_usd: Param,
+	pub pgro_replicas: Param,
+	pub pgro_replica_gb_total: Param,
+	pub fleet_db_gb_total: Param,
+	pub pgro_ops_share: Param,
 	pub dagster_pool_usd: Param,
-	pub replicas_sharing_pipeline: Param,
 }
 
 /// Applied to displayed figures only; the breakdown is always cost price.
@@ -113,6 +125,8 @@ pub struct Display {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct WizardMapping {
+	/// Questions whose answers do not count towards the size band for pricing.
+	pub band_ignores: Vec<String>,
 	pub central_in_cloud: Condition,
 	pub backups: Toggle,
 	pub tupaia: Toggle,
@@ -220,20 +234,18 @@ impl PricingConfig {
 		if self.bands.is_empty() {
 			return Err(AppError::custom("no size bands are priced"));
 		}
-		// Divisors must be positive, or a share becomes infinite.
+		// Divisors must be positive, or a rate becomes infinite.
 		for (id, p) in [
-			(
-				"backups_db_deployments",
-				&self.params.backups_db_deployments,
-			),
-			(
-				"replicas_sharing_pipeline",
-				&self.params.replicas_sharing_pipeline,
-			),
+			("pgro_replicas", &self.params.pgro_replicas),
+			("pgro_replica_gb_total", &self.params.pgro_replica_gb_total),
+			("fleet_db_gb_total", &self.params.fleet_db_gb_total),
 		] {
 			if p.value <= 0.0 {
 				return Err(AppError::custom(format!("{id} must be positive")));
 			}
+		}
+		if !(0.0..=1.0).contains(&self.params.pgro_ops_share.value) {
+			return Err(AppError::custom("pgro_ops_share must be between 0 and 1"));
 		}
 		let d = &self.display;
 		// Shown figures are whole units, so a step has to be one for the lines

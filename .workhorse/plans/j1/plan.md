@@ -37,3 +37,14 @@ Four rounds of screenshot critique by fresh Opus agents, and a separate logic re
 - **Fixed:** displayed lines now add up to the headline (each line rounds to $5, headline is their sum, annual is 12x); the slider splits the real facility count and its fill, ends and readout agree; the strip, rail and calculator share one layout; the assumptions panel is gone in favour of a qualifier on each line; unsized and error states show one quiet message.
 - **Logic fixes:** Copy link no longer copies the secret path; out-of-order size replies cannot overwrite newer state; failed requests no longer leave a stale figure; the wizard slider setting is dropped when its count changes; the facility cap, mix share and rounding step are validated.
 - **Deferred:** a sticky headline bar on narrow screens; a control for the exact facility server total (the total comes from the facilities band or estimate); the ruleset's spaced hyphens in ranges.
+
+## Model v2.3 (5 Nov)
+
+Ported from the update file. The replicas database share is gone: pgro (the Postgres replicas cluster) is split by estimated database size into a backups and clone feeding share (base price, when backups are on) and the reporting part of the Tupaia add-on. Tupaia reporting is on by default and rebuilt around 40% of Tupaia prod compute.
+
+- **Pricing band ignores integrations.** `wizard.band_ignores` in `pricing.ron` drops those answers before the band is derived for pricing. The ruleset's own size, which still adds one band for connected systems and sets the public wizard's compute requirements, is unchanged until Edwin decides whether to remove the bump everywhere.
+- **Database size** is a column on the band table, tagged provisional (Estimated) as one note for the whole table.
+- **Estimator** no longer asks about connected systems. The catchment question gains help text about patients with encounters.
+- **Version** is shown with the caveat under every figure.
+- **Fixtures** replaced with the 299 v2.3 cases, including one with a parameter override.
+- Decided against showing an assumptions panel again: the provisional parameters are tagged on the lines they feed.

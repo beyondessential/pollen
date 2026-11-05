@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use super::config::PricingConfig;
-use crate::ruleset::{Answer, Answers, Question, QuestionKind, Ruleset, evaluate};
+use crate::ruleset::{Answer, Answers, Question, Ruleset, evaluate};
 
 /// A sizing question as the estimator offers it.
 #[derive(Debug, Clone, Serialize, ToSchema)]
@@ -29,14 +29,6 @@ pub struct EstimatorOption {
 #[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct EstimatorView {
 	pub sizing: Vec<EstimatorQuestion>,
-	/// The yes/no about connected systems.
-	pub integrations: Option<EstimatorToggle>,
-}
-
-#[derive(Debug, Clone, Serialize, ToSchema)]
-pub struct EstimatorToggle {
-	pub label: String,
-	pub hint: String,
 }
 
 #[derive(Debug, Deserialize, ToSchema)]
@@ -44,9 +36,6 @@ pub struct SizeArgs {
 	/// Option ids keyed by sizing question id. Questions left out are unanswered.
 	#[serde(default)]
 	pub answers: BTreeMap<String, String>,
-	/// Whether any other system connects.
-	#[serde(default)]
-	pub integrations: bool,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -86,15 +75,7 @@ impl PricingConfig {
 					.collect(),
 			})
 			.collect();
-		EstimatorView {
-			sizing,
-			integrations: ruleset
-				.question(&self.estimator.integrations)
-				.map(|q| EstimatorToggle {
-					label: q.label.clone(),
-					hint: self.estimator.integrations_hint.clone(),
-				}),
-		}
+		EstimatorView { sizing }
 	}
 
 	/// Derive the band, and the facility server count, from sizing answers.
@@ -108,13 +89,6 @@ impl PricingConfig {
 			if known {
 				answers.set(qid, Answer::One(oid.clone()));
 			}
-		}
-		if args.integrations
-			&& let Some(q) = ruleset.question(&self.estimator.integrations)
-			&& q.kind == QuestionKind::Multi
-			&& let Some(o) = Self::real_options(q).find(|o| !o.exclusive)
-		{
-			answers.set(&q.id, Answer::Many(vec![o.id.clone()]));
 		}
 		let band = evaluate(ruleset, &answers).derived.get("size").cloned();
 		let cloud_facilities = answers

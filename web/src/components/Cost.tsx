@@ -26,7 +26,7 @@ export function CostSummary({
 					<span className="cost-annual">{money(d.annual, d.currency)} a year</span>
 					<ul className="cost-lines">
 						{cost.lines.map((l, i) =>
-							l.monthly_usd > 0 ? (
+							d.lines[i] > 0 ? (
 								<li key={l.id}>
 									<span className="cost-line-label">{l.label}</span>
 									<span className="cost-line-v">{money(d.lines[i], d.currency)}</span>
@@ -63,15 +63,18 @@ function LineDetail({
 	) : null;
 }
 
-/// The one line that says what a figure is. With a margin applied it is no
-/// longer at cost, so it stops saying it is not a price.
-export function CostCaveat({ display }: { display: CostBreakdown["display"] | undefined }) {
-	if (!display) return null;
+/// The one line that says what a figure is, and which model it comes from.
+/// With a margin applied it is no longer at cost, so it stops saying it is not
+/// a price.
+export function CostCaveat({ cost }: { cost: CostBreakdown | null | undefined }) {
+	if (!cost) return null;
+	const { display } = cost;
 	return (
 		<p className="cost-caveat">
 			{display.margin > 0
 				? `${display.currency}, including a ${Math.round(display.margin * 100)}% margin.`
-				: `${display.currency} at cost. Not a price to the client.`}
+				: `${display.currency} at cost. Not a price to the client.`}{" "}
+			Model {cost.model_version}.
 		</p>
 	);
 }

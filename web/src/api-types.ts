@@ -267,6 +267,8 @@ export interface components {
             annual_usd: number;
             display: components["schemas"]["DisplayTotal"];
             lines: components["schemas"]["CostLine"][];
+            /** @description The version of the model these figures come from. */
+            model_version: string;
             /**
              * Format: double
              * @description The unrounded sum of the lines.
@@ -351,13 +353,8 @@ export interface components {
             label: string;
             options: components["schemas"]["EstimatorOption"][];
         };
-        EstimatorToggle: {
-            hint: string;
-            label: string;
-        };
         /** @description The questions the estimator asks, taken from the ruleset. */
         EstimatorView: {
-            integrations?: null | components["schemas"]["EstimatorToggle"];
             sizing: components["schemas"]["EstimatorQuestion"][];
         };
         Evaluation: {
@@ -435,7 +432,7 @@ export interface components {
          * @description A line of the breakdown. Ids are stable, so tests and the UI can key on them.
          * @enum {string}
          */
-        LineId: "central_box" | "cloud_facilities" | "clone" | "platform_share" | "backups_db_share" | "tupaia_reporting" | "windows_extra";
+        LineId: "central_box" | "cloud_facilities" | "clone" | "platform_share" | "backups_ops_share" | "tupaia_reporting" | "windows_extra";
         /** @description What a fork's migration changed (spec WIZ, stable-id migration). */
         MigrationView: {
             dropped: string[];
@@ -578,6 +575,11 @@ export interface components {
          *     storage its snapshots hold.
          */
         ServerBox: {
+            /**
+             * Format: double
+             * @description The database size estimated from the band (not an input). Only bands have one.
+             */
+            db_gb?: number;
             instance: string;
             name: string;
             /** Format: double */
@@ -597,8 +599,6 @@ export interface components {
             answers?: {
                 [key: string]: string;
             };
-            /** @description Whether any other system connects. */
-            integrations?: boolean;
         };
         SizeEstimate: {
             /** @description The derived band; none until a sizing question is answered. */

@@ -7,10 +7,9 @@ import type { CostBreakdown, CostInput, PricingModelView } from "../types";
 
 type FacilityMode = "cloud" | "client" | "mix";
 
-/// The estimator's answers: option ids by sizing question, and whether other
-/// systems connect.
-type Estimate = { answers: Record<string, string>; integrations: boolean };
-const NO_ESTIMATE: Estimate = { answers: {}, integrations: false };
+/// The estimator's answers: option ids by sizing question.
+type Estimate = { answers: Record<string, string> };
+const NO_ESTIMATE: Estimate = { answers: {} };
 
 /// Price a handful of inputs directly (spec COST, The calculator).
 export default function Calculator({ model }: { model: PricingModelView }) {
@@ -195,7 +194,10 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 						/>
 					</Field>
 					<Field label="Tupaia reporting">
-						<YesNo label="Tupaia reporting" value={tupaia} onChange={setTupaia} />
+						<div className="calc-stack">
+							<YesNo label="Tupaia reporting" value={tupaia} onChange={setTupaia} />
+							<p className="cost-hint">Over and above backups.</p>
+						</div>
 					</Field>
 				</div>
 			</main>
@@ -203,7 +205,7 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 			<aside className="calc-result">
 				<div className="card">
 					<CostSummary cost={cost} missing={error} />
-					<CostCaveat display={cost?.display} />
+					<CostCaveat cost={cost} />
 				</div>
 			</aside>
 		</div>
@@ -222,7 +224,7 @@ function Estimator({
 	estimate: Estimate;
 	onChange: (e: Estimate) => void;
 }) {
-	const { sizing, integrations } = model.estimator;
+	const { sizing } = model.estimator;
 	return (
 		<div className="estimator">
 			{sizing.map((q) => {
@@ -251,17 +253,6 @@ function Estimator({
 					</div>
 				);
 			})}
-			{integrations && (
-				<div className="est-q" role="group" aria-label={integrations.label}>
-					<span className="est-label">{integrations.label}</span>
-					<span className="est-hint">{integrations.hint}</span>
-					<YesNo
-						label={integrations.label}
-						value={estimate.integrations}
-						onChange={(v) => onChange({ ...estimate, integrations: v })}
-					/>
-				</div>
-			)}
 		</div>
 	);
 }

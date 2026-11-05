@@ -29,7 +29,7 @@ fn input_from_fixture(v: &Value) -> CostInput {
 		},
 		clone_uptime: None,
 		backups: v["backups"].as_bool().unwrap_or(true),
-		tupaia: v["tupaia"].as_bool().unwrap_or(false),
+		tupaia: v["tupaia"].as_bool().unwrap_or(true),
 		windows_central: v["windows_central"].as_bool().unwrap_or(false),
 		windows_facilities: v["windows_facilities"].as_u64().unwrap_or(0) as u32,
 		windows_clone: v["windows_clone"].as_bool().unwrap_or(false),
@@ -43,18 +43,31 @@ fn assert_cents(what: &str, actual: f64, expected: f64) {
 	);
 }
 
+/// A fixture's parameter override, applied to a copy of the configuration.
+fn config_with(overrides: &Value) -> PricingConfig {
+	let mut config = PricingConfig::from_ron(BUNDLED_PRICING).unwrap();
+	for (name, v) in overrides.as_object().into_iter().flatten() {
+		let v = v.as_f64().unwrap();
+		match name.as_str() {
+			"pgro_ops_share" => config.params.pgro_ops_share.value = v,
+			other => panic!("fixture overrides {other}, which the harness does not know"),
+		}
+	}
+	config
+}
+
 #[test]
 fn matches_every_reference_case_to_the_cent() {
-	let config = PricingConfig::from_ron(BUNDLED_PRICING).unwrap();
 	let fixtures: Value = serde_json::from_str(FIXTURES).unwrap();
 	let examples = fixtures["examples"].as_array().unwrap();
 	let grid = fixtures["grid"].as_array().unwrap();
-	assert_eq!(examples.len() + grid.len(), 297);
+	assert_eq!(examples.len() + grid.len(), 299);
 
 	for (i, case) in examples.iter().chain(grid).enumerate() {
 		let name = case["name"]
 			.as_str()
 			.map_or(format!("case {i}"), str::to_string);
+		let config = config_with(&case["params_override"]);
 		let input = input_from_fixture(&case["input"]);
 		let got = config
 			.cost(&input)
@@ -136,7 +149,7 @@ fn backups_off_leaves_the_clone_alone() {
 	assert_cents(
 		"difference",
 		a.monthly_usd - b.monthly_usd,
-		config.backups_share(),
+		config.backups_share(config.band("Medium").unwrap().db_gb),
 	);
 	assert!(
 		b.lines
@@ -217,8 +230,8 @@ fn lines_carry_the_weakest_confidence_they_rest_on() {
 	assert_eq!(tag(PlatformShare), "Estimated");
 	assert_eq!(tag(Clone), "Estimated");
 	assert_eq!(tag(TupaiaReporting), "Estimated");
-	// Estimated pool over an assumed number of deployments.
-	assert_eq!(tag(BackupsDbShare), "Assumed");
+	// A share of the data cluster, by an estimated database size.
+	assert_eq!(tag(BackupsOpsShare), "Estimated");
 }
 
 #[test]
@@ -286,11 +299,11 @@ fn display_rounds_to_the_configured_step() {
 	let got = config
 		.cost(&input_from_fixture(&json!({ "band": "small" })))
 		.unwrap();
-	// 242.65 a month. Each line rounds to $5 (80, 0, 85, 40, 40) and the
+	// 315.91 a month. Each line rounds to $5 (80, 0, 85, 40, 5, 110) and the
 	// headline is their sum, so it adds up on the page.
-	assert_eq!(got.display.lines, vec![80.0, 0.0, 85.0, 40.0, 40.0]);
-	assert_eq!(got.display.monthly, 245.0);
-	assert_eq!(got.display.annual, 2940.0);
+	assert_eq!(got.display.lines, vec![80.0, 0.0, 85.0, 40.0, 5.0, 110.0]);
+	assert_eq!(got.display.monthly, 320.0);
+	assert_eq!(got.display.annual, 3840.0);
 	assert_eq!(got.display.currency, "USD");
 }
 
@@ -336,7 +349,7 @@ async fn calculator_prices_inputs() {
 			}))
 			.await
 			.json();
-		assert_cents("monthly", got["monthly_usd"].as_f64().unwrap(), 1077.57);
+		assert_cents("monthly", got["monthly_usd"].as_f64().unwrap(), 969.18);
 
 		server
 			.post("/api/pricing/cost")
@@ -398,8 +411,18 @@ async fn plan_reads_its_answers() {
 		assert_cents(
 			"medium",
 			medium["cost"]["monthly_usd"].as_f64().unwrap(),
-			939.27,
+			830.87,
 		);
+
+		// Connected systems do not move the band for pricing, although the
+		// ruleset's own size counts them.
+		let integrated = plan_cost(
+			&server,
+			json!({ "catchment": "c0", "facilities": "f0", "integrations": ["lims"] }),
+			json!({}),
+		)
+		.await;
+		assert_eq!(integrated["size"], "Tiny");
 
 		// All facility servers in BES cloud: 2-5 facilities guesses three.
 		let cloud = plan_cost(
@@ -444,7 +467,7 @@ async fn plan_reads_its_answers() {
 		assert_cents(
 			"override",
 			overridden["cost"]["monthly_usd"].as_f64().unwrap(),
-			227.83,
+			191.84,
 		);
 
 		// Client-hosted central; Tupaia left open is noted, and left out.
@@ -457,8 +480,8 @@ async fn plan_reads_its_answers() {
 		assert_eq!(open["input"]["central_in_cloud"], false);
 		assert_eq!(open["open"][0]["id"], "tupaia_reporting");
 		assert_eq!(open["open"][0]["included"], false);
-		// Shown as the breakdown shows it: $394.68 to the nearest step.
-		assert_eq!(open["open"][0]["display_monthly"], 395.0);
+		// Shown as the breakdown shows it: $86.93 for a Tiny to the nearest step.
+		assert_eq!(open["open"][0]["display_monthly"], 85.0);
 
 		// Backups off drops only the backups share.
 		let no_backups = plan_cost(
@@ -496,23 +519,28 @@ async fn estimator_derives_the_band_the_wizard_would() {
 		assert!(none["cloud_facilities"].is_null());
 
 		// The highest band reached across the sizing questions wins.
-		let got = size(&server, json!({ "answers": { "catchment": "c0", "facilities": "f2" } })).await;
-		assert_eq!(got["band"], "Medium");
-		assert_eq!(got["cloud_facilities"], 10);
-
-		// "I'm not sure" contributes nothing, and a connected system bumps one band.
 		let got = size(
 			&server,
-			json!({ "answers": { "catchment": "c1", "mobile": "m_unsure" }, "integrations": true }),
+			json!({ "answers": { "catchment": "c0", "facilities": "f2" } }),
 		)
 		.await;
 		assert_eq!(got["band"], "Medium");
-		assert!(got["cloud_facilities"].is_null());
+		assert_eq!(got["cloud_facilities"], 10);
 
-		// The bump is capped at the top band, and unknown ids are ignored.
+		// "I'm not sure" contributes nothing, and connected systems do not
+		// move the band.
 		let got = size(
 			&server,
-			json!({ "answers": { "catchment": "c3", "facilities": "nope", "region": "sydney" }, "integrations": true }),
+			json!({ "answers": { "catchment": "c1", "mobile": "m_unsure" } }),
+		)
+		.await;
+		assert_eq!(got["band"], "Small");
+		assert!(got["cloud_facilities"].is_null());
+
+		// Unknown ids are ignored.
+		let got = size(
+			&server,
+			json!({ "answers": { "catchment": "c3", "facilities": "nope", "region": "sydney" } }),
 		)
 		.await;
 		assert_eq!(got["band"], "Large");
@@ -525,7 +553,6 @@ async fn estimator_derives_the_band_the_wizard_would() {
 			.await
 			.json();
 		assert_eq!(model["estimator"]["sizing"].as_array().unwrap().len(), 3);
-		assert_eq!(model["estimator"]["integrations"]["hint"], "e.g. SENAITE, mSupply, DHIS2");
 		assert_eq!(model["facility_guess_by_band"], json!([1, 3, 10, 20]));
 		assert_eq!(model["mix_share"], 0.5);
 		assert_eq!(model["facility_slider_question"], "hosting_balance");

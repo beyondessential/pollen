@@ -1138,43 +1138,55 @@ body {
 	font-weight: 500;
 	margin-bottom: 8px;
 }
+/* A balance from an even split: the fill runs from the middle to the thumb in
+   the colour of the side it leans to, so it grows the way the thumb moves.
+   The middle is notched above and below the track. --at (0 to 1) comes from
+   the component; --t is the thumb's centre, inset by half the thumb. */
 .slider input[type="range"] {
+	--t: calc(9px + (100% - 18px) * var(--at, 0));
+	--fill: linear-gradient(
+		90deg,
+		var(--line) min(var(--t), 50%),
+		var(--navy) min(var(--t), 50%) 50%,
+		var(--sky) 50% max(var(--t), 50%),
+		var(--line) max(var(--t), 50%)
+	);
 	-webkit-appearance: none;
 	appearance: none;
 	display: block;
 	width: 100%;
 	height: 20px;
 	margin: 0;
-	background: transparent;
+	background: linear-gradient(#c4d0d6, #c4d0d6) center / 2px 12px no-repeat;
 	cursor: pointer;
 }
-/* The BES cloud side, from the thumb to its end, is filled to match its label. */
 .slider input[type="range"]::-webkit-slider-runnable-track {
 	height: 6px;
 	border-radius: 3px;
-	background: linear-gradient(90deg, var(--line) var(--pct, 0%), var(--sky) var(--pct, 0%));
+	background: var(--fill);
 }
 .slider input[type="range"]::-moz-range-track {
 	height: 6px;
 	border-radius: 3px;
-	background: linear-gradient(90deg, var(--line) var(--pct, 0%), var(--sky) var(--pct, 0%));
+	background: var(--fill);
 }
+/* White, so it reads against either fill. */
 .slider input[type="range"]::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	width: 18px;
 	height: 18px;
 	margin-top: -6px;
 	border-radius: 50%;
-	background: var(--navy);
-	border: 2px solid #fff;
+	background: #fff;
+	border: 2px solid var(--navy);
 	box-shadow: 0 1px 3px rgba(20, 34, 43, 0.3);
 }
 .slider input[type="range"]::-moz-range-thumb {
 	width: 14px;
 	height: 14px;
 	border-radius: 50%;
-	background: var(--navy);
-	border: 2px solid #fff;
+	background: #fff;
+	border: 2px solid var(--navy);
 	box-shadow: 0 1px 3px rgba(20, 34, 43, 0.3);
 }
 .slider input[type="range"]:focus-visible {
@@ -1182,17 +1194,19 @@ body {
 	outline-offset: 3px;
 	border-radius: 4px;
 }
+/* Each end is named in its side's colour. */
 .slider-ends {
 	display: flex;
 	justify-content: space-between;
 	font-size: 11.5px;
-	color: var(--ink-faint);
+	font-weight: 500;
 	margin-top: 4px;
 }
-/* The BES cloud end matches its fill. */
+.slider-ends span:first-child {
+	color: var(--navy);
+}
 .slider-ends span:last-child {
 	color: var(--sky-deep);
-	font-weight: 500;
 }
 
 /* The calculator. */

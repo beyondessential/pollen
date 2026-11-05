@@ -169,13 +169,13 @@ export function Slider({
 	startLabel?: string;
 	endLabel?: string;
 }) {
-	// How far along the track the thumb is, for the fill on its far side.
-	const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
+	// How far along the track the thumb is, from 0 to 1, for the fill.
+	const at = max > min ? (value - min) / (max - min) : 0;
 	return (
 		<div className="slider">
 			<span className="slider-v">{format(value)}</span>
 			<input
-				style={{ "--pct": `${pct}%` } as CSSProperties}
+				style={{ "--at": at } as CSSProperties}
 				type="range"
 				aria-label={label}
 				min={min}

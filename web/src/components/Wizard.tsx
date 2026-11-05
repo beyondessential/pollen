@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import { callApi } from "../api";
 import { Markup } from "../markup";
@@ -15,9 +15,16 @@ import { Check, Chevron } from "./visuals";
 export default function Wizard({
 	view,
 	setView,
+	rail,
+	replace,
 }: {
 	view: AppView;
 	setView: (v: AppView) => void;
+	/// Extra content for the rail beneath the size, such as the running cost.
+	rail?: ReactNode;
+	/// Content shown in place of a question, by question id, while that
+	/// question is visible.
+	replace?: Record<string, ReactNode>;
 }) {
 	const [busy, setBusy] = useState(false);
 	// Sections the ruleset marks collapsed start closed: a non-technical user
@@ -92,6 +99,8 @@ export default function Wizard({
 					<span className="stat-v">{ev.derived["size"] ?? "Not sized"}</span>
 				</div>
 
+				{rail}
+
 				{flagged.length > 0 && (
 					<>
 						<div className="rail-section-h">Off the standard path</div>
@@ -129,16 +138,20 @@ export default function Wizard({
 								section.label && <h2 className="qsection-title">{section.label}</h2>
 							)}
 							{isOpen &&
-								questions.map((q) => (
-									<QuestionCard
-										key={q.id}
-										q={q}
-										value={answers[q.id]}
-										assumed={assumedBy.get(q.id)}
-										guidance={guidanceFor(q.id)}
-										onChange={(v) => change(q.id, v)}
-									/>
-								))}
+								questions.map((q) =>
+									replace?.[q.id] != null ? (
+										<div key={q.id}>{replace[q.id]}</div>
+									) : (
+										<QuestionCard
+											key={q.id}
+											q={q}
+											value={answers[q.id]}
+											assumed={assumedBy.get(q.id)}
+											guidance={guidanceFor(q.id)}
+											onChange={(v) => change(q.id, v)}
+										/>
+									),
+								)}
 						</section>
 					);
 				})}

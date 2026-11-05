@@ -1,8 +1,19 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { callApi, useApi } from "../api";
+import { planUrl, useEdition } from "../edition";
 import Artifact from "../components/Artifact";
+import { CostCaveat } from "../components/Cost";
+import PlanCostPanel, {
+	DEFAULT_SETTINGS,
+	FacilityServersCard,
+	FacilityServersControl,
+	PlanCostControls,
+	PlanCostSummary,
+	type PlanSettings,
+	usePlanCost,
+} from "../components/PlanCostPanel";
 import Wizard from "../components/Wizard";
 import { type RecentPlan, listRecentPlans, recordRecentPlan } from "../recentPlans";
 import type { AnswerValue, AppView } from "../types";
@@ -29,8 +40,35 @@ function Loaded({ initial }: { initial: AppView }) {
 	const [view, setView] = useState(initial);
 	const [params] = useSearchParams();
 	const navigate = useNavigate();
+	const edition = useEdition();
 	const [busy, setBusy] = useState(false);
 	const [resumeDismissed, setResumeDismissed] = useState(false);
+
+	// The internal edition's pricing: the person pricing's own settings, and the
+	// cost they give. The facility slider takes the place of one question, so it
+	// shows only while that question would.
+	const [settings, setSettings] = useState<PlanSettings>(DEFAULT_SETTINGS);
+	const { model, pricingPath } = edition;
+	const sliderQuestion = model?.facility_slider_question;
+	const sliderShowing =
+		sliderQuestion != null && view.evaluation.visible_questions.includes(sliderQuestion);
+	const plan = usePlanCost(pricingPath, view, settings, sliderShowing);
+
+	// A facility server setting means something only against the facility count
+	// it was made for: let go of it when the count changes or the slider goes.
+	// A count that is briefly unknown, such as while pricing again, changes nothing.
+	const facilityTotal = plan?.guess.total;
+	const previousTotal = useRef<number | undefined>(undefined);
+	useEffect(() => {
+		if (facilityTotal == null) return;
+		if (previousTotal.current != null && previousTotal.current !== facilityTotal) {
+			setSettings((s) => (s.facilities == null ? s : { ...s, facilities: null }));
+		}
+		previousTotal.current = facilityTotal;
+	}, [facilityTotal]);
+	useEffect(() => {
+		if (!sliderShowing) setSettings((s) => (s.facilities == null ? s : { ...s, facilities: null }));
+	}, [sliderShowing]);
 
 	const answers = view.answers as unknown as Record<string, AnswerValue>;
 	const started = Object.values(answers).some((v) =>
@@ -72,7 +110,7 @@ function Loaded({ initial }: { initial: AppView }) {
 		setBusy(true);
 		try {
 			const forked = await callApi("applications", "fork", { id: view.id, ...args });
-			navigate(`/a/${forked.id}`, { replace: true });
+			navigate(planUrl(edition, forked.id), { replace: true });
 		} finally {
 			setBusy(false);
 		}
@@ -113,14 +151,56 @@ function Loaded({ initial }: { initial: AppView }) {
 			{showResume && previous != null && (
 				<ResumeBar
 					plan={previous}
-					onResume={() => navigate(`/a/${previous.id}`)}
+					onResume={() => navigate(planUrl(edition, previous.id))}
 					onDismiss={() => setResumeDismissed(true)}
 				/>
 			)}
 			{view.status === "finalised" ? (
-				<Artifact view={view} />
+				<>
+					{pricingPath != null && model && plan && (
+						<div className="cost-strip">
+							<div>
+								<PlanCostSummary plan={plan} />
+								<CostCaveat cost={plan.cost} />
+							</div>
+							<div className="cost-strip-controls">
+								<PlanCostControls settings={settings} onSettings={setSettings} />
+								{sliderShowing && (
+									<FacilityServersControl
+										label="Facility servers"
+										plan={plan}
+										settings={settings}
+										onSettings={setSettings}
+									/>
+								)}
+							</div>
+						</div>
+					)}
+					<Artifact view={view} />
+				</>
 			) : (
-				<Wizard view={view} setView={setView} />
+				<Wizard
+					view={view}
+					setView={setView}
+					rail={
+						pricingPath != null && (
+							<PlanCostPanel plan={plan} settings={settings} onSettings={setSettings} />
+						)
+					}
+					replace={
+						sliderQuestion != null && model && sliderShowing
+							? {
+									[sliderQuestion]: (
+										<FacilityServersCard
+											plan={plan}
+											settings={settings}
+											onSettings={setSettings}
+										/>
+									),
+								}
+							: undefined
+					}
+				/>
 			)}
 		</>
 	);

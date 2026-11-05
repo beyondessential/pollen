@@ -21,6 +21,9 @@ The tool is public-facing, reachable over the open internet at its own hostname,
 An artifact is addressed by an unguessable identifier in its URL, and that identifier is the only thing protecting it.
 Nothing stored is sensitive: no health data, no personal data, and no client or deployment name (see [Data and confidentiality](#data-and-confidentiality)).
 
+The tool shows no cost figures.
+A separate internal edition, reached at an unguessable path, adds an indicative hosting cost to BES; see [COST](../pricing/hosting-cost.md).
+
 ## What it is not
 
 The tool surfaces these boundaries to the user, not only records them here.

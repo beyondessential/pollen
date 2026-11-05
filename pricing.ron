@@ -1,0 +1,208 @@
+// Tamanu hosting cost model (spec COST).
+//
+// Every number the internal calculator and the priced wizard use lives here,
+// and nowhere else. Figures are USD per month at cost price to BES: no margin,
+// ex GST, no FX, on-demand AWS Sydney rates. Hosting only; support,
+// maintenance and upgrades are priced separately.
+//
+// Each parameter carries its confidence and the basis for its value:
+//   Decided   settled by the model's owner
+//   Read      read from a published rate or an observed bill
+//   Estimated an allocation of shared AWS accounts, expected to move
+//   Assumed   a working assumption awaiting real figures
+//
+// The fixtures in crates/pollen-server/tests/fixtures/pricing_cases.json pin
+// the arithmetic to the cent. Changing a value here changes what they expect,
+// so regenerate them alongside.
+(
+    model: "Tamanu hosting cost model v2.3",
+    version: "v2.3 (5 Nov 2026)",
+
+    // The internal pricing edition lives at /<access_path> (calculator), with
+    // priced plans beneath it, and its API answers only requests naming it.
+    // It keeps the edition from being found by accident; it is not a secret of
+    // any weight, and changing it moves the edition.
+    access_path: "hosting-model",
+
+    hours_per_month: 730.0,
+
+    // Size band -> server -> storage, as one table. Band names match the
+    // labels the ruleset's `size` derivation emits, in the order the
+    // calculator offers them. A band the ruleset does not derive yet (an
+    // "Enterprise" above Large, say) can be added here first.
+    //
+    // `db_gb` is the database size estimated from the band. It is not an input:
+    // it carries the size into the backups and Tupaia shares. PROVISIONAL.
+    //
+    // OPEN: Large uses the Slab price-list box. Deployments that feel Large
+    // today run Medium-class centrals with up to about 1 TB; whether Large
+    // keeps headroom or follows what is running is undecided.
+    bands: [
+        (name: "Tiny", instance: "t4g.medium (2 vCPU, 4 GB)", usd_per_hour: 0.0424, volume_gb: 200.0, snapshot_multiple: 2.0, db_gb: 2.0),
+        (name: "Small", instance: "t4g.medium (2 vCPU, 4 GB)", usd_per_hour: 0.0424, volume_gb: 200.0, snapshot_multiple: 2.0, db_gb: 10.0),
+        (name: "Medium", instance: "t4g.xlarge (4 vCPU, 16 GB)", usd_per_hour: 0.1696, volume_gb: 750.0, snapshot_multiple: 2.0, db_gb: 80.0),
+        (name: "Large", instance: "m6g.2xlarge (8 vCPU, 32 GB)", usd_per_hour: 0.3834, volume_gb: 1500.0, snapshot_multiple: 2.0, db_gb: 125.0),
+    ],
+
+    db_size_by_band: (
+        confidence: Estimated,
+        basis: "Taken from the replica sizes measured in the current fleet (the largest known for Large); the band, not an input. Edwin, 5 Nov 2026.",
+    ),
+
+    // A facility server in BES cloud, whatever the deployment's size.
+    facility: (name: "Facility", instance: "t4g.medium (2 vCPU, 4 GB)", usd_per_hour: 0.0424, volume_gb: 200.0, snapshot_multiple: 1.0),
+
+    params: (
+        gp3_usd_per_gb_month: (
+            value: 0.096,
+            confidence: Read,
+            basis: "Observed Sydney gp3 rate.",
+        ),
+        snapshot_usd_per_gb_month: (
+            value: 0.055,
+            confidence: Read,
+            basis: "Sydney standard EBS snapshot rate.",
+        ),
+        base_per_box_usd: (
+            value: 8.0,
+            confidence: Read,
+            basis: "Public IPv4 3.65 plus monitoring, alarms and a little data transfer (about 4.35), as seen on small prod boxes.",
+        ),
+        clone_snapshot_multiple: (
+            value: 0.5,
+            confidence: Estimated,
+            basis: "Clones carry some snapshots, far fewer than prod.",
+        ),
+        clone_uptime: (
+            value: 0.3,
+            confidence: Decided,
+            basis: "Clones are stopped by default and run for pre-upgrade testing. Edwin, 3 Nov 2026.",
+        ),
+        windows_uplift_on_compute: (
+            value: 0.55,
+            confidence: Read,
+            basis: "Windows t3a.xlarge 0.2637/h against t4g.xlarge 0.1696/h; Windows t3a.medium 0.0659 against t4g.medium 0.0424. Compute only; disks cost the same.",
+        ),
+        platform_share_usd: (
+            value: 40.0,
+            confidence: Estimated,
+            basis: "Canopy backups and replica management, AMIs, BES Primary and a tamanu-meta-prod share, over 19 deployments (about 36), rounded up.",
+        ),
+        tupaia_prod_compute_usd: (
+            value: 1168.0,
+            confidence: Estimated,
+            basis: "Tupaia prod compute: app t3.2xlarge about 314 plus Multi-AZ db.r8g.xlarge instances about 854 (Oct). Excludes storage, backups, ELB and IPv4 (about 369): the stored data is mostly MediTrak and DataTrak survey data, not Tamanu.",
+        ),
+        tamanu_share_of_tupaia_compute: (
+            value: 0.4,
+            confidence: Decided,
+            basis: "Share of Tupaia prod compute (reports, dashboards) that is Tamanu reporting. Edwin and Juliana, 5 Nov 2026. Split evenly across the deployments with a replica.",
+        ),
+        pgro_pool_usd: (
+            value: 1800.0,
+            confidence: Estimated,
+            basis: "pgro: the k8s data cluster for Tamanu replicas on shared EC2. Current cost (Edwin, 5 Nov): the account ran about 2,000 to 2,100 a month on 1 to 3 Nov as replicas were added, less about 240 of RDS. Replaces the tamanu-replicas RDS (shut down late Oct) and, within 1 to 2 months, the data warehouse for Tamanu data.",
+        ),
+        pgro_replicas: (
+            value: 9.0,
+            confidence: Read,
+            basis: "Deployments with a long-lived reporting replica in Canopy (5 Nov). Splits the flat parts of the Tupaia add-on (prod compute share, Dagster).",
+        ),
+        pgro_replica_gb_total: (
+            value: 580.8,
+            confidence: Estimated,
+            basis: "Total DB size of those 9 replicas: 6 measured (296 GB, Oct) and 3 not yet measured, estimated by band (285 GB). Denominator for the reporting rate.",
+        ),
+        fleet_db_gb_total: (
+            value: 708.8,
+            confidence: Estimated,
+            basis: "Total DB size across the 18 deployments whose backups BES runs: measured where known, otherwise estimated by band. Denominator for the backups rate.",
+        ),
+        pgro_ops_share: (
+            value: 0.1,
+            confidence: Estimated,
+            basis: "Share of pgro spent taking backups and feeding clones (base price, when backups are on); the rest hosts long-lived replicas for Tupaia (Tupaia add-on). Both by DB size (Edwin, 5 Nov). Felix, 5 Nov: about 10% of the account is k8s overhead common to both (left pro rata), and of the rest 80 to 90% is long-lived replicas; Edwin and Felix settled on about 10% for backups. The backups themselves sit in S3 (platform share); pgro only controls taking them.",
+        ),
+        dagster_pool_usd: (
+            value: 265.0,
+            confidence: Estimated,
+            basis: "Dagster r6a.xlarge including overhead. Tamanu-specific (Edwin, 3 Nov). Partly shut down early Nov (Felix), so this may fall.",
+        ),
+    ),
+
+    // Applied to displayed figures only; the breakdown is always cost price.
+    // Hidden while the margin is zero and the currency is USD.
+    display: (
+        margin: 0.0,
+        currency: "USD",
+        usd_to_currency: 1.0,
+        round_monthly_to: 5.0,
+    ),
+
+    // The calculator's facility server control runs from none to this.
+    max_cloud_facilities: 20,
+
+    // The calculator's size estimator: the questions it asks, answered with
+    // the ruleset's option ids, from which the server derives the band with the
+    // ruleset's own derivation. The facilities question also gives the number
+    // of facility servers.
+    estimator: (
+        sizing: ["catchment", "facilities", "mobile"],
+        facilities: "facilities",
+    ),
+
+    // How the priced wizard reads a plan's answers (assumed answers count as
+    // chosen ones; answers to hidden questions are ignored). Conditions use the
+    // ruleset's condition language and its stable question and option ids.
+    wizard: (
+        // Questions whose answers do not count towards the size band for
+        // pricing. Connected systems no longer move the band (Edwin, 5 Nov);
+        // the ruleset's own size, and the compute requirements it sets, still do
+        // until that is decided.
+        band_ignores: ["integrations"],
+        central_in_cloud: Equals("central", "bescloud"),
+        backups: (
+            on: Not(Equals("backup_capability", "no")),
+            open: Equals("backup_capability", "unsure"),
+        ),
+        tupaia: (
+            on: Equals("tupaia", "yes"),
+            open: Equals("tupaia", "unsure"),
+        ),
+
+        // The wizard asks where facility servers run, not how many there are,
+        // so the cloud count starts as (facilities in the band) x (share in BES
+        // cloud), rounded. The first matching row wins; no match counts as none.
+        facility_count: (
+            value: [
+                (when: Equals("facilities", "f0"), value: 1.0),
+                (when: Equals("facilities", "f1"), value: 3.0),
+                (when: Equals("facilities", "f2"), value: 10.0),
+                (when: Equals("facilities", "f3"), value: 20.0),
+            ],
+            confidence: Assumed,
+            basis: "A representative facility count for each facilities band, assuming each facility has its own server.",
+        ),
+        cloud_share: (
+            all: Equals("hosting_where", "allbes"),
+            mix: Equals("hosting_where", "mix"),
+            mix_share: 0.5,
+            confidence: Assumed,
+            basis: "All facility servers are in BES cloud when they all run there, and half of them when they are a mix.",
+        ),
+        // In the priced wizard a slider for the cloud count takes the place of
+        // this question, which asks for the same thing as a rough balance.
+        slider_in_place_of: "hosting_balance",
+
+        notes: [
+            (
+                when: Equals("region", "otheraws"),
+                text: "Priced at Sydney rates. The cost of another region is confirmed separately.",
+            ),
+            (
+                when: Equals("hosted_integration", "yes"),
+                text: "BES-hosted integrations are not priced here.",
+            ),
+        ],
+    ),
+)

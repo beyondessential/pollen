@@ -14,9 +14,17 @@ use diesel_async::{
 };
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness as _, embed_migrations};
 use pollen_server::config::Config;
+use pollen_server::pricing::{BUNDLED_PRICING, PricingConfig};
 use pollen_server::ruleset::{BUNDLED_RULESET, ResolvedRuleset};
 use pollen_server::state::AppState;
 use uuid::Uuid;
+
+/// The pricing path the app is configured with, read from the same file.
+pub static PRICING_PATH: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
+	PricingConfig::from_ron(BUNDLED_PRICING)
+		.expect("bundled pricing")
+		.access_path
+});
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
@@ -104,6 +112,7 @@ where
 			ResolvedRuleset::from_ron(BUNDLED_RULESET).expect("bundled ruleset"),
 		)),
 		resolver: None,
+		pricing: Arc::new(PricingConfig::from_ron(BUNDLED_PRICING).expect("bundled pricing")),
 	};
 	let app = pollen_server::routes(state).expect("routes");
 	let server = TestServer::new(app);

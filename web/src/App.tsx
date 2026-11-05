@@ -1,27 +1,27 @@
-import { Link, Route, Routes } from "react-router-dom";
+import { Outlet, Route, Routes } from "react-router-dom";
 
-import besLogo from "./assets/bes-logo.png";
+import { NotFound, Shell } from "./components/Shell";
 import ApplicationPage from "./routes/ApplicationPage";
 import NewApplication from "./routes/NewApplication";
+import PricingEdition from "./routes/PricingEdition";
 
 export default function App() {
 	return (
-		<>
-			<header className="topbar">
-				<Link to="/" className="brand">
-					<img src={besLogo} className="brand-logo" alt="BES" />
-					<span className="brand-rule" />
-					<span className="brand-name">New Tamanu</span>
-				</Link>
-				<Link to="/" className="topbar-new">
-					Start a new plan
-				</Link>
-			</header>
-			<Routes>
+		<Routes>
+			<Route
+				element={
+					<Shell>
+						<Outlet />
+					</Shell>
+				}
+			>
 				<Route path="/" element={<NewApplication />} />
 				<Route path="/a/:id" element={<ApplicationPage />} />
-				<Route path="*" element={<div className="splash">Not found.</div>} />
-			</Routes>
-		</>
+			</Route>
+			{/* The internal edition, under its unguessable path. A path that is not
+			    the configured one reads as not found. */}
+			<Route path="/:pricingPath/*" element={<PricingEdition />} />
+			<Route path="*" element={<NotFound />} />
+		</Routes>
 	);
 }

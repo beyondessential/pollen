@@ -325,7 +325,10 @@ async fn store_config(
 /// the model is not permitted to do (spec WIZ, the engine's model is
 /// append-only). Report it as a conflict rather than an internal error: the
 /// plan itself is intact, and this build simply cannot render it.
-async fn load_ruleset(conn: &mut diesel_async::AsyncPgConnection, hash: &str) -> Result<Ruleset> {
+pub(crate) async fn load_ruleset(
+	conn: &mut diesel_async::AsyncPgConnection,
+	hash: &str,
+) -> Result<Ruleset> {
 	let row = ConfigRow::get(conn, hash).await?;
 	serde_json::from_value(row.content).map_err(|e| {
 		AppError::Conflict(format!(

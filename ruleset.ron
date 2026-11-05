@@ -41,6 +41,7 @@
             kind: Band,
             section: Some("essentials"),
             label: "How many people does the health system serve?",
+            help: Some("Where there is no defined catchment, count patients with encounters rather than everyone ever registered."),
             options: [
                 (id: "c0", label: "Under 1,000"),
                 (id: "c1", label: "1,000 - 10,000"),

@@ -9,7 +9,7 @@
 
 import { type ChildProcessWithoutNullStreams, spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import net from "node:net";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,6 +17,11 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FRONTEND_ROOT = resolve(__dirname, "..");
 const WORKSPACE_ROOT = resolve(FRONTEND_ROOT, "..");
+
+/** The internal pricing edition's path segment, from the same file the server reads. */
+export const PRICING_PATH = /access_path:\s*"([^"]+)"/.exec(
+	readFileSync(resolve(WORKSPACE_ROOT, "pricing.ron"), "utf8"),
+)![1];
 
 export interface StackHandle {
 	/** Vite dev server URL (serves the SPA, proxies /api to the binary). */

@@ -87,6 +87,16 @@ export type Verdict = Solidify<Schemas["Verdict"]>;
 export type Section = Solidify<Schemas["Section"]>;
 export type Assumed = Solidify<Schemas["Assumed"]>;
 
+// ── Internal pricing wire types ─────────────────────────────────────────────
+export type PricingModelView = Solidify<Schemas["PricingModelView"]>;
+export type Confidence = Solidify<Schemas["Confidence"]>;
+export type CostInput = Solidify<Schemas["CostInput"]>;
+export type CostBreakdown = Solidify<Schemas["CostBreakdown"]>;
+export type CostLine = Solidify<Schemas["CostLine"]>;
+export type CloneMode = Solidify<Schemas["CloneMode"]>;
+export type PlanCost = Solidify<Schemas["PlanCost"]>;
+export type PlanOverrides = Solidify<Schemas["PlanOverrides"]>;
+
 /// An answer value: one option id (single/band) or several (multi).
 export type AnswerValue = string | string[];
 

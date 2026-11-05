@@ -114,6 +114,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/pricing/cost": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Price inputs set directly (the calculator). */
+        post: operations["pricing_cost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pricing/model": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The pricing configuration. */
+        post: operations["pricing_model"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pricing/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Price a plan from its answers (the priced wizard). */
+        post: operations["pricing_plan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pricing/size": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Work out the size band, and facility servers, from sizing answers (the
+         *     calculator's estimator).
+         */
+        post: operations["pricing_size"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -162,6 +233,17 @@ export interface components {
          * @enum {string}
          */
         Audience: "Client" | "Bes" | "Pricing" | "Record";
+        /**
+         * @description The clone used to test upgrades.
+         * @enum {string}
+         */
+        CloneMode: "off" | "standard" | "always_on";
+        /**
+         * @description How sure the model's owner is of a parameter's value.
+         *     Ordered from most to least certain, so the weakest of several is the maximum.
+         * @enum {string}
+         */
+        Confidence: "Decided" | "Read" | "Estimated" | "Assumed";
         Consequence: {
             audience: components["schemas"]["Audience"];
             cost?: null | components["schemas"]["Cost"];
@@ -180,9 +262,100 @@ export interface components {
             ballpark?: string | null;
             tier: string;
         };
+        CostBreakdown: {
+            /** Format: double */
+            annual_usd: number;
+            display: components["schemas"]["DisplayTotal"];
+            lines: components["schemas"]["CostLine"][];
+            /** @description The version of the model these figures come from. */
+            model_version: string;
+            /**
+             * Format: double
+             * @description The unrounded sum of the lines.
+             */
+            monthly_usd: number;
+        };
+        /** @description What a deployment is priced from. */
+        CostInput: {
+            backups: boolean;
+            /** @description A size band named in the pricing configuration. */
+            band: string;
+            /**
+             * @description Whether the central server is in BES cloud. A client-hosted central
+             *     server costs BES nothing, though its clone still runs in BES cloud.
+             */
+            central_in_cloud: boolean;
+            clone: components["schemas"]["CloneMode"];
+            /**
+             * Format: double
+             * @description How much of the month a standard clone runs, as a fraction. Omitted
+             *     takes the configured share. Ignored unless the clone is standard.
+             */
+            clone_uptime?: number | null;
+            /**
+             * Format: int32
+             * @description Facility servers in BES cloud.
+             */
+            cloud_facilities: number;
+            tupaia: boolean;
+            /** @description A Windows central server. Applies only while the central is in BES cloud. */
+            windows_central?: boolean;
+            windows_clone?: boolean;
+            /**
+             * Format: int32
+             * @description How many of the cloud facility servers run Windows (capped at their count).
+             */
+            windows_facilities?: number;
+        };
+        CostLine: {
+            /**
+             * @description The weakest confidence among the parameters the line rests on, so a
+             *     figure made of estimates is not mistaken for a fact.
+             */
+            confidence: components["schemas"]["Confidence"];
+            /** @description What the line is made of, such as the server and its storage. */
+            detail?: string | null;
+            id: components["schemas"]["LineId"];
+            label: string;
+            /**
+             * Format: double
+             * @description Unrounded monthly cost to BES.
+             */
+            monthly_usd: number;
+        };
         CreateArgs: {
             /** @description A ruleset branch to preview; omitted binds the bundled default. */
             config_branch?: string | null;
+        };
+        /**
+         * @description The displayed figures: margin and currency applied, then each line rounded
+         *     to the configured step. The monthly figure is the sum of the rounded lines,
+         *     and the annual figure twelve times it, so what is shown adds up.
+         */
+        DisplayTotal: {
+            /** Format: double */
+            annual: number;
+            currency: string;
+            /** @description Each line's displayed figure, in the order of the lines. */
+            lines: number[];
+            /** Format: double */
+            margin: number;
+            /** Format: double */
+            monthly: number;
+        };
+        EstimatorOption: {
+            id: string;
+            label: string;
+        };
+        /** @description A sizing question as the estimator offers it. */
+        EstimatorQuestion: {
+            id: string;
+            label: string;
+            options: components["schemas"]["EstimatorOption"][];
+        };
+        /** @description The questions the estimator asks, taken from the ruleset. */
+        EstimatorView: {
+            sizing: components["schemas"]["EstimatorQuestion"][];
         };
         Evaluation: {
             /**
@@ -220,6 +393,22 @@ export interface components {
              */
             visible_questions: string[];
         };
+        /** @description The guessed cloud facility server count and what it rests on. */
+        FacilityGuess: {
+            basis: string;
+            confidence: components["schemas"]["Confidence"];
+            /**
+             * Format: int32
+             * @description Facility servers in BES cloud as answered, before any setting.
+             */
+            count: number;
+            /**
+             * Format: int32
+             * @description All the deployment's facility servers, in BES cloud or not: the most a
+             *     setting can put in BES cloud.
+             */
+            total: number;
+        };
         FinaliseArgs: {
             /** Format: uuid */
             id: string;
@@ -239,10 +428,28 @@ export interface components {
             /** Format: uuid */
             id: string;
         };
+        /**
+         * @description A line of the breakdown. Ids are stable, so tests and the UI can key on them.
+         * @enum {string}
+         */
+        LineId: "central_box" | "cloud_facilities" | "clone" | "platform_share" | "backups_ops_share" | "tupaia_reporting" | "windows_extra";
         /** @description What a fork's migration changed (spec WIZ, stable-id migration). */
         MigrationView: {
             dropped: string[];
             new_questions: string[];
+        };
+        ModelArgs: Record<string, never>;
+        /** @description A cost input resting on an answer still open, priced one way for now. */
+        OpenLine: {
+            /**
+             * Format: double
+             * @description What it adds each month, displayed as the lines of the breakdown are.
+             */
+            display_monthly: number;
+            id: components["schemas"]["LineId"];
+            /** @description Whether the line is in the figure as it stands. */
+            included: boolean;
+            label: string;
         };
         Opt: {
             /**
@@ -269,6 +476,51 @@ export interface components {
             answers: unknown;
             /** Format: uuid */
             id: string;
+        };
+        PlanArgs: {
+            /** Format: uuid */
+            id: string;
+            overrides?: components["schemas"]["PlanOverrides"];
+        };
+        PlanCost: {
+            cost?: null | components["schemas"]["CostBreakdown"];
+            guess: components["schemas"]["FacilityGuess"];
+            input?: null | components["schemas"]["CostInput"];
+            /** @description Why there is no figure, when there is none. */
+            missing?: string | null;
+            notes: string[];
+            open: components["schemas"]["OpenLine"][];
+            /** @description The derived size band, if the plan is sized. */
+            size?: string | null;
+        };
+        /** @description What the person pricing sets beside the plan. Never stored with it. */
+        PlanOverrides: {
+            clone?: null | components["schemas"]["CloneMode"];
+            /** Format: double */
+            clone_uptime?: number | null;
+            /** Format: int32 */
+            cloud_facilities?: number | null;
+        };
+        /** @description The model's configuration, for the calculator's controls. */
+        PricingModelView: {
+            bands: components["schemas"]["ServerBox"][];
+            /** @description The sizing questions the calculator's estimator asks. */
+            estimator: components["schemas"]["EstimatorView"];
+            /**
+             * @description For each band, in order, the facility servers if they all run in BES
+             *     cloud.
+             */
+            facility_guess_by_band: number[];
+            /** @description The wizard question the cloud facility slider takes the place of. */
+            facility_slider_question: string;
+            /** Format: int32 */
+            max_cloud_facilities: number;
+            /**
+             * Format: double
+             * @description The share of the facility servers in BES cloud for a mix of both.
+             */
+            mix_share: number;
+            model: string;
         };
         /**
          * @description Wire-shape mirror of [`problem_details::ProblemDetails`] for OpenAPI.
@@ -319,10 +571,45 @@ export interface components {
             label: string;
         };
         /**
+         * @description One server: its instance, hourly rate, storage, and how many copies of that
+         *     storage its snapshots hold.
+         */
+        ServerBox: {
+            /**
+             * Format: double
+             * @description The database size estimated from the band (not an input). Only bands have one.
+             */
+            db_gb?: number;
+            instance: string;
+            name: string;
+            /** Format: double */
+            snapshot_multiple: number;
+            /** Format: double */
+            usd_per_hour: number;
+            /** Format: double */
+            volume_gb: number;
+        };
+        /**
          * @description The viability axis (spec WIZ, Severity).
          * @enum {string}
          */
         Severity: "Default" | "NonDefault" | "Blocking";
+        SizeArgs: {
+            /** @description Option ids keyed by sizing question id. Questions left out are unanswered. */
+            answers?: {
+                [key: string]: string;
+            };
+        };
+        SizeEstimate: {
+            /** @description The derived band; none until a sizing question is answered. */
+            band?: string | null;
+            /**
+             * Format: int32
+             * @description Facility servers in BES cloud if they all run there, once the facilities
+             *     question is answered.
+             */
+            cloud_facilities?: number | null;
+        };
         /**
          * @description One row of a compute requirement as presented: the engine has already
          *     resolved the size band and dropped the rows whose condition does not hold.
@@ -529,6 +816,130 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VersionInfo"];
+                };
+            };
+        };
+    };
+    pricing_cost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CostInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostBreakdown"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
+                };
+            };
+        };
+    };
+    pricing_model: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModelArgs"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PricingModelView"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
+                };
+            };
+        };
+    };
+    pricing_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanArgs"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanCost"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
+                };
+            };
+        };
+    };
+    pricing_size: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SizeArgs"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SizeEstimate"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
                 };
             };
         };

@@ -25,7 +25,7 @@ Port the Tamanu hosting cost model into pollen as an internal edition: a calcula
 - [x] Cost model, fixture test (297 cases), unit tests
 - [x] Pricing endpoints (`model`, `cost`, `plan`) behind the path header; OpenAPI and types regenerated
 - [x] Edition routing in the SPA; plan links keep the prefix
-- [x] Calculator page with the assumptions panel
+- [x] Calculator page; estimates are tagged on the breakdown lines rather than listed in a panel
 - [x] Running cost in the wizard rail, and above a finalised plan
 - [x] e2e for the calculator, the priced wizard and the gating
 - [ ] Set `PRICING_PATH` on the deployment and share the URL internally

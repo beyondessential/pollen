@@ -21,10 +21,14 @@ test("the calculator prices its inputs and follows each control", async ({ page 
 	const group = (name: string) => page.getByRole("radiogroup", { name, exact: true });
 
 	// Tiny, BES cloud central, client-hosted facilities, backups, smoke testing
-	// on a clone and Tupaia reporting, all on by default: 637.33.
-	await expect(figure).toHaveText("$635");
-	await expect(page.locator(".calc-result .cost-annual")).toHaveText("$7,650 a year");
+	// on a clone and Tupaia reporting, all on by default: 637.33. Each line
+	// rounds to $5 (80, 85, 40, 40, 395) and the headline is their sum.
+	await expect(figure).toHaveText("$640");
+	await expect(page.locator(".calc-result .cost-annual")).toHaveText("$7,680 a year");
+	await expect(lines).not.toContainText("Cloud facility servers");
 	await expect(lines).toContainText("Tupaia reporting");
+	await expect(lines.locator("li", { hasText: "Platform share" })).toContainText("Estimate");
+	await expect(lines.locator("li", { hasText: "Backups share" })).toContainText("Assumed");
 
 	await page.getByRole("radio", { name: "Medium" }).click();
 	await group("Tupaia reporting").getByRole("radio", { name: "No" }).click();
@@ -45,9 +49,8 @@ test("the calculator prices its inputs and follows each control", async ({ page 
 	await group("Central server").getByRole("radio", { name: "Client hosted" }).click();
 	await expect(lines).not.toContainText("Central server");
 
-	await page.getByRole("button", { name: "Assumptions" }).click();
-	await expect(page.getByText("Standard clone uptime")).toBeVisible();
-	await expect(page.locator(".conf-estimated").first()).toBeVisible();
+	// Estimates are tagged where they appear; there is no list of assumptions.
+	await expect(page.getByRole("button", { name: "Assumptions" })).toHaveCount(0);
 });
 
 test("the calculator asks where facility servers run, and estimates the size", async ({ page }) => {
@@ -74,14 +77,17 @@ test("the calculator asks where facility servers run, and estimates the size", a
 	await group("Facility servers").getByRole("radio", { name: "A mix" }).click();
 	await expect(slider).toHaveValue("5");
 	await expect(page.locator(".calc-field .slider")).toContainText("Client hosted");
-	await expect(page.locator(".calc-field .slider")).toContainText("5 in BES cloud");
+	await expect(page.locator(".calc-field .slider")).toContainText("5 of 10 in BES cloud");
+	await expect(page.locator(".calc-stack .cost-hint")).toHaveText("Assumes 10 facility servers, from the estimate.");
+	// The slider splits the facility servers there are: it cannot pass them.
+	await expect(slider).toHaveAttribute("max", "10");
 	await expect(lines).toContainText("5 × t4g.medium");
 	await slider.fill("2");
 	await expect(lines).toContainText("2 × t4g.medium");
 
 	// Client hosted prices none.
 	await group("Facility servers").getByRole("radio", { name: "Client hosted" }).click();
-	await expect(lines).not.toContainText("t4g.medium (2 vCPU, 4 GB), 200 GB");
+	await expect(lines).not.toContainText("Cloud facility servers");
 
 	// A connected system bumps the estimate one band; choosing a band directly
 	// clears the estimator.
@@ -99,7 +105,9 @@ test("a priced plan keeps a running cost beside the questions", async ({ page })
 	await expect(page).toHaveURL(new RegExp(`${BASE}/a/`));
 	const rail = page.locator(".rail");
 	await expect(rail.locator(".cost-v")).toHaveText("Not priced");
-	await expect(rail).toContainText("Needs the catchment and facilities answers.");
+	await expect(rail).toContainText("Answer the first two questions to see a cost.");
+	// Nothing to adjust until there is a figure.
+	await expect(rail.getByRole("radiogroup", { name: "Upgrade smoke testing on a clone" })).toHaveCount(0);
 
 	await answer(page, "How many people does the health system serve?", "Under 1,000");
 	await answer(page, "How many facilities will use Tamanu?", "One");
@@ -113,17 +121,33 @@ test("a priced plan keeps a running cost beside the questions", async ({ page })
 	await expect(slider).toHaveCount(0);
 	await answer(page, "Where should the facility servers run?", "A mix of both");
 	await expect(page.getByRole("heading", { name: "Roughly what balance?" })).toHaveCount(0);
-	await expect(page.getByRole("heading", { name: "How many facility servers will BES host?" })).toBeVisible();
-	// One facility, half of it in BES cloud: one server. 311.80.
+	await expect(
+		page.getByRole("heading", { name: "How many facility servers run in BES cloud?" }),
+	).toBeVisible();
+	// One facility, half of it in BES cloud: one server. 311.80, shown as the
+	// lines add up (80, 70, 85, 40, 40).
 	await expect(slider).toHaveValue("1");
-	await expect(rail.locator(".cost-v")).toHaveText("$310");
+	await expect(rail.locator(".cost-v")).toHaveText("$315");
 
 	// Settings belong to the pricer: they move the figure, not the plan.
-	await slider.fill("2");
-	await expect(rail.locator(".cost-v")).toHaveText("$380");
-	await expect(page.getByRole("button", { name: "Use guess (1)" })).toBeVisible();
-	await rail.getByRole("radiogroup", { name: "Clone" }).getByRole("radio", { name: "Off" }).click();
-	await expect(rail.locator(".cost-v")).toHaveText("$295");
+	await expect(page.locator(".slider")).toContainText("1 of 1 in BES cloud");
+	await slider.fill("0");
+	await expect(rail.locator(".cost-v")).toHaveText("$245");
+	await slider.fill("1");
+	await expect(rail.locator(".cost-v")).toHaveText("$315");
+	await expect(page.getByRole("button", { name: "Use 1" })).toBeVisible();
+	await rail
+		.getByRole("radiogroup", { name: "Upgrade smoke testing on a clone" })
+		.getByRole("radio", { name: "No" })
+		.click();
+	await expect(rail.locator(".cost-v")).toHaveText("$230");
+
+	// A setting is let go when the facility count it was made for changes.
+	await slider.fill("0");
+	await answer(page, "How many facilities", "2 - 5");
+	await expect(slider).toHaveAttribute("max", "3");
+	await expect(slider).toHaveValue("2");
+	await expect(page.getByRole("button", { name: /^Use \d/ })).toHaveCount(0);
 
 	// Leaving the mix takes the slider, and its setting, out of the figure.
 	await answer(page, "Where should the facility servers run?", "All client hosted");
@@ -141,4 +165,18 @@ test("a wrong path is not found, and the public wizard shows no figure", async (
 	await answer(page, "How many facilities will use Tamanu?", "One");
 	await expect(page.locator(".rail")).not.toContainText("$");
 	await expect(page.locator(".cost")).toHaveCount(0);
+});
+
+test("copy link on a plan never carries the internal address", async ({ page, context }) => {
+	await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+	await page.goto(`${BASE}/new`);
+	await expect(page).toHaveURL(new RegExp(`${BASE}/a/`));
+	const id = page.url().split("/a/")[1];
+	await answer(page, "How many people does the health system serve?", "Under 1,000");
+	await answer(page, "How many facilities will use Tamanu?", "One");
+	await page.getByRole("button", { name: /Finalise/ }).click();
+	await page.getByRole("button", { name: "Copy link" }).click();
+	const copied = await page.evaluate(() => navigator.clipboard.readText());
+	expect(copied).toContain(`/a/${id}`);
+	expect(copied).not.toContain(PRICING_PATH);
 });

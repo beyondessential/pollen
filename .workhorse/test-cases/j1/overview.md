@@ -28,7 +28,8 @@
 - [x] The estimator sets the band the wizard would derive, bumps it for a connected system, and ignores "I'm not sure" (verifies spec: COST)
 - [x] Choosing a band directly clears the estimator (verifies spec: COST)
 - [ ] BES cloud facility servers with no estimate follow the band's typical count
-- [x] The assumptions panel lists parameters with their tags (verifies spec: COST)
+- [x] Breakdown lines resting on estimated or assumed parameters carry their tag (verifies spec: COST)
+- [x] The mix slider cannot pass the number of facility servers, and reads how many of them are in BES cloud (verifies spec: COST)
 
 ## Priced wizard
 

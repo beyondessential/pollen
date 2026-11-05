@@ -28,6 +28,16 @@ export default function PricingEdition() {
 		return () => controller.abort();
 	}, [pricingPath]);
 
+	// Nothing in the internal edition's address should travel with a link
+	// followed from it.
+	useEffect(() => {
+		const meta = document.createElement("meta");
+		meta.name = "referrer";
+		meta.content = "no-referrer";
+		document.head.appendChild(meta);
+		return () => meta.remove();
+	}, []);
+
 	if (failed) return <NotFound />;
 	if (!model) return <div className="splash">Loading…</div>;
 

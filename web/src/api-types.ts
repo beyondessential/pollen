@@ -240,6 +240,7 @@ export interface components {
         CloneMode: "off" | "standard" | "always_on";
         /**
          * @description How sure the model's owner is of a parameter's value.
+         *     Ordered from most to least certain, so the weakest of several is the maximum.
          * @enum {string}
          */
         Confidence: "Decided" | "Read" | "Estimated" | "Assumed";
@@ -305,6 +306,11 @@ export interface components {
             windows_facilities?: number;
         };
         CostLine: {
+            /**
+             * @description The weakest confidence among the parameters the line rests on, so a
+             *     figure made of estimates is not mistaken for a fact.
+             */
+            confidence: components["schemas"]["Confidence"];
             /** @description What the line is made of, such as the server and its storage. */
             detail?: string | null;
             id: components["schemas"]["LineId"];
@@ -319,26 +325,17 @@ export interface components {
             /** @description A ruleset branch to preview; omitted binds the bundled default. */
             config_branch?: string | null;
         };
-        /** @description Applied to displayed figures only; the breakdown is always cost price. */
-        Display: {
-            currency: string;
-            /**
-             * Format: double
-             * @description Margin over cost, as a fraction (0.2 is 20%).
-             */
-            margin: number;
-            /** Format: double */
-            round_annual_to: number;
-            /** Format: double */
-            round_monthly_to: number;
-            /** Format: double */
-            usd_to_currency: number;
-        };
-        /** @description The displayed figures: margin and currency applied, then rounded. */
+        /**
+         * @description The displayed figures: margin and currency applied, then each line rounded
+         *     to the configured step. The monthly figure is the sum of the rounded lines,
+         *     and the annual figure twelve times it, so what is shown adds up.
+         */
         DisplayTotal: {
             /** Format: double */
             annual: number;
             currency: string;
+            /** @description Each line's displayed figure, in the order of the lines. */
+            lines: number[];
             /** Format: double */
             margin: number;
             /** Format: double */
@@ -403,8 +400,17 @@ export interface components {
         FacilityGuess: {
             basis: string;
             confidence: components["schemas"]["Confidence"];
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Facility servers in BES cloud as answered, before any setting.
+             */
             count: number;
+            /**
+             * Format: int32
+             * @description All the deployment's facility servers, in BES cloud or not: the most a
+             *     setting can put in BES cloud.
+             */
+            total: number;
         };
         FinaliseArgs: {
             /** Format: uuid */
@@ -465,17 +471,6 @@ export interface components {
              */
             warn?: string | null;
         };
-        Param: {
-            basis: string;
-            confidence: components["schemas"]["Confidence"];
-            label: string;
-            unit: components["schemas"]["Unit"];
-            /** Format: double */
-            value: number;
-        };
-        ParamView: components["schemas"]["Param"] & {
-            id: string;
-        };
         PatchArgs: {
             /** @description Answers keyed by question id; each value is an option id or a list of them. */
             answers: unknown;
@@ -506,21 +501,11 @@ export interface components {
             /** Format: int32 */
             cloud_facilities?: number | null;
         };
-        /**
-         * @description The model's configuration, for the calculator's controls and the
-         *     assumptions panel.
-         */
+        /** @description The model's configuration, for the calculator's controls. */
         PricingModelView: {
             bands: components["schemas"]["ServerBox"][];
-            /**
-             * Format: double
-             * @description The configured share of the month a standard clone runs.
-             */
-            clone_uptime: number;
-            display: components["schemas"]["Display"];
             /** @description The sizing questions the calculator's estimator asks. */
             estimator: components["schemas"]["EstimatorView"];
-            facility: components["schemas"]["ServerBox"];
             /**
              * @description For each band, in order, the facility servers if they all run in BES
              *     cloud.
@@ -536,7 +521,6 @@ export interface components {
              */
             mix_share: number;
             model: string;
-            params: components["schemas"]["ParamView"][];
         };
         /**
          * @description Wire-shape mirror of [`problem_details::ProblemDetails`] for OpenAPI.
@@ -656,11 +640,6 @@ export interface components {
             specs: components["schemas"]["Spec"][];
             summary?: string | null;
         };
-        /**
-         * @description What a parameter's value measures, so it can be shown in the right form.
-         * @enum {string}
-         */
-        Unit: "Usd" | "UsdPerGbMonth" | "Share" | "Count" | "Multiple";
         /**
          * @description The viability verdict: the worst severity present across triggered
          *     consequences. Default-severity consequences don't move it off `Clear`.

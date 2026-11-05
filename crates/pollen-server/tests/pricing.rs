@@ -103,6 +103,23 @@ fn matches_every_reference_case_to_the_cent() {
 		// The breakdown is what the figure is made of.
 		let sum: f64 = got.lines.iter().map(|l| l.monthly_usd).sum();
 		assert_cents(&format!("{name} sum"), sum, got.monthly_usd);
+
+		// What is displayed adds up: the headline is the sum of the shown
+		// lines, and the annual figure is twelve times it.
+		assert_eq!(
+			got.display.lines.len(),
+			got.lines.len(),
+			"{name}: display lines"
+		);
+		let shown: f64 = got.display.lines.iter().sum();
+		assert_cents(&format!("{name} displayed sum"), shown, got.display.monthly);
+		assert_cents(
+			&format!("{name} displayed annual"),
+			got.display.monthly * 12.0,
+			got.display.annual,
+		);
+		// And it stays close to the cost: each line is within half a step.
+		assert!((got.display.monthly - got.monthly_usd).abs() <= 2.5 * got.lines.len() as f64);
 	}
 }
 
@@ -183,14 +200,74 @@ fn clone_uptime_scales_only_compute() {
 }
 
 #[test]
+fn lines_carry_the_weakest_confidence_they_rest_on() {
+	let config = PricingConfig::from_ron(BUNDLED_PRICING).unwrap();
+	let got = config
+		.cost(&input_from_fixture(
+			&json!({ "band": "medium", "tupaia": true }),
+		))
+		.unwrap();
+	let tag = |id: pollen_server::pricing::LineId| {
+		serde_json::to_value(got.lines.iter().find(|l| l.id == id).unwrap().confidence).unwrap()
+	};
+	use pollen_server::pricing::LineId::*;
+	// Rates read from price lists.
+	assert_eq!(tag(CentralBox), "Read");
+	// Allocations of shared accounts.
+	assert_eq!(tag(PlatformShare), "Estimated");
+	assert_eq!(tag(Clone), "Estimated");
+	assert_eq!(tag(TupaiaReporting), "Estimated");
+	// Estimated pool over an assumed number of deployments.
+	assert_eq!(tag(BackupsDbShare), "Assumed");
+}
+
+#[test]
+fn refuses_more_facility_servers_than_it_will_price() {
+	let config = PricingConfig::from_ron(BUNDLED_PRICING).unwrap();
+	let base = input_from_fixture(&json!({ "band": "small" }));
+	let max = config.max_cloud_facilities;
+	assert!(
+		config
+			.cost(&CostInput {
+				cloud_facilities: max,
+				..base.clone()
+			})
+			.is_ok()
+	);
+	assert!(
+		config
+			.cost(&CostInput {
+				cloud_facilities: max + 1,
+				..base.clone()
+			})
+			.is_err()
+	);
+	// A clone that never runs reads as 0%, not -0%.
+	let off = config
+		.cost(&CostInput {
+			clone_uptime: Some(-0.0),
+			..base
+		})
+		.unwrap();
+	let clone = off
+		.lines
+		.iter()
+		.find(|l| l.id == pollen_server::pricing::LineId::Clone)
+		.unwrap();
+	assert_eq!(clone.detail.as_deref(), Some("Runs 0% of the month"));
+}
+
+#[test]
 fn display_rounds_to_the_configured_step() {
 	let config = PricingConfig::from_ron(BUNDLED_PRICING).unwrap();
 	let got = config
 		.cost(&input_from_fixture(&json!({ "band": "small" })))
 		.unwrap();
-	// 242.65 a month, 2,911.79 a year.
+	// 242.65 a month. Each line rounds to $5 (80, 0, 85, 40, 40) and the
+	// headline is their sum, so it adds up on the page.
+	assert_eq!(got.display.lines, vec![80.0, 0.0, 85.0, 40.0, 40.0]);
 	assert_eq!(got.display.monthly, 245.0);
-	assert_eq!(got.display.annual, 2910.0);
+	assert_eq!(got.display.annual, 2940.0);
 	assert_eq!(got.display.currency, "USD");
 }
 
@@ -199,7 +276,7 @@ fn display_rounds_to_the_configured_step() {
 #[tokio::test(flavor = "multi_thread")]
 async fn endpoints_hide_behind_the_pricing_path() {
 	run_server(|server, _conn| async move {
-		for fn_ in ["model", "cost", "plan"] {
+		for fn_ in ["model", "cost", "size", "plan"] {
 			let path = format!("/api/pricing/{fn_}");
 			server
 				.post(&path)
@@ -220,8 +297,6 @@ async fn endpoints_hide_behind_the_pricing_path() {
 			.await
 			.json();
 		assert_eq!(model["bands"].as_array().unwrap().len(), 4);
-		assert_eq!(model["params"].as_array().unwrap().len(), 14);
-		assert_eq!(model["params"][0]["confidence"], "Read");
 	})
 	.await;
 }
@@ -283,7 +358,7 @@ async fn plan_reads_its_answers() {
 			unsized_plan["missing"]
 				.as_str()
 				.unwrap()
-				.contains("catchment")
+				.contains("first two questions")
 		);
 
 		// Medium, everything else assumed: central and facilities are the
@@ -322,6 +397,17 @@ async fn plan_reads_its_answers() {
 		)
 		.await;
 		assert_eq!(mix["guess"]["count"], 5);
+		assert_eq!(mix["guess"]["total"], 10);
+
+		// A setting can put no more in BES cloud than there are facility servers.
+		let capped = plan_cost(
+			&server,
+			json!({ "catchment": "c0", "facilities": "f1", "hosting_where": "mix", "tupaia": "no" }),
+			json!({ "cloud_facilities": 15 }),
+		)
+		.await;
+		assert_eq!(capped["guess"]["total"], 3);
+		assert_eq!(capped["input"]["cloud_facilities"], 3);
 
 		// Overrides change the figure without touching the plan.
 		let overridden = plan_cost(

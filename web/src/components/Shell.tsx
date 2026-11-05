@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 import besLogo from "../assets/bes-logo.png";
 import { useEdition } from "../edition";
@@ -26,9 +26,13 @@ export function Shell({ children }: { children: ReactNode }) {
 				</Link>
 				<nav className="topbar-nav">
 					{internal && (
-						<Link to={edition.base} className="topbar-new">
+						<NavLink
+							to={edition.base}
+							end
+							className={({ isActive }) => `topbar-new${isActive ? " active" : ""}`}
+						>
 							Calculator
-						</Link>
+						</NavLink>
 					)}
 					<Link to={internal ? `${edition.base}/new` : "/"} className="topbar-new">
 						Start a new plan

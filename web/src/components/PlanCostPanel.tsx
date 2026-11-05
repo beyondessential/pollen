@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
 import { callPricing, money } from "../edition";
-import type { AppView, CloneMode, PlanCost, PricingModelView } from "../types";
-import { CLONE_OPTIONS, CostSummary, Segmented, Slider } from "./Cost";
+import type { AppView, CloneMode, PlanCost } from "../types";
+import { CostCaveat, CostSummary, Slider, YesNo } from "./Cost";
 
 /// What the person pricing sets beside a plan (spec COST, The priced wizard).
 /// Held by the page and never stored with the plan.
@@ -41,14 +41,59 @@ export function usePlanCost(
 			controller.signal,
 		)
 			.then(setPlan)
-			.catch(() => {});
+			// A figure that could not be refreshed is not left standing.
+			.catch(() => {
+				if (!controller.signal.aborted) setPlan(null);
+			});
 		return () => controller.abort();
 	}, [pricingPath, view.id, view.evaluation, facilities, settings.clone]);
 
 	return plan;
 }
 
-/// The cost beside a plan: the figure, what it rests on, and the clone setting.
+/// The figure, what it rests on, and anything still unsettled that bears on it.
+export function PlanCostSummary({ plan }: { plan: PlanCost | null }) {
+	if (!plan) return null;
+	return (
+		<>
+			<CostSummary cost={plan.cost} missing={plan.missing} compact />
+			{plan.open.map((o) => (
+				<p key={o.id} className="cost-callout">
+					{o.label} ({money(o.monthly_usd)} a month) is {o.included ? "included" : "left out"}{" "}
+					until it is settled.
+				</p>
+			))}
+			{plan.notes.map((n) => (
+				<p key={n} className="cost-callout">
+					{n}
+				</p>
+			))}
+		</>
+	);
+}
+
+/// The clone setting, since it is not a client choice.
+export function PlanCostControls({
+	settings,
+	onSettings,
+}: {
+	settings: PlanSettings;
+	onSettings: (s: PlanSettings) => void;
+}) {
+	return (
+		<div className="cost-control">
+			<span className="cost-control-k">Upgrade smoke testing on a clone</span>
+			<YesNo
+				label="Upgrade smoke testing on a clone"
+				value={settings.clone !== "off"}
+				onChange={(on) => onSettings({ ...settings, clone: on ? "standard" : "off" })}
+			/>
+		</div>
+	);
+}
+
+/// The cost beside a plan, in the wizard's rail: the figure and lines, then
+/// the setting that moves them, then what a figure is.
 export default function PlanCostPanel({
 	plan,
 	settings,
@@ -61,75 +106,58 @@ export default function PlanCostPanel({
 	if (!plan) return null;
 	return (
 		<div className="cost-panel">
-			<CostSummary cost={plan.cost} missing={plan.missing} compact />
-
-			{plan.open.map((o) => (
-				<p key={o.id} className="cost-note">
-					{o.label} is not settled, so it is {o.included ? "included" : "left out"}. It is{" "}
-					{money(o.monthly_usd)} a month.
-				</p>
-			))}
-			{plan.notes.map((n) => (
-				<p key={n} className="cost-note">
-					{n}
-				</p>
-			))}
-
-			<div className="cost-control">
-				<span className="cost-control-k">Clone</span>
-				<Segmented
-					label="Clone"
-					options={CLONE_OPTIONS}
-					value={settings.clone}
-					onChange={(clone) => onSettings({ ...settings, clone })}
-				/>
-			</div>
+			<PlanCostSummary plan={plan} />
+			{plan.cost && <PlanCostControls settings={settings} onSettings={onSettings} />}
+			<CostCaveat />
 		</div>
 	);
 }
 
-/// How many facility servers run in BES cloud, starting at the guess. Takes
-/// the place of the balance question in the flow (spec COST, The priced wizard).
+/// How many of the facility servers run in BES cloud, starting at the guess.
+/// Takes the place of the balance question in the flow (spec COST, The priced
+/// wizard).
 export function FacilityServersControl({
 	plan,
-	model,
 	settings,
 	onSettings,
 }: {
 	plan: PlanCost | null;
-	model: PricingModelView;
 	settings: PlanSettings;
 	onSettings: (s: PlanSettings) => void;
 }) {
 	const guess = plan?.guess.count ?? 0;
-	const count = settings.facilities ?? guess;
+	const total = plan?.guess.total ?? 0;
+	const count = Math.min(settings.facilities ?? guess, total);
+	if (total === 0) {
+		return <p className="cost-hint">Answer the facilities question first.</p>;
+	}
 	return (
 		<div className="cost-control cost-control-flow">
-			<span className="cost-control-k">
-				{settings.facilities == null ? (
-					<span className="cost-control-hint" title={plan?.guess.basis}>
-						Guessed from the facilities answer
-					</span>
-				) : (
-					<button
-						type="button"
-						className="cost-control-reset"
-						onClick={() => onSettings({ ...settings, facilities: null })}
-					>
-						Use guess ({guess})
-					</button>
-				)}
-			</span>
 			<Slider
 				label="Facility servers in BES cloud"
 				value={count}
 				min={0}
-				max={Math.max(model.max_cloud_facilities, count)}
+				max={total}
 				onChange={(facilities) => onSettings({ ...settings, facilities })}
-									startLabel="Client hosted"
-									endLabel="BES cloud"
-									format={(n) => `${n} in BES cloud`}
+				startLabel="Client hosted"
+				endLabel="BES cloud"
+				format={(n) => `${n} of ${total} in BES cloud`}
 			/>
+			<p className="cost-hint">
+				Assumes {total} facility server{total === 1 ? "" : "s"}, from the facilities answer.
+				{settings.facilities != null && (
+					<>
+						{" "}
+						<button
+							type="button"
+							className="cost-control-reset"
+							onClick={() => onSettings({ ...settings, facilities: null })}
+						>
+							Use {guess}
+						</button>
+					</>
+				)}
+			</p>
 		</div>
 	);
 }
@@ -138,7 +166,7 @@ export function FacilityServersControl({
 export function FacilityServersCard(props: Parameters<typeof FacilityServersControl>[0]) {
 	return (
 		<div className="card">
-			<h3 className="qtitle">How many facility servers will BES host?</h3>
+			<h3 className="qtitle">How many facility servers run in BES cloud?</h3>
 			<FacilityServersControl {...props} />
 		</div>
 	);

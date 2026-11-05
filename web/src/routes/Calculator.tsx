@@ -1,9 +1,9 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
-import { CostSummary, Segmented, Slider } from "../components/Cost";
+import { CostCaveat, CostSummary, Segmented, Slider, YesNo } from "../components/Cost";
 import { Chevron } from "../components/visuals";
 import { callPricing, useEdition } from "../edition";
-import type { CostBreakdown, CostInput, ParamView, PricingModelView, Unit } from "../types";
+import type { CostBreakdown, CostInput, PricingModelView } from "../types";
 
 type FacilityMode = "cloud" | "client" | "mix";
 
@@ -17,8 +17,8 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 	const { pricingPath } = useEdition();
 	const [band, setBand] = useState(model.bands[0]?.name ?? "");
 	const [estimate, setEstimate] = useState<Estimate>(NO_ESTIMATE);
-	// Facility servers if they all ran in BES cloud, from the estimator's
-	// facilities answer. Without one, the band's typical number stands in.
+	// Facility servers the deployment has, from the estimator's facilities
+	// answer. Without one, the band's typical number stands in.
 	const [estimated, setEstimated] = useState<number | null>(null);
 	const [centralInCloud, setCentralInCloud] = useState(true);
 	const [facilityMode, setFacilityMode] = useState<FacilityMode>("client");
@@ -30,72 +30,88 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 
 	const [cost, setCost] = useState<CostBreakdown | null>(null);
 	const [error, setError] = useState<string | null>(null);
-	const [showAssumptions, setShowAssumptions] = useState(false);
 
-	const bandIx = Math.max(0, model.bands.findIndex((b) => b.name === band));
-	const allInCloud = estimated ?? model.facility_guess_by_band[bandIx] ?? 0;
-	const mixDefault = Math.round(allInCloud * model.mix_share);
+	const bandIx = Math.max(
+		0,
+		model.bands.findIndex((b) => b.name === band),
+	);
+	// All the deployment's facility servers, wherever they run.
+	const totalFacilities = estimated ?? model.facility_guess_by_band[bandIx] ?? 0;
+	const mixDefault = Math.round(totalFacilities * model.mix_share);
 	const cloudFacilities =
-		facilityMode === "cloud" ? allInCloud : facilityMode === "mix" ? (mixCount ?? mixDefault) : 0;
-
-	const input: CostInput = {
-		band,
-		central_in_cloud: centralInCloud,
-		cloud_facilities: cloudFacilities,
-		clone: smokeTesting ? "standard" : "off",
-		clone_uptime: null,
-		backups,
-		tupaia,
-		windows_central: false,
-		windows_facilities: 0,
-		windows_clone: false,
-	};
+		facilityMode === "cloud"
+			? totalFacilities
+			: facilityMode === "mix"
+				? Math.min(mixCount ?? mixDefault, totalFacilities)
+				: 0;
 
 	useEffect(() => {
 		if (!pricingPath) return;
 		const controller = new AbortController();
+		const input: CostInput = {
+			band,
+			central_in_cloud: centralInCloud,
+			cloud_facilities: cloudFacilities,
+			clone: smokeTesting ? "standard" : "off",
+			clone_uptime: null,
+			backups,
+			tupaia,
+			windows_central: false,
+			windows_facilities: 0,
+			windows_clone: false,
+		};
 		callPricing(pricingPath, "cost", input, controller.signal)
 			.then((c) => {
 				setCost(c);
 				setError(null);
 			})
 			.catch((e: unknown) => {
-				if (!controller.signal.aborted) setError(e instanceof Error ? e.message : String(e));
+				if (controller.signal.aborted) return;
+				// A figure that could not be refreshed is not left standing.
+				setCost(null);
+				setError(e instanceof Error ? e.message : String(e));
 			});
 		return () => controller.abort();
-		// biome-ignore lint/correctness/useExhaustiveDependencies: input is built from the state listed
 	}, [pricingPath, band, centralInCloud, cloudFacilities, smokeTesting, backups, tupaia]);
 
 	// The band comes from the server, which applies the wizard's own derivation.
+	// Only the latest reply counts, and choosing a band directly outranks any
+	// reply still on its way.
+	const latest = useRef(0);
 	function estimateSize(next: Estimate) {
 		setEstimate(next);
 		if (!pricingPath) return;
+		const mine = ++latest.current;
 		callPricing(pricingPath, "size", next)
 			.then((r) => {
+				if (mine !== latest.current) return;
 				setEstimated(r.cloud_facilities);
-				if (r.band) setBand(r.band);
+				setMixCount(null);
+				if (r.band && model.bands.some((b) => b.name === r.band)) setBand(r.band);
 			})
 			.catch(() => {});
 	}
 
 	// Choosing a band directly replaces whatever was estimated.
 	function chooseBand(name: string) {
+		latest.current++;
 		setBand(name);
 		setEstimate(NO_ESTIMATE);
 		setEstimated(null);
+		setMixCount(null);
 	}
 
-	const yesNo = [
-		{ id: "yes" as const, label: "Yes" },
-		{ id: "no" as const, label: "No" },
-	];
-	const yn = (b: boolean) => (b ? "yes" : "no");
+	const facilityHint =
+		facilityMode === "client"
+			? null
+			: `Assumes ${totalFacilities} facility server${totalFacilities === 1 ? "" : "s"}, ${
+					estimated != null ? "from the estimate" : `typical for ${band}`
+				}.`;
 
 	return (
 		<div className="calc">
+			<h1 className="calc-title">Hosting cost calculator</h1>
 			<main className="calc-main">
-				<h1 className="calc-title">Hosting cost calculator</h1>
-
 				<div className="card">
 					<h3 className="qtitle">Deployment</h3>
 					<Field label="Size">
@@ -152,13 +168,14 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 									label="Facility servers in BES cloud"
 									value={cloudFacilities}
 									min={0}
-									max={Math.max(model.max_cloud_facilities, cloudFacilities)}
+									max={totalFacilities}
 									onChange={setMixCount}
 									startLabel="Client hosted"
 									endLabel="BES cloud"
-									format={(n) => `${n} in BES cloud`}
+									format={(n) => `${n} of ${totalFacilities} in BES cloud`}
 								/>
 							)}
+							{facilityHint && <p className="cost-hint">{facilityHint}</p>}
 						</div>
 					</Field>
 				</div>
@@ -166,28 +183,17 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 				<div className="card">
 					<h3 className="qtitle">Services</h3>
 					<Field label="BES takes backups">
-						<Segmented
-							label="BES takes backups"
-							options={yesNo}
-							value={yn(backups)}
-							onChange={(v) => setBackups(v === "yes")}
-						/>
+						<YesNo label="BES takes backups" value={backups} onChange={setBackups} />
 					</Field>
 					<Field label="Upgrade smoke testing on a clone">
-						<Segmented
+						<YesNo
 							label="Upgrade smoke testing on a clone"
-							options={yesNo}
-							value={yn(smokeTesting)}
-							onChange={(v) => setSmokeTesting(v === "yes")}
+							value={smokeTesting}
+							onChange={setSmokeTesting}
 						/>
 					</Field>
 					<Field label="Tupaia reporting">
-						<Segmented
-							label="Tupaia reporting"
-							options={yesNo}
-							value={yn(tupaia)}
-							onChange={(v) => setTupaia(v === "yes")}
-						/>
+						<YesNo label="Tupaia reporting" value={tupaia} onChange={setTupaia} />
 					</Field>
 				</div>
 			</main>
@@ -195,20 +201,8 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 			<aside className="calc-result">
 				<div className="card">
 					<CostSummary cost={cost} missing={error} />
+					<CostCaveat />
 				</div>
-
-				<section className="assumptions">
-					<button
-						type="button"
-						className={`qexpand${showAssumptions ? " on" : ""}`}
-						aria-expanded={showAssumptions}
-						onClick={() => setShowAssumptions(!showAssumptions)}
-					>
-						<Chevron size={17} />
-						<span>Assumptions</span>
-					</button>
-					{showAssumptions && <Assumptions model={model} />}
-				</section>
 			</aside>
 		</div>
 	);
@@ -259,25 +253,11 @@ function Estimator({
 				<div className="est-q" role="group" aria-label={integrations.label}>
 					<span className="est-label">{integrations.label}</span>
 					<span className="est-hint">{integrations.hint}</span>
-					<div className="bandrow est-row est-row-two">
-						{[
-							{ id: "no", label: "No" },
-							{ id: "yes", label: "Yes" },
-						].map((o) => {
-							const on = estimate.integrations === (o.id === "yes");
-							return (
-								<button
-									type="button"
-									key={o.id}
-									aria-pressed={on}
-									className={`band${on ? " on" : ""}`}
-									onClick={() => onChange({ ...estimate, integrations: o.id === "yes" })}
-								>
-									{o.label}
-								</button>
-							);
-						})}
-					</div>
+					<YesNo
+						label={integrations.label}
+						value={estimate.integrations}
+						onChange={(v) => onChange({ ...estimate, integrations: v })}
+					/>
 				</div>
 			)}
 		</div>
@@ -291,62 +271,4 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 			{children}
 		</div>
 	);
-}
-
-function Assumptions({ model }: { model: PricingModelView }) {
-	return (
-		<div className="card assumptions-body">
-			<table className="assume">
-				<thead>
-					<tr>
-						<th>Size</th>
-						<th>Server</th>
-						<th>Storage</th>
-					</tr>
-				</thead>
-				<tbody>
-					{[...model.bands, model.facility].map((b) => (
-						<tr key={b.name}>
-							<td>{b.name}</td>
-							<td>{b.instance}</td>
-							<td>{b.volume_gb} GB</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
-			<ul className="params">
-				{model.params.map((p) => (
-					<Param key={p.id} p={p} />
-				))}
-			</ul>
-		</div>
-	);
-}
-
-function Param({ p }: { p: ParamView }) {
-	return (
-		<li className="param">
-			<div className="param-head">
-				<span className="param-label">{p.label}</span>
-				<span className="param-v">{formatParam(p.value, p.unit)}</span>
-			</div>
-			<span className={`conf conf-${p.confidence.toLowerCase()}`}>{p.confidence}</span>
-			<span className="param-basis">{p.basis}</span>
-		</li>
-	);
-}
-
-function formatParam(value: number, unit: Unit): string {
-	switch (unit) {
-		case "Usd":
-			return `$${value.toLocaleString("en-AU")}`;
-		case "UsdPerGbMonth":
-			return `$${value} per GB-month`;
-		case "Share":
-			return `${Math.round(value * 100)}%`;
-		case "Multiple":
-			return `${value}×`;
-		case "Count":
-			return String(value);
-	}
 }

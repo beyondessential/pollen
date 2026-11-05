@@ -4,10 +4,13 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { callApi, useApi } from "../api";
 import { planUrl, useEdition } from "../edition";
 import Artifact from "../components/Artifact";
+import { CostCaveat } from "../components/Cost";
 import PlanCostPanel, {
 	DEFAULT_SETTINGS,
 	FacilityServersCard,
 	FacilityServersControl,
+	PlanCostControls,
+	PlanCostSummary,
 	type PlanSettings,
 	usePlanCost,
 } from "../components/PlanCostPanel";
@@ -50,6 +53,14 @@ function Loaded({ initial }: { initial: AppView }) {
 	const sliderShowing =
 		sliderQuestion != null && view.evaluation.visible_questions.includes(sliderQuestion);
 	const plan = usePlanCost(pricingPath, view, settings, sliderShowing);
+
+	// A facility server setting means something only against the facility count
+	// it was made for: let go of it when the count changes or the slider goes.
+	const facilityTotal = plan?.guess.total;
+	// biome-ignore lint/correctness/useExhaustiveDependencies: reset on these two alone
+	useEffect(() => {
+		setSettings((s) => (s.facilities == null ? s : { ...s, facilities: null }));
+	}, [facilityTotal, sliderShowing]);
 
 	const answers = view.answers as unknown as Record<string, AnswerValue>;
 	const started = Object.values(answers).some((v) =>
@@ -138,17 +149,22 @@ function Loaded({ initial }: { initial: AppView }) {
 			)}
 			{view.status === "finalised" ? (
 				<>
-					{pricingPath != null && model && (
+					{pricingPath != null && model && plan && (
 						<div className="cost-strip">
-							<PlanCostPanel plan={plan} settings={settings} onSettings={setSettings} />
-							{sliderShowing && (
-								<FacilityServersControl
-									plan={plan}
-									model={model}
-									settings={settings}
-									onSettings={setSettings}
-								/>
-							)}
+							<div>
+								<PlanCostSummary plan={plan} />
+								<CostCaveat />
+							</div>
+							<div className="cost-strip-controls">
+								<PlanCostControls settings={settings} onSettings={setSettings} />
+								{sliderShowing && (
+									<FacilityServersControl
+										plan={plan}
+										settings={settings}
+										onSettings={setSettings}
+									/>
+								)}
+							</div>
 						</div>
 					)}
 					<Artifact view={view} />
@@ -168,7 +184,6 @@ function Loaded({ initial }: { initial: AppView }) {
 									[sliderQuestion]: (
 										<FacilityServersCard
 											plan={plan}
-											model={model}
 											settings={settings}
 											onSettings={setSettings}
 										/>

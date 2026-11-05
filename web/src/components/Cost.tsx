@@ -2,7 +2,7 @@ import { money } from "../edition";
 import type { CostBreakdown } from "../types";
 
 /// The headline figure, its annual equivalent, and the lines it is made of
-/// (spec COST, What a figure is).
+/// (spec COST, What a figure is). The shown lines add up to the headline.
 export function CostSummary({
 	cost,
 	missing,
@@ -23,15 +23,17 @@ export function CostSummary({
 					<span className="cost-v">{money(d.monthly, d.currency)}</span>
 					<span className="cost-annual">{money(d.annual, d.currency)} a year</span>
 					<ul className="cost-lines">
-						{cost.lines.map((l) => (
-							<li key={l.id}>
-								<span>
-									<span className="cost-line-label">{l.label}</span>
-									{l.detail && <span className="cost-line-detail">{l.detail}</span>}
-								</span>
-								<span className="cost-line-v">{money(l.monthly_usd)}</span>
-							</li>
-						))}
+						{cost.lines.map((l, i) =>
+							l.monthly_usd > 0 ? (
+								<li key={l.id}>
+									<span>
+										<span className="cost-line-label">{l.label}</span>
+										<LineDetail detail={l.detail} confidence={l.confidence} />
+									</span>
+									<span className="cost-line-v">{money(d.lines[i], d.currency)}</span>
+								</li>
+							) : null,
+						)}
 					</ul>
 				</>
 			) : (
@@ -40,29 +42,50 @@ export function CostSummary({
 					{missing && <span className="cost-annual">{missing}</span>}
 				</>
 			)}
-			<p className="cost-caveat">
-				Indicative hosting cost to BES, not a price. Lines are USD at cost.
-			</p>
 		</div>
 	);
 }
 
+/// What a line is made of, marked where it rests on an estimate or an
+/// assumption so that is not mistaken for a fact.
+function LineDetail({
+	detail,
+	confidence,
+}: {
+	detail: string | null;
+	confidence: CostBreakdown["lines"][number]["confidence"];
+}) {
+	const parts = [
+		detail,
+		confidence === "Estimated" ? "Estimate" : confidence === "Assumed" ? "Assumed" : null,
+	].filter((p): p is string => !!p);
+	return parts.length > 0 ? <span className="cost-line-detail">{parts.join(" · ")}</span> : null;
+}
+
+/// The one line that says what a figure is.
+export function CostCaveat() {
+	return <p className="cost-caveat">USD at cost. Not a price to the client.</p>;
+}
+
 /// A row of mutually exclusive options, styled as the wizard's size bands.
+/// `compact` sizes the buttons to their labels for an on/off choice.
 export function Segmented<T extends string>({
 	options,
 	value,
 	onChange,
 	disabled = false,
 	label,
+	compact = false,
 }: {
 	options: { id: T; label: string }[];
 	value: T;
 	onChange: (v: T) => void;
 	disabled?: boolean;
 	label: string;
+	compact?: boolean;
 }) {
 	return (
-		<div className="bandrow" role="radiogroup" aria-label={label}>
+		<div className={`bandrow${compact ? " bandrow-compact" : ""}`} role="radiogroup" aria-label={label}>
 			{options.map((o) => (
 				<button
 					type="button"
@@ -80,7 +103,33 @@ export function Segmented<T extends string>({
 	);
 }
 
-/// A slider with its value beside it.
+export const YES_NO = [
+	{ id: "yes" as const, label: "Yes" },
+	{ id: "no" as const, label: "No" },
+];
+
+/// An on/off choice as Yes and No.
+export function YesNo({
+	value,
+	onChange,
+	label,
+}: {
+	value: boolean;
+	onChange: (v: boolean) => void;
+	label: string;
+}) {
+	return (
+		<Segmented
+			compact
+			label={label}
+			options={YES_NO}
+			value={value ? "yes" : "no"}
+			onChange={(v) => onChange(v === "yes")}
+		/>
+	);
+}
+
+/// A slider with its reading above the track and what each end means below it.
 export function Slider({
 	value,
 	min,
@@ -101,37 +150,28 @@ export function Slider({
 	format?: (v: number) => string;
 	label: string;
 	disabled?: boolean;
-	/// Names for what each end of the track means.
 	startLabel?: string;
 	endLabel?: string;
 }) {
 	return (
 		<div className="slider">
-			<div className="slider-track">
-				<input
-					type="range"
-					aria-label={label}
-					min={min}
-					max={max}
-					step={step}
-					value={value}
-					disabled={disabled}
-					onChange={(e) => onChange(Number(e.target.value))}
-				/>
-				{(startLabel || endLabel) && (
-					<div className="slider-ends">
-						<span>{startLabel}</span>
-						<span>{endLabel}</span>
-					</div>
-				)}
-			</div>
 			<span className="slider-v">{format(value)}</span>
+			<input
+				type="range"
+				aria-label={label}
+				min={min}
+				max={max}
+				step={step}
+				value={value}
+				disabled={disabled}
+				onChange={(e) => onChange(Number(e.target.value))}
+			/>
+			{(startLabel || endLabel) && (
+				<div className="slider-ends">
+					<span>{startLabel}</span>
+					<span>{endLabel}</span>
+				</div>
+			)}
 		</div>
 	);
 }
-
-export const CLONE_OPTIONS = [
-	{ id: "off" as const, label: "Off" },
-	{ id: "standard" as const, label: "Standard" },
-	{ id: "always_on" as const, label: "Always on" },
-];

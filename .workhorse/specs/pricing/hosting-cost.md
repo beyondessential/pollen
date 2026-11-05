@@ -75,7 +75,7 @@ Each parameter carries the basis for its value and one of these confidence tags:
 - **Estimated**: an allocation of shared costs, expected to move.
 - **Assumed**: a working assumption awaiting real figures.
 
-- [ ] An assumptions panel lists every parameter with its value, tag and basis, so an estimate is never mistaken for a fact.
+- [ ] A breakdown line that rests on an estimated or assumed parameter carries that tag, so an estimate is never mistaken for a fact.
 - [ ] A band missing from the table is reported as not priced rather than priced at another band.
 
 ## The calculator
@@ -85,18 +85,19 @@ Its controls are:
 
 - the size band, one of the configured bands, with an estimator that works the band out from the sizing questions the wizard asks (the catchment, the facilities, the mobile users and whether other systems connect), using the wizard's own derivation of size;
 - whether the central server is in BES cloud or client hosted;
-- where the facility servers run: BES cloud, client hosted, or a mix, where a mix brings up a slider for how many of them are in BES cloud, from none to twenty;
+- where the facility servers run: BES cloud, client hosted, or a mix, where a mix brings up a slider that splits the deployment's facility servers between client hosted and BES cloud;
 - whether BES takes backups, on by default;
 - whether upgrade smoke testing runs on a clone, on by default, priced as a standard clone at the configured share of the month;
 - whether the deployment has Tupaia reporting, on by default.
 
-Facility servers in BES cloud are counted from the facilities answer of the estimator, or, when the size band was chosen directly, from a typical number for that band.
-A mix starts at a configured share of that count.
+The deployment's facility servers are counted from the facilities answer of the estimator, or, when the size band was chosen directly, from a typical number for that band.
+A mix starts with a configured share of them in BES cloud, and the slider runs from none in BES cloud to all of them, labelled at each end and reading how many of the total are in BES cloud.
 
 - [ ] Changing any control updates the figure and breakdown straight away.
 - [ ] Choosing the facility servers as BES cloud prices a count that follows the facilities estimate, or the size band when nothing has been estimated.
 - [ ] Choosing client hosted prices no facility servers.
-- [ ] Choosing a mix shows the slider, starting at the configured share of the BES cloud count.
+- [ ] Choosing a mix shows the slider, starting at the configured share of the facility servers.
+- [ ] The slider cannot put more facility servers in BES cloud than there are, and returns to its starting share when the size or the estimate changes.
 - [ ] The estimator sets the size band to the band the wizard would derive from the same answers.
 - [ ] Choosing a size band directly clears the estimator's answers.
 - [ ] Turning backups off removes only the backups share.
@@ -115,7 +116,7 @@ The cost is read from the answers, with an assumed answer counting the same as a
 - BES-hosted integrations are not priced, since they are referred to a separate conversation.
 
 The wizard asks where facility servers run, not how many there are, so the number of cloud facility servers is a guess from the facilities band and the share of facility servers in BES cloud, both set in the pricing configuration.
-When facility servers are a mix of both, a slider for how many are in BES cloud takes the place of the question about the balance, starting at the guess.
+When facility servers are a mix of both, a slider that splits them between client hosted and BES cloud takes the place of the question about the balance, starting at the guess and running up to all of them.
 The clone mode can be set beside the cost, since it is not a client choice.
 These settings belong to the person pricing, not to the plan, and are not stored with it.
 

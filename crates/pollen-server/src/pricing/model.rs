@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use super::config::{PricingConfig, ServerBox};
+use super::config::{Confidence, Param, PricingConfig, ServerBox};
 use crate::error::{AppError, Result};
 
 /// The clone used to test upgrades.
@@ -67,13 +67,20 @@ pub struct CostLine {
 	pub detail: Option<String>,
 	/// Unrounded monthly cost to BES.
 	pub monthly_usd: f64,
+	/// The weakest confidence among the parameters the line rests on, so a
+	/// figure made of estimates is not mistaken for a fact.
+	pub confidence: Confidence,
 }
 
-/// The displayed figures: margin and currency applied, then rounded.
+/// The displayed figures: margin and currency applied, then each line rounded
+/// to the configured step. The monthly figure is the sum of the rounded lines,
+/// and the annual figure twelve times it, so what is shown adds up.
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct DisplayTotal {
 	pub currency: String,
 	pub margin: f64,
+	/// Each line's displayed figure, in the order of the lines.
+	pub lines: Vec<f64>,
 	pub monthly: f64,
 	pub annual: f64,
 }
@@ -85,6 +92,15 @@ pub struct CostBreakdown {
 	pub monthly_usd: f64,
 	pub annual_usd: f64,
 	pub display: DisplayTotal,
+}
+
+/// The weakest confidence among the parameters a line rests on.
+fn weakest(params: &[&Param]) -> Confidence {
+	params
+		.iter()
+		.map(|p| p.confidence)
+		.max()
+		.unwrap_or(Confidence::Decided)
 }
 
 impl PricingConfig {
@@ -135,21 +151,39 @@ impl PricingConfig {
 			CloneMode::AlwaysOn => 1.0,
 			CloneMode::Standard => input.clone_uptime.unwrap_or(self.params.clone_uptime.value),
 		};
+		// A negative zero would print as "-0%".
+		let uptime = if uptime == 0.0 { 0.0 } else { uptime };
 		if !(0.0..=1.0).contains(&uptime) {
 			return Err(AppError::BadRequest(
 				"clone uptime must be between 0 and 1".into(),
 			));
 		}
+		if input.cloud_facilities > self.max_cloud_facilities {
+			return Err(AppError::BadRequest(format!(
+				"at most {} facility servers can be priced",
+				self.max_cloud_facilities
+			)));
+		}
 		let p = &self.params;
 		let pct = |f: f64| format!("{}%", (f * 100.0).round());
+		// Boxes rest on rates read from price lists and bills.
+		let rates = weakest(&[
+			&p.gp3_usd_per_gb_month,
+			&p.snapshot_usd_per_gb_month,
+			&p.base_per_box_usd,
+		]);
 		let mut lines = Vec::new();
 
 		if input.central_in_cloud {
 			lines.push(CostLine {
 				id: LineId::CentralBox,
 				label: "Central server".into(),
-				detail: Some(format!("{}, {} GB", central.instance, central.volume_gb)),
+				detail: Some(format!(
+					"{}, {}\u{a0}GB",
+					central.instance, central.volume_gb
+				)),
 				monthly_usd: self.box_cost(central),
+				confidence: rates,
 			});
 		}
 		let n = input.cloud_facilities;
@@ -158,11 +192,12 @@ impl PricingConfig {
 			label: "Cloud facility servers".into(),
 			detail: (n > 0).then(|| {
 				format!(
-					"{n} × {}, {} GB",
+					"{n} × {}, {}\u{a0}GB",
 					self.facility.instance, self.facility.volume_gb
 				)
 			}),
 			monthly_usd: f64::from(n) * self.box_cost(&self.facility),
+			confidence: rates,
 		});
 		if input.clone != CloneMode::Off {
 			lines.push(CostLine {
@@ -170,23 +205,26 @@ impl PricingConfig {
 				label: "Clone".into(),
 				detail: Some(match input.clone {
 					CloneMode::AlwaysOn => "Always on".into(),
-					_ => format!("Running {} of the month", pct(uptime)),
+					_ => format!("Runs {} of the month", pct(uptime)),
 				}),
 				monthly_usd: self.clone_cost(central, uptime),
+				confidence: weakest(&[&p.clone_snapshot_multiple, &p.clone_uptime]).max(rates),
 			});
 		}
 		lines.push(CostLine {
 			id: LineId::PlatformShare,
 			label: "Platform share".into(),
-			detail: None,
+			detail: Some("Shared BES infrastructure".into()),
 			monthly_usd: p.platform_share_usd.value,
+			confidence: p.platform_share_usd.confidence,
 		});
 		if input.backups {
 			lines.push(CostLine {
 				id: LineId::BackupsDbShare,
 				label: "Backups share".into(),
-				detail: None,
+				detail: Some("Shared backups database".into()),
 				monthly_usd: self.backups_share(),
+				confidence: weakest(&[&p.backups_db_pool_usd, &p.backups_db_deployments]),
 			});
 		}
 		if input.tupaia {
@@ -195,6 +233,13 @@ impl PricingConfig {
 				label: "Tupaia reporting".into(),
 				detail: None,
 				monthly_usd: self.tupaia_addon(),
+				confidence: weakest(&[
+					&p.tupaia_prod_pool_usd,
+					&p.tupaia_prod_share,
+					&p.reporting_pipeline_pool_usd,
+					&p.dagster_pool_usd,
+					&p.replicas_sharing_pipeline,
+				]),
 			});
 		}
 
@@ -227,6 +272,7 @@ impl PricingConfig {
 				label: "Windows".into(),
 				detail: Some(format!("{} on compute: {}", pct(uplift), parts.join(", "))),
 				monthly_usd: windows,
+				confidence: p.windows_uplift_on_compute.confidence.max(rates),
 			});
 		}
 
@@ -234,13 +280,15 @@ impl PricingConfig {
 		let annual_usd = monthly_usd * 12.0;
 		let d = &self.display;
 		let scale = (1.0 + d.margin) * d.usd_to_currency;
-		let round = |v: f64, step: f64| {
-			if step > 0.0 {
-				(v / step).round() * step
+		let round = |v: f64| {
+			if d.round_monthly_to > 0.0 {
+				(v / d.round_monthly_to).round() * d.round_monthly_to
 			} else {
 				v
 			}
 		};
+		let display_lines: Vec<f64> = lines.iter().map(|l| round(l.monthly_usd * scale)).collect();
+		let display_monthly: f64 = display_lines.iter().sum();
 		Ok(CostBreakdown {
 			lines,
 			monthly_usd,
@@ -248,8 +296,9 @@ impl PricingConfig {
 			display: DisplayTotal {
 				currency: d.currency.clone(),
 				margin: d.margin,
-				monthly: round(monthly_usd * scale, d.round_monthly_to),
-				annual: round(annual_usd * scale, d.round_annual_to),
+				lines: display_lines,
+				monthly: display_monthly,
+				annual: display_monthly * 12.0,
 			},
 		})
 	}

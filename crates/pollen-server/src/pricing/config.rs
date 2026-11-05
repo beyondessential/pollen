@@ -55,7 +55,8 @@ pub struct ServerBox {
 }
 
 /// How sure the model's owner is of a parameter's value.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+/// Ordered from most to least certain, so the weakest of several is the maximum.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, ToSchema)]
 pub enum Confidence {
 	/// Settled by the model's owner.
 	Decided,
@@ -67,22 +68,9 @@ pub enum Confidence {
 	Assumed,
 }
 
-/// What a parameter's value measures, so it can be shown in the right form.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-pub enum Unit {
-	Usd,
-	UsdPerGbMonth,
-	/// A fraction, shown as a percentage.
-	Share,
-	Count,
-	Multiple,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Param {
-	pub label: String,
-	pub unit: Unit,
 	pub value: f64,
 	pub confidence: Confidence,
 	pub basis: String,
@@ -107,31 +95,6 @@ pub struct Params {
 	pub replicas_sharing_pipeline: Param,
 }
 
-impl Params {
-	/// Every parameter with its id, in authored order, for the assumptions panel.
-	pub fn entries(&self) -> [(&'static str, &Param); 14] {
-		[
-			("gp3_usd_per_gb_month", &self.gp3_usd_per_gb_month),
-			("snapshot_usd_per_gb_month", &self.snapshot_usd_per_gb_month),
-			("base_per_box_usd", &self.base_per_box_usd),
-			("clone_snapshot_multiple", &self.clone_snapshot_multiple),
-			("clone_uptime", &self.clone_uptime),
-			("windows_uplift_on_compute", &self.windows_uplift_on_compute),
-			("platform_share_usd", &self.platform_share_usd),
-			("backups_db_pool_usd", &self.backups_db_pool_usd),
-			("backups_db_deployments", &self.backups_db_deployments),
-			("tupaia_prod_pool_usd", &self.tupaia_prod_pool_usd),
-			("tupaia_prod_share", &self.tupaia_prod_share),
-			(
-				"reporting_pipeline_pool_usd",
-				&self.reporting_pipeline_pool_usd,
-			),
-			("dagster_pool_usd", &self.dagster_pool_usd),
-			("replicas_sharing_pipeline", &self.replicas_sharing_pipeline),
-		]
-	}
-}
-
 /// Applied to displayed figures only; the breakdown is always cost price.
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(deny_unknown_fields)]
@@ -140,8 +103,8 @@ pub struct Display {
 	pub margin: f64,
 	pub currency: String,
 	pub usd_to_currency: f64,
+	/// Each displayed line rounds to a multiple of this.
 	pub round_monthly_to: f64,
-	pub round_annual_to: f64,
 }
 
 /// How the priced wizard reads a plan's answers into model inputs.
@@ -258,6 +221,10 @@ impl PricingConfig {
 			if p.value <= 0.0 {
 				return Err(AppError::custom(format!("{id} must be positive")));
 			}
+		}
+		let mix = self.wizard.cloud_share.mix_share;
+		if !(0.0..=1.0).contains(&mix) {
+			return Err(AppError::custom("mix_share must be between 0 and 1"));
 		}
 		let uptime = self.params.clone_uptime.value;
 		if !(0.0..=1.0).contains(&uptime) {

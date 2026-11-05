@@ -507,7 +507,7 @@
       },
       "Confidence": {
         "type": "string",
-        "description": "How sure the model's owner is of a parameter's value.",
+        "description": "How sure the model's owner is of a parameter's value.\nOrdered from most to least certain, so the weakest of several is the maximum.",
         "enum": [
           "Decided",
           "Read",
@@ -676,9 +676,14 @@
         "required": [
           "id",
           "label",
-          "monthly_usd"
+          "monthly_usd",
+          "confidence"
         ],
         "properties": {
+          "confidence": {
+            "$ref": "#/components/schemas/Confidence",
+            "description": "The weakest confidence among the parameters the line rests on, so a\nfigure made of estimates is not mistaken for a fact."
+          },
           "detail": {
             "type": [
               "string",
@@ -711,46 +716,13 @@
           }
         }
       },
-      "Display": {
-        "type": "object",
-        "description": "Applied to displayed figures only; the breakdown is always cost price.",
-        "required": [
-          "margin",
-          "currency",
-          "usd_to_currency",
-          "round_monthly_to",
-          "round_annual_to"
-        ],
-        "properties": {
-          "currency": {
-            "type": "string"
-          },
-          "margin": {
-            "type": "number",
-            "format": "double",
-            "description": "Margin over cost, as a fraction (0.2 is 20%)."
-          },
-          "round_annual_to": {
-            "type": "number",
-            "format": "double"
-          },
-          "round_monthly_to": {
-            "type": "number",
-            "format": "double"
-          },
-          "usd_to_currency": {
-            "type": "number",
-            "format": "double"
-          }
-        },
-        "additionalProperties": false
-      },
       "DisplayTotal": {
         "type": "object",
-        "description": "The displayed figures: margin and currency applied, then rounded.",
+        "description": "The displayed figures: margin and currency applied, then each line rounded\nto the configured step. The monthly figure is the sum of the rounded lines,\nand the annual figure twelve times it, so what is shown adds up.",
         "required": [
           "currency",
           "margin",
+          "lines",
           "monthly",
           "annual"
         ],
@@ -761,6 +733,14 @@
           },
           "currency": {
             "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "Each line's displayed figure, in the order of the lines."
           },
           "margin": {
             "type": "number",
@@ -934,6 +914,7 @@
         "description": "The guessed cloud facility server count and what it rests on.",
         "required": [
           "count",
+          "total",
           "confidence",
           "basis"
         ],
@@ -947,6 +928,13 @@
           "count": {
             "type": "integer",
             "format": "int32",
+            "description": "Facility servers in BES cloud as answered, before any setting.",
+            "minimum": 0
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32",
+            "description": "All the deployment's facility servers, in BES cloud or not: the most a\nsetting can put in BES cloud.",
             "minimum": 0
           }
         }
@@ -1098,53 +1086,6 @@
           }
         }
       },
-      "Param": {
-        "type": "object",
-        "required": [
-          "label",
-          "unit",
-          "value",
-          "confidence",
-          "basis"
-        ],
-        "properties": {
-          "basis": {
-            "type": "string"
-          },
-          "confidence": {
-            "$ref": "#/components/schemas/Confidence"
-          },
-          "label": {
-            "type": "string"
-          },
-          "unit": {
-            "$ref": "#/components/schemas/Unit"
-          },
-          "value": {
-            "type": "number",
-            "format": "double"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ParamView": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Param"
-          },
-          {
-            "type": "object",
-            "required": [
-              "id"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              }
-            }
-          }
-        ]
-      },
       "PatchArgs": {
         "type": "object",
         "required": [
@@ -1269,15 +1210,11 @@
       },
       "PricingModelView": {
         "type": "object",
-        "description": "The model's configuration, for the calculator's controls and the\nassumptions panel.",
+        "description": "The model's configuration, for the calculator's controls.",
         "required": [
           "model",
           "bands",
-          "facility",
-          "params",
-          "display",
           "max_cloud_facilities",
-          "clone_uptime",
           "estimator",
           "facility_guess_by_band",
           "mix_share",
@@ -1290,20 +1227,9 @@
               "$ref": "#/components/schemas/ServerBox"
             }
           },
-          "clone_uptime": {
-            "type": "number",
-            "format": "double",
-            "description": "The configured share of the month a standard clone runs."
-          },
-          "display": {
-            "$ref": "#/components/schemas/Display"
-          },
           "estimator": {
             "$ref": "#/components/schemas/EstimatorView",
             "description": "The sizing questions the calculator's estimator asks."
-          },
-          "facility": {
-            "$ref": "#/components/schemas/ServerBox"
           },
           "facility_guess_by_band": {
             "type": "array",
@@ -1330,12 +1256,6 @@
           },
           "model": {
             "type": "string"
-          },
-          "params": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ParamView"
-            }
           }
         }
       },
@@ -1623,17 +1543,6 @@
             ]
           }
         }
-      },
-      "Unit": {
-        "type": "string",
-        "description": "What a parameter's value measures, so it can be shown in the right form.",
-        "enum": [
-          "Usd",
-          "UsdPerGbMonth",
-          "Share",
-          "Count",
-          "Multiple"
-        ]
       },
       "Verdict": {
         "type": "string",

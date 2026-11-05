@@ -89,9 +89,7 @@ export type Assumed = Solidify<Schemas["Assumed"]>;
 
 // ── Internal pricing wire types ─────────────────────────────────────────────
 export type PricingModelView = Solidify<Schemas["PricingModelView"]>;
-export type ParamView = Solidify<Schemas["ParamView"]>;
 export type Confidence = Solidify<Schemas["Confidence"]>;
-export type Unit = Solidify<Schemas["Unit"]>;
 export type CostInput = Solidify<Schemas["CostInput"]>;
 export type CostBreakdown = Solidify<Schemas["CostBreakdown"]>;
 export type CostLine = Solidify<Schemas["CostLine"]>;

@@ -14,8 +14,8 @@ use super::applications::load_ruleset;
 use crate::db::Application;
 use crate::error::{AppError, Result};
 use crate::pricing::{
-	CostBreakdown, CostInput, Display, EstimatorView, Param, PlanCost, PlanOverrides, ServerBox,
-	SizeArgs, SizeEstimate, price_plan,
+	CostBreakdown, CostInput, EstimatorView, PlanCost, PlanOverrides, ServerBox, SizeArgs,
+	SizeEstimate, price_plan,
 };
 use crate::ruleset::Answers;
 use crate::state::AppState;
@@ -50,25 +50,12 @@ fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
 	a.len() == b.len() && a.iter().zip(b).fold(0u8, |acc, (x, y)| acc | (x ^ y)) == 0
 }
 
-#[derive(Debug, Serialize, ToSchema)]
-pub struct ParamView {
-	pub id: String,
-	#[serde(flatten)]
-	pub param: Param,
-}
-
-/// The model's configuration, for the calculator's controls and the
-/// assumptions panel.
+/// The model's configuration, for the calculator's controls.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct PricingModelView {
 	pub model: String,
 	pub bands: Vec<ServerBox>,
-	pub facility: ServerBox,
-	pub params: Vec<ParamView>,
-	pub display: Display,
 	pub max_cloud_facilities: u32,
-	/// The configured share of the month a standard clone runs.
-	pub clone_uptime: f64,
 	/// The sizing questions the calculator's estimator asks.
 	pub estimator: EstimatorView,
 	/// For each band, in order, the facility servers if they all run in BES
@@ -100,19 +87,7 @@ pub async fn model(
 	Ok(Json(PricingModelView {
 		model: c.model.clone(),
 		bands: c.bands.clone(),
-		facility: c.facility.clone(),
-		params: c
-			.params
-			.entries()
-			.into_iter()
-			.map(|(id, p)| ParamView {
-				id: id.to_string(),
-				param: p.clone(),
-			})
-			.collect(),
-		display: c.display.clone(),
 		max_cloud_facilities: c.max_cloud_facilities,
-		clone_uptime: c.params.clone_uptime.value,
 		estimator: c.estimator_view(ruleset),
 		facility_guess_by_band: c.band_facility_guesses(ruleset),
 		mix_share: c.wizard.cloud_share.mix_share,

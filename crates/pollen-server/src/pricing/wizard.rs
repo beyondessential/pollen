@@ -34,7 +34,11 @@ pub struct OpenLine {
 /// The guessed cloud facility server count and what it rests on.
 #[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct FacilityGuess {
+	/// Facility servers in BES cloud as answered, before any setting.
 	pub count: u32,
+	/// All the deployment's facility servers, in BES cloud or not: the most a
+	/// setting can put in BES cloud.
+	pub total: u32,
 	pub confidence: Confidence,
 	pub basis: String,
 }
@@ -63,9 +67,12 @@ pub fn price_plan(
 	let answers = effective_answers(ruleset, answers);
 	let w = &config.wizard;
 
-	let guessed = (w.facility_count.pick(&answers) * w.cloud_share.pick(&answers)).round();
+	let max = f64::from(config.max_cloud_facilities);
+	let total = w.facility_count.pick(&answers).round().clamp(0.0, max);
+	let guessed = (total * w.cloud_share.pick(&answers)).round();
 	let guess = FacilityGuess {
-		count: guessed.clamp(0.0, f64::from(config.max_cloud_facilities)) as u32,
+		count: guessed as u32,
+		total: total as u32,
 		confidence: w.facility_count.confidence,
 		basis: format!("{} {}", w.facility_count.basis, w.cloud_share.basis),
 	};
@@ -78,7 +85,7 @@ pub fn price_plan(
 
 	let size = evaluation.derived.get("size").cloned();
 	let missing = match &size {
-		None => Some("Needs the catchment and facilities answers.".to_string()),
+		None => Some("Answer the first two questions to see a cost.".to_string()),
 		Some(s) if config.band(s).is_none() => Some(format!("The {s} band is not priced yet.")),
 		Some(_) => None,
 	};
@@ -97,7 +104,9 @@ pub fn price_plan(
 	let input = CostInput {
 		band,
 		central_in_cloud: w.central_in_cloud.eval(&answers),
-		cloud_facilities: overrides.cloud_facilities.unwrap_or(guess.count),
+		cloud_facilities: overrides
+			.cloud_facilities
+			.map_or(guess.count, |n| n.min(guess.total)),
 		clone: overrides.clone.unwrap_or_default(),
 		clone_uptime: overrides.clone_uptime,
 		backups: w.backups.on.eval(&answers),

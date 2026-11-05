@@ -91,7 +91,9 @@ export default function Artifact({ view }: { view: AppView }) {
 	}
 
 	function copyLink() {
-		navigator.clipboard?.writeText(window.location.href).then(
+		// The public address, whichever edition this is open in: the internal
+		// one is not something to hand to a client.
+		navigator.clipboard?.writeText(`${window.location.origin}/a/${view.id}`).then(
 			() => {
 				setCopied(true);
 				setTimeout(() => setCopied(false), 1800);

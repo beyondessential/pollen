@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { callApi, useApi } from "../api";
@@ -56,11 +56,19 @@ function Loaded({ initial }: { initial: AppView }) {
 
 	// A facility server setting means something only against the facility count
 	// it was made for: let go of it when the count changes or the slider goes.
+	// A count that is briefly unknown, such as while pricing again, changes nothing.
 	const facilityTotal = plan?.guess.total;
-	// biome-ignore lint/correctness/useExhaustiveDependencies: reset on these two alone
+	const previousTotal = useRef<number | undefined>(undefined);
 	useEffect(() => {
-		setSettings((s) => (s.facilities == null ? s : { ...s, facilities: null }));
-	}, [facilityTotal, sliderShowing]);
+		if (facilityTotal == null) return;
+		if (previousTotal.current != null && previousTotal.current !== facilityTotal) {
+			setSettings((s) => (s.facilities == null ? s : { ...s, facilities: null }));
+		}
+		previousTotal.current = facilityTotal;
+	}, [facilityTotal]);
+	useEffect(() => {
+		if (!sliderShowing) setSettings((s) => (s.facilities == null ? s : { ...s, facilities: null }));
+	}, [sliderShowing]);
 
 	const answers = view.answers as unknown as Record<string, AnswerValue>;
 	const started = Object.values(answers).some((v) =>
@@ -153,12 +161,13 @@ function Loaded({ initial }: { initial: AppView }) {
 						<div className="cost-strip">
 							<div>
 								<PlanCostSummary plan={plan} />
-								<CostCaveat />
+								<CostCaveat display={plan.cost?.display} />
 							</div>
 							<div className="cost-strip-controls">
 								<PlanCostControls settings={settings} onSettings={setSettings} />
 								{sliderShowing && (
 									<FacilityServersControl
+										label="Facility servers"
 										plan={plan}
 										settings={settings}
 										onSettings={setSettings}

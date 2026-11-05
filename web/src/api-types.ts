@@ -444,12 +444,15 @@ export interface components {
         ModelArgs: Record<string, never>;
         /** @description A cost input resting on an answer still open, priced one way for now. */
         OpenLine: {
+            /**
+             * Format: double
+             * @description What it adds each month, displayed as the lines of the breakdown are.
+             */
+            display_monthly: number;
             id: components["schemas"]["LineId"];
             /** @description Whether the line is in the figure as it stands. */
             included: boolean;
             label: string;
-            /** Format: double */
-            monthly_usd: number;
         };
         Opt: {
             /**

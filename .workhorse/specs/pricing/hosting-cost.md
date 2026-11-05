@@ -29,7 +29,9 @@ It is never presented as a price to the client.
 
 - [ ] Every figure is labelled as an indicative monthly cost to BES, not a price.
 - [ ] The monthly figure leads, with its annual equivalent beneath it.
-- [ ] Displayed figures are rounded to a step set in the pricing configuration; the breakdown sums to the unrounded total.
+- [ ] Each line is displayed rounded to a step set in the pricing configuration, the monthly figure is the sum of the displayed lines, and the annual figure is twelve times it, so what is shown adds up.
+- [ ] A figure quoted anywhere beside the breakdown, such as a cost still depending on an unsettled answer, is displayed the same way as the lines.
+- [ ] The line beneath the figure says it is USD at cost and not a price to the client, and says instead that it includes the margin once a margin is applied.
 
 A margin and a currency conversion are part of the configuration, applied to the displayed figures only.
 While the margin is zero and the currency is US dollars, neither is shown.

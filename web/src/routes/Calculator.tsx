@@ -85,9 +85,12 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 		callPricing(pricingPath, "size", next)
 			.then((r) => {
 				if (mine !== latest.current) return;
+				// A band the pricing table lacks is not taken up, nor is the
+				// facility count that came with it.
+				if (r.band && !model.bands.some((b) => b.name === r.band)) return;
 				setEstimated(r.cloud_facilities);
 				setMixCount(null);
-				if (r.band && model.bands.some((b) => b.name === r.band)) setBand(r.band);
+				if (r.band) setBand(r.band);
 			})
 			.catch(() => {});
 	}
@@ -101,12 +104,11 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 		setMixCount(null);
 	}
 
+	const source = estimated != null ? "from the estimate" : `typical for ${band}`;
 	const facilityHint =
 		facilityMode === "client"
 			? null
-			: `Assumes ${totalFacilities} facility server${totalFacilities === 1 ? "" : "s"}, ${
-					estimated != null ? "from the estimate" : `typical for ${band}`
-				}.`;
+			: `${totalFacilities} facility server${totalFacilities === 1 ? "" : "s"}, ${source}.`;
 
 	return (
 		<div className="calc">
@@ -201,7 +203,7 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 			<aside className="calc-result">
 				<div className="card">
 					<CostSummary cost={cost} missing={error} />
-					<CostCaveat />
+					<CostCaveat display={cost?.display} />
 				</div>
 			</aside>
 		</div>

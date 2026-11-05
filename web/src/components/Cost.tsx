@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { money } from "../edition";
 import type { CostBreakdown } from "../types";
 
@@ -26,21 +28,17 @@ export function CostSummary({
 						{cost.lines.map((l, i) =>
 							l.monthly_usd > 0 ? (
 								<li key={l.id}>
-									<span>
-										<span className="cost-line-label">{l.label}</span>
-										<LineDetail detail={l.detail} confidence={l.confidence} />
-									</span>
+									<span className="cost-line-label">{l.label}</span>
 									<span className="cost-line-v">{money(d.lines[i], d.currency)}</span>
+									<LineDetail detail={l.detail} confidence={l.confidence} />
 								</li>
 							) : null,
 						)}
 					</ul>
 				</>
 			) : (
-				<>
-					<span className="cost-v cost-v-none">Not priced</span>
-					{missing && <span className="cost-annual">{missing}</span>}
-				</>
+				// One quiet message, not a second heading.
+				<span className="cost-annual">{missing ?? "Not priced"}</span>
 			)}
 		</div>
 	);
@@ -59,12 +57,23 @@ function LineDetail({
 		detail,
 		confidence === "Estimated" ? "Estimate" : confidence === "Assumed" ? "Assumed" : null,
 	].filter((p): p is string => !!p);
-	return parts.length > 0 ? <span className="cost-line-detail">{parts.join(" · ")}</span> : null;
+	// The dot stays with the qualifier when the detail wraps.
+	return parts.length > 0 ? (
+		<span className="cost-line-detail">{parts.join(" ·\u00a0")}</span>
+	) : null;
 }
 
-/// The one line that says what a figure is.
-export function CostCaveat() {
-	return <p className="cost-caveat">USD at cost. Not a price to the client.</p>;
+/// The one line that says what a figure is. With a margin applied it is no
+/// longer at cost, so it stops saying it is not a price.
+export function CostCaveat({ display }: { display: CostBreakdown["display"] | undefined }) {
+	if (!display) return null;
+	return (
+		<p className="cost-caveat">
+			{display.margin > 0
+				? `${display.currency}, including a ${Math.round(display.margin * 100)}% margin.`
+				: `${display.currency} at cost. Not a price to the client.`}
+		</p>
+	);
 }
 
 /// A row of mutually exclusive options, styled as the wizard's size bands.
@@ -85,7 +94,11 @@ export function Segmented<T extends string>({
 	compact?: boolean;
 }) {
 	return (
-		<div className={`bandrow${compact ? " bandrow-compact" : ""}`} role="radiogroup" aria-label={label}>
+		<div
+			className={`bandrow${compact ? " bandrow-compact" : ""}${options.length === 3 ? " bandrow-three" : ""}`}
+			role="radiogroup"
+			aria-label={label}
+		>
 			{options.map((o) => (
 				<button
 					type="button"
@@ -153,10 +166,13 @@ export function Slider({
 	startLabel?: string;
 	endLabel?: string;
 }) {
+	// How far along the track the thumb is, for the fill on its far side.
+	const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
 	return (
 		<div className="slider">
 			<span className="slider-v">{format(value)}</span>
 			<input
+				style={{ "--pct": `${pct}%` } as CSSProperties}
 				type="range"
 				aria-label={label}
 				min={min}

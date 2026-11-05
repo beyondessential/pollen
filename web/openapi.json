@@ -1031,9 +1031,14 @@
           "id",
           "label",
           "included",
-          "monthly_usd"
+          "display_monthly"
         ],
         "properties": {
+          "display_monthly": {
+            "type": "number",
+            "format": "double",
+            "description": "What it adds each month, displayed as the lines of the breakdown are."
+          },
           "id": {
             "$ref": "#/components/schemas/LineId"
           },
@@ -1043,10 +1048,6 @@
           },
           "label": {
             "type": "string"
-          },
-          "monthly_usd": {
-            "type": "number",
-            "format": "double"
           }
         }
       },

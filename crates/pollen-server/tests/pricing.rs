@@ -254,7 +254,30 @@ fn refuses_more_facility_servers_than_it_will_price() {
 		.iter()
 		.find(|l| l.id == pollen_server::pricing::LineId::Clone)
 		.unwrap();
-	assert_eq!(clone.detail.as_deref(), Some("Runs 0% of the month"));
+	assert_eq!(
+		clone.detail.as_deref(),
+		Some("Compute 0% of the month, storage always")
+	);
+}
+
+#[test]
+fn shows_storage_with_a_thousands_separator() {
+	let config = PricingConfig::from_ron(BUNDLED_PRICING).unwrap();
+	let got = config
+		.cost(&input_from_fixture(&json!({ "band": "large" })))
+		.unwrap();
+	let central = got
+		.lines
+		.iter()
+		.find(|l| l.id == pollen_server::pricing::LineId::CentralBox)
+		.unwrap();
+	assert!(
+		central
+			.detail
+			.as_deref()
+			.unwrap()
+			.ends_with("1,500\u{a0}GB")
+	);
 }
 
 #[test]
@@ -434,6 +457,8 @@ async fn plan_reads_its_answers() {
 		assert_eq!(open["input"]["central_in_cloud"], false);
 		assert_eq!(open["open"][0]["id"], "tupaia_reporting");
 		assert_eq!(open["open"][0]["included"], false);
+		// Shown as the breakdown shows it: $394.68 to the nearest step.
+		assert_eq!(open["open"][0]["display_monthly"], 395.0);
 
 		// Backups off drops only the backups share.
 		let no_backups = plan_cost(

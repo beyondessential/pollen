@@ -222,6 +222,17 @@ impl PricingConfig {
 				return Err(AppError::custom(format!("{id} must be positive")));
 			}
 		}
+		let d = &self.display;
+		// Shown figures are whole units, so a step has to be one for the lines
+		// to visibly add up to the headline.
+		if d.round_monthly_to < 1.0 || d.round_monthly_to.fract() != 0.0 {
+			return Err(AppError::custom("round_monthly_to must be a whole number"));
+		}
+		if d.usd_to_currency <= 0.0 || d.margin <= -1.0 {
+			return Err(AppError::custom(
+				"margin and exchange rate must be positive",
+			));
+		}
 		let mix = self.wizard.cloud_share.mix_share;
 		if !(0.0..=1.0).contains(&mix) {
 			return Err(AppError::custom("mix_share must be between 0 and 1"));

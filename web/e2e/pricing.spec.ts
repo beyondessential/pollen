@@ -38,12 +38,12 @@ test("the calculator prices its inputs and follows each control", async ({ page 
 	// Backups off removes only the backups share; the clone stays.
 	await group("BES takes backups").getByRole("radio", { name: "No" }).click();
 	await expect(figure).toHaveText("$505");
-	await expect(lines).toContainText("Clone");
+	await expect(lines).toContainText("Smoke testing clone");
 	await expect(lines).not.toContainText("Backups share");
 
 	// Without smoke testing there is no clone.
 	await group("Upgrade smoke testing on a clone").getByRole("radio", { name: "No" }).click();
-	await expect(lines).not.toContainText("Clone");
+	await expect(lines).not.toContainText("Smoke testing clone");
 
 	// A client-hosted central drops the central server.
 	await group("Central server").getByRole("radio", { name: "Client hosted" }).click();
@@ -76,9 +76,10 @@ test("the calculator asks where facility servers run, and estimates the size", a
 	// A mix starts at half of that, and the slider moves it.
 	await group("Facility servers").getByRole("radio", { name: "A mix" }).click();
 	await expect(slider).toHaveValue("5");
-	await expect(page.locator(".calc-field .slider")).toContainText("Client hosted");
-	await expect(page.locator(".calc-field .slider")).toContainText("5 of 10 in BES cloud");
-	await expect(page.locator(".calc-stack .cost-hint")).toHaveText("Assumes 10 facility servers, from the estimate.");
+	// The readout answers how many of the total are in BES cloud.
+	await expect(page.locator(".calc-field .slider-v")).toHaveText("5 of 10 in BES cloud");
+	await expect(page.locator(".calc-field .slider-ends")).toHaveText("Client hostedBES cloud");
+	await expect(page.locator(".calc-stack .cost-hint")).toHaveText("10 facility servers, from the estimate.");
 	// The slider splits the facility servers there are: it cannot pass them.
 	await expect(slider).toHaveAttribute("max", "10");
 	await expect(lines).toContainText("5 × t4g.medium");
@@ -93,7 +94,7 @@ test("the calculator asks where facility servers run, and estimates the size", a
 	// clears the estimator.
 	const systems = page.getByRole("group", { name: "Does Tamanu need to connect to other systems?" });
 	await expect(systems).toContainText("e.g. SENAITE, mSupply, DHIS2");
-	await systems.getByRole("button", { name: "Yes" }).click();
+	await systems.getByRole("radio", { name: "Yes" }).click();
 	await expect(page.getByRole("radio", { name: "Large" })).toBeChecked();
 	await page.getByRole("radio", { name: "Small" }).click();
 	await expect(facilities.getByRole("button", { name: "6 - 20" })).toHaveAttribute("aria-pressed", "false");
@@ -104,7 +105,7 @@ test("a priced plan keeps a running cost beside the questions", async ({ page })
 	await page.goto(`${BASE}/new`);
 	await expect(page).toHaveURL(new RegExp(`${BASE}/a/`));
 	const rail = page.locator(".rail");
-	await expect(rail.locator(".cost-v")).toHaveText("Not priced");
+	await expect(rail.locator(".cost-v")).toHaveCount(0);
 	await expect(rail).toContainText("Answer the first two questions to see a cost.");
 	// Nothing to adjust until there is a figure.
 	await expect(rail.getByRole("radiogroup", { name: "Upgrade smoke testing on a clone" })).toHaveCount(0);
@@ -130,7 +131,7 @@ test("a priced plan keeps a running cost beside the questions", async ({ page })
 	await expect(rail.locator(".cost-v")).toHaveText("$315");
 
 	// Settings belong to the pricer: they move the figure, not the plan.
-	await expect(page.locator(".slider")).toContainText("1 of 1 in BES cloud");
+	await expect(page.locator(".slider-v")).toHaveText("1 of 1 in BES cloud");
 	await slider.fill("0");
 	await expect(rail.locator(".cost-v")).toHaveText("$245");
 	await slider.fill("1");

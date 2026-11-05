@@ -15,8 +15,16 @@
 - [x] Pricing endpoints answer 404 with no path or a wrong one (verifies spec: COST)
 - [x] A wrong path in the browser shows "Not found." (verifies spec: COST)
 - [x] The public wizard shows no figure (verifies spec: COST)
+- [x] Copy link in the priced edition copies the public address, never the internal one (verifies spec: COST)
 - [ ] Making a new version or resuming from the priced edition stays in the priced edition (verifies spec: COST)
 - [ ] The printed record from the priced edition carries no figure
+
+## Displayed figures
+
+- [x] Each line rounds to the configured step, the headline is the sum of the displayed lines and the annual figure is twelve times it, for every reference case (verifies spec: COST)
+- [x] A cost quoted beside the breakdown, for an unsettled answer, is shown the same way as the lines (verifies spec: COST)
+- [x] Lines that rest on estimated or assumed parameters carry that qualifier; zero lines are hidden
+- [x] More facility servers than the model will price is refused
 
 ## Calculator
 
@@ -29,13 +37,14 @@
 - [x] Choosing a band directly clears the estimator (verifies spec: COST)
 - [ ] BES cloud facility servers with no estimate follow the band's typical count
 - [x] Breakdown lines resting on estimated or assumed parameters carry their tag (verifies spec: COST)
-- [x] The mix slider cannot pass the number of facility servers, and reads how many of them are in BES cloud (verifies spec: COST)
+- [x] The mix slider cannot pass the number of facility servers, and reads "N of total in BES cloud" (verifies spec: COST)
 
 ## Priced wizard
 
 - [x] Unsized plan asks for the sizing answers instead of a figure (verifies spec: COST)
 - [x] All facility servers in BES cloud at 2–5 facilities guesses three; all client hosted guesses none (verifies spec: COST)
 - [x] A mix shows the slider in place of the balance question, starting at half the guess (verifies spec: COST)
+- [x] A slider setting is dropped when the facility count changes or the mix is left (verifies spec: COST)
 - [x] Moving the slider or setting the clone moves the figure, not the plan; leaving the mix drops the slider's setting (verifies spec: COST)
 - [x] Tupaia left open is noted and left out (verifies spec: COST)
 - [ ] A finalised plan opened in the priced edition shows its cost (verifies spec: COST)

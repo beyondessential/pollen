@@ -28,7 +28,8 @@ pub struct OpenLine {
 	pub label: String,
 	/// Whether the line is in the figure as it stands.
 	pub included: bool,
-	pub monthly_usd: f64,
+	/// What it adds each month, displayed as the lines of the breakdown are.
+	pub display_monthly: f64,
 }
 
 /// The guessed cloud facility server count and what it rests on.
@@ -123,7 +124,7 @@ pub fn price_plan(
 			id: LineId::BackupsDbShare,
 			label: "Backups share".into(),
 			included: input.backups,
-			monthly_usd: config.backups_share(),
+			display_monthly: config.display_amount(config.backups_share()),
 		});
 	}
 	if w.tupaia.open.eval(&answers) {
@@ -131,7 +132,7 @@ pub fn price_plan(
 			id: LineId::TupaiaReporting,
 			label: "Tupaia reporting".into(),
 			included: input.tupaia,
-			monthly_usd: config.tupaia_addon(),
+			display_monthly: config.display_amount(config.tupaia_addon()),
 		});
 	}
 

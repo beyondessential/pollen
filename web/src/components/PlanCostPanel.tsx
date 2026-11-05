@@ -54,13 +54,15 @@ export function usePlanCost(
 /// The figure, what it rests on, and anything still unsettled that bears on it.
 export function PlanCostSummary({ plan }: { plan: PlanCost | null }) {
 	if (!plan) return null;
+	const currency = plan.cost?.display.currency;
 	return (
 		<>
 			<CostSummary cost={plan.cost} missing={plan.missing} compact />
 			{plan.open.map((o) => (
 				<p key={o.id} className="cost-callout">
-					{o.label} ({money(o.monthly_usd)} a month) is {o.included ? "included" : "left out"}{" "}
-					until it is settled.
+					{o.included
+						? `${o.label} (${money(o.display_monthly, currency)} a month) is counted while undecided.`
+						: `${o.label} would add ${money(o.display_monthly, currency)} a month. Not yet decided.`}
 				</p>
 			))}
 			{plan.notes.map((n) => (
@@ -81,7 +83,8 @@ export function PlanCostControls({
 	onSettings: (s: PlanSettings) => void;
 }) {
 	return (
-		<div className="cost-control">
+		<div className="cost-control cost-adjust">
+			<span className="stat-k">Adjust</span>
 			<span className="cost-control-k">Upgrade smoke testing on a clone</span>
 			<YesNo
 				label="Upgrade smoke testing on a clone"
@@ -108,7 +111,7 @@ export default function PlanCostPanel({
 		<div className="cost-panel">
 			<PlanCostSummary plan={plan} />
 			{plan.cost && <PlanCostControls settings={settings} onSettings={onSettings} />}
-			<CostCaveat />
+			<CostCaveat display={plan.cost?.display} />
 		</div>
 	);
 }
@@ -120,19 +123,25 @@ export function FacilityServersControl({
 	plan,
 	settings,
 	onSettings,
+	label,
 }: {
 	plan: PlanCost | null;
 	settings: PlanSettings;
 	onSettings: (s: PlanSettings) => void;
+	/// A heading for the control where the question around it is not showing.
+	label?: string;
 }) {
-	const guess = plan?.guess.count ?? 0;
-	const total = plan?.guess.total ?? 0;
+	// Nothing to show until the plan has been priced.
+	if (!plan) return null;
+	const guess = plan.guess.count;
+	const total = plan.guess.total;
 	const count = Math.min(settings.facilities ?? guess, total);
 	if (total === 0) {
 		return <p className="cost-hint">Answer the facilities question first.</p>;
 	}
 	return (
 		<div className="cost-control cost-control-flow">
+			{label && <span className="cost-control-k">{label}</span>}
 			<Slider
 				label="Facility servers in BES cloud"
 				value={count}
@@ -144,7 +153,7 @@ export function FacilityServersControl({
 				format={(n) => `${n} of ${total} in BES cloud`}
 			/>
 			<p className="cost-hint">
-				Assumes {total} facility server{total === 1 ? "" : "s"}, from the facilities answer.
+				{total} facility server{total === 1 ? "" : "s"}, from the facilities answer.
 				{settings.facilities != null && (
 					<>
 						{" "}
@@ -163,7 +172,7 @@ export function FacilityServersControl({
 }
 
 /// The slider as a question card, for the wizard's flow.
-export function FacilityServersCard(props: Parameters<typeof FacilityServersControl>[0]) {
+export function FacilityServersCard(props: Omit<Parameters<typeof FacilityServersControl>[0], "label">) {
 	return (
 		<div className="card">
 			<h3 className="qtitle">How many facility servers run in BES cloud?</h3>

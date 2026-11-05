@@ -29,3 +29,11 @@ Port the Tamanu hosting cost model into pollen as an internal edition: a calcula
 - [x] Running cost in the wizard rail, and above a finalised plan
 - [x] e2e for the calculator, the priced wizard and the gating
 - [ ] Set `PRICING_PATH` on the deployment and share the URL internally
+
+## Polish loop (5 Nov)
+
+Four rounds of screenshot critique by fresh Opus agents, and a separate logic review with a re-check of its fixes, until the last pass found nothing above minor.
+
+- **Fixed:** displayed lines now add up to the headline (each line rounds to $5, headline is their sum, annual is 12x); the slider splits the real facility count and its fill, ends and readout agree; the strip, rail and calculator share one layout; the assumptions panel is gone in favour of a qualifier on each line; unsized and error states show one quiet message.
+- **Logic fixes:** Copy link no longer copies the secret path; out-of-order size replies cannot overwrite newer state; failed requests no longer leave a stale figure; the wizard slider setting is dropped when its count changes; the facility cap, mix share and rounding step are validated.
+- **Deferred:** a sticky headline bar on narrow screens; a control for the exact facility server total (the total comes from the facilities band or estimate); the ruleset's spaced hyphens in ranges.

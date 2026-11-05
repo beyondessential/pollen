@@ -19,8 +19,12 @@ use pollen_server::ruleset::{BUNDLED_RULESET, ResolvedRuleset};
 use pollen_server::state::AppState;
 use uuid::Uuid;
 
-/// The pricing path the test server is configured with.
-pub const PRICING_PATH: &str = "test-pricing-path-0123456789";
+/// The pricing path the app is configured with, read from the same file.
+pub static PRICING_PATH: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
+	PricingConfig::from_ron(BUNDLED_PRICING)
+		.expect("bundled pricing")
+		.access_path
+});
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
@@ -102,7 +106,6 @@ where
 			ruleset_repo_token: None,
 			ruleset_branch: "main".to_string(),
 			ruleset_poll_secs: 0,
-			pricing_path: Some(PRICING_PATH.to_string()),
 		}),
 		db: pollen_server::db::init(&tdb.url),
 		default_ruleset: Arc::new(ArcSwap::from_pointee(

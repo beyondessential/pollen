@@ -35,11 +35,10 @@ impl FromRequestParts<AppState> for PricingAccess {
 			.get(PRICING_PATH_HEADER)
 			.and_then(|v| v.to_str().ok())
 			.unwrap_or_default();
-		match &state.config.pricing_path {
-			Some(expected) if constant_time_eq(given.as_bytes(), expected.as_bytes()) => {
-				Ok(PricingAccess)
-			}
-			_ => Err(AppError::NotFound("not found".into())),
+		if constant_time_eq(given.as_bytes(), state.pricing.access_path.as_bytes()) {
+			Ok(PricingAccess)
+		} else {
+			Err(AppError::NotFound("not found".into()))
 		}
 	}
 }

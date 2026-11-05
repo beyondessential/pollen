@@ -16,6 +16,13 @@
 // so regenerate them alongside.
 (
     model: "Tamanu hosting cost model v2",
+
+    // The internal pricing edition lives at /<access_path> (calculator), with
+    // priced plans beneath it, and its API answers only requests naming it.
+    // It keeps the edition from being found by accident; it is not a secret of
+    // any weight, and changing it moves the edition.
+    access_path: "waggle-ledger-47",
+
     hours_per_month: 730.0,
 
     // Size band -> server -> storage, as one table. Band names match the

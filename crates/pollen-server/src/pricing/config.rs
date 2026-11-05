@@ -16,6 +16,8 @@ pub const BUNDLED_PRICING: &str =
 #[serde(deny_unknown_fields)]
 pub struct PricingConfig {
 	pub model: String,
+	/// The path segment the internal edition lives under.
+	pub access_path: String,
 	pub hours_per_month: f64,
 	/// Size band to server to storage, in the order the calculator offers them.
 	pub bands: Vec<ServerBox>,
@@ -198,6 +200,17 @@ impl PricingConfig {
 	}
 
 	fn validate(&self) -> Result<()> {
+		// It becomes a URL segment, so it has to survive as one.
+		let path = &self.access_path;
+		if path.len() < 8
+			|| !path
+				.chars()
+				.all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_'))
+		{
+			return Err(AppError::custom(
+				"access_path must be at least 8 characters of letters, digits, '-' or '_'",
+			));
+		}
 		let mut seen = std::collections::BTreeSet::new();
 		for b in &self.bands {
 			if !seen.insert(b.name.as_str()) {

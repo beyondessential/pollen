@@ -4,7 +4,7 @@ Port the Tamanu hosting cost model into pollen as an internal edition: a calcula
 
 ## Decisions (Edwin, 3 Nov 2026)
 
-- **Gating:** an unguessable path segment, set by `PRICING_PATH` (at least 16 URL-safe characters). The SPA serves the edition at `/<path>/` (the calculator), `/<path>/new` and `/<path>/a/<id>`. The pricing endpoints take the same segment in an `x-pricing-path` header and answer 404 otherwise. With it unset, the edition is off.
+- **Gating:** a memorable, not obvious path segment, `access_path` in `pricing.ron` (no env var; the figures are internal, not secret). The SPA serves the edition at `/<path>/` (the calculator), `/<path>/new` and `/<path>/a/<id>`. The pricing endpoints take the same segment in an `x-pricing-path` header and answer 404 otherwise.
 - **Cloud facility servers:** the wizard guesses (facilities in the band) × (share in BES cloud), with both tables in `pricing.ron` and tagged Assumed. A slider appears only for a mix, in place of the balance question in the wizard and under "A mix" in the calculator.
 - **Calculator simplified (5 Nov):** no Windows controls, no always-on clone (one "Upgrade smoke testing on a clone" yes/no at the default uptime), Tupaia reporting on by default, and a size estimator whose band comes from the ruleset's own derivation via `pricing/size`. The model and API still price Windows and always-on.
 - **Backups and clone are independent.** Turning backups off drops only the backups share, so backups never look more expensive than they are.
@@ -28,7 +28,7 @@ Port the Tamanu hosting cost model into pollen as an internal edition: a calcula
 - [x] Calculator page; estimates are tagged on the breakdown lines rather than listed in a panel
 - [x] Running cost in the wizard rail, and above a finalised plan
 - [x] e2e for the calculator, the priced wizard and the gating
-- [ ] Set `PRICING_PATH` on the deployment and share the URL internally
+- [ ] Share the internal URL with the team
 
 ## Polish loop (5 Nov)
 

@@ -10,10 +10,10 @@ The public tool described in [WIZ](../wizard/onboarding.md) shows no figures, an
 
 ## Access
 
-The internal edition lives under a path segment that is unguessable and set in configuration, never in the code or the ruleset.
-That segment is the only thing protecting it, in the same way an artifact's identifier protects the artifact.
+The internal edition lives under a path segment set in the pricing configuration, never in the ruleset.
+The segment is memorable and not obvious.
+It keeps the edition from being found by accident, the way an artifact's identifier keeps the artifact; the figures are internal, not secret.
 The cost endpoints answer only a request carrying the same segment, and answer anything else as though they did not exist, so the public tool cannot reach a figure.
-With no segment configured, the internal edition is switched off entirely.
 
 - [ ] The calculator opens at the configured path.
 - [ ] A new priced plan starts from the configured path, and an existing plan opens priced under it.

@@ -308,14 +308,14 @@ async fn endpoints_hide_behind_the_pricing_path() {
 				.assert_status(StatusCode::NOT_FOUND);
 			server
 				.post(&path)
-				.add_header("x-pricing-path", "test-pricing-path-012345678X")
+				.add_header("x-pricing-path", format!("{}x", PRICING_PATH.as_str()))
 				.json(&json!({}))
 				.await
 				.assert_status(StatusCode::NOT_FOUND);
 		}
 		let model: Value = server
 			.post("/api/pricing/model")
-			.add_header("x-pricing-path", PRICING_PATH)
+			.add_header("x-pricing-path", PRICING_PATH.as_str())
 			.json(&json!({}))
 			.await
 			.json();
@@ -329,7 +329,7 @@ async fn calculator_prices_inputs() {
 	run_server(|server, _conn| async move {
 		let got: Value = server
 			.post("/api/pricing/cost")
-			.add_header("x-pricing-path", PRICING_PATH)
+			.add_header("x-pricing-path", PRICING_PATH.as_str())
 			.json(&json!({
 				"band": "Medium", "central_in_cloud": true, "cloud_facilities": 2,
 				"clone": "standard", "backups": true, "tupaia": true,
@@ -340,7 +340,7 @@ async fn calculator_prices_inputs() {
 
 		server
 			.post("/api/pricing/cost")
-			.add_header("x-pricing-path", PRICING_PATH)
+			.add_header("x-pricing-path", PRICING_PATH.as_str())
 			.json(&json!({
 				"band": "Enterprise", "central_in_cloud": true, "cloud_facilities": 0,
 				"clone": "off", "backups": true, "tupaia": false,
@@ -365,7 +365,7 @@ async fn plan_cost(server: &axum_test::TestServer, answers: Value, overrides: Va
 		.assert_status_ok();
 	server
 		.post("/api/pricing/plan")
-		.add_header("x-pricing-path", PRICING_PATH)
+		.add_header("x-pricing-path", PRICING_PATH.as_str())
 		.json(&json!({ "id": id, "overrides": overrides }))
 		.await
 		.json()
@@ -481,7 +481,7 @@ async fn plan_reads_its_answers() {
 async fn size(server: &axum_test::TestServer, body: Value) -> Value {
 	server
 		.post("/api/pricing/size")
-		.add_header("x-pricing-path", PRICING_PATH)
+		.add_header("x-pricing-path", PRICING_PATH.as_str())
 		.json(&body)
 		.await
 		.json()
@@ -520,7 +520,7 @@ async fn estimator_derives_the_band_the_wizard_would() {
 		// The model carries what the estimator asks, and a typical count per band.
 		let model: Value = server
 			.post("/api/pricing/model")
-			.add_header("x-pricing-path", PRICING_PATH)
+			.add_header("x-pricing-path", PRICING_PATH.as_str())
 			.json(&json!({}))
 			.await
 			.json();

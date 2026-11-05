@@ -21,7 +21,7 @@
     // priced plans beneath it, and its API answers only requests naming it.
     // It keeps the edition from being found by accident; it is not a secret of
     // any weight, and changing it moves the edition.
-    access_path: "waggle-ledger-47",
+    access_path: "hosting-model",
 
     hours_per_month: 730.0,
 

@@ -146,11 +146,10 @@ fn backups_off_leaves_the_clone_alone() {
 	};
 	let a = config.cost(&on).unwrap();
 	let b = config.cost(&off).unwrap();
-	assert_cents(
-		"difference",
-		a.monthly_usd - b.monthly_usd,
-		config.backups_share(config.band("Medium").unwrap().db_gb),
-	);
+	assert_cents("difference", a.monthly_usd - b.monthly_usd, {
+		let db = config.band("Medium").unwrap().db_gb;
+		config.backups_share(db) + config.s3_backup_share(db)
+	});
 	assert!(
 		b.lines
 			.iter()
@@ -294,16 +293,86 @@ fn shows_storage_with_a_thousands_separator() {
 }
 
 #[test]
+fn matches_the_figures_the_model_update_publishes() {
+	let config = PricingConfig::from_ron(BUNDLED_PRICING).unwrap();
+	// Central in BES cloud, clone, backups: without and with Tupaia.
+	for (band, plain, with_tupaia) in [
+		("tiny", 195.0, 282.0),
+		("small", 200.0, 309.0),
+		("medium", 542.0, 846.0),
+		("large", 1017.0, 1447.0),
+	] {
+		let base = input_from_fixture(&json!({ "band": band, "tupaia": false }));
+		let tupaia = CostInput {
+			tupaia: true,
+			..base.clone()
+		};
+		assert_eq!(
+			config.cost(&base).unwrap().monthly_usd.round(),
+			plain,
+			"{band}"
+		);
+		assert_eq!(
+			config.cost(&tupaia).unwrap().monthly_usd.round(),
+			with_tupaia,
+			"{band}"
+		);
+	}
+	// Backup storage per band, from S3 usage by database size.
+	for (band, usd) in [
+		("Tiny", 0.60),
+		("Small", 3.01),
+		("Medium", 24.11),
+		("Large", 37.68),
+	] {
+		let db = config.band(band).unwrap().db_gb;
+		assert_cents(band, config.s3_backup_share(db), usd);
+	}
+}
+
+#[test]
+fn backup_storage_follows_the_backups_share_and_goes_with_it() {
+	use pollen_server::pricing::LineId;
+	let config = PricingConfig::from_ron(BUNDLED_PRICING).unwrap();
+	let on = config
+		.cost(&input_from_fixture(&json!({ "band": "medium" })))
+		.unwrap();
+	let ids: Vec<LineId> = on.lines.iter().map(|l| l.id).collect();
+	let ops = ids
+		.iter()
+		.position(|i| *i == LineId::BackupsOpsShare)
+		.unwrap();
+	assert_eq!(
+		ids[ops + 1],
+		LineId::BackupStorage,
+		"straight after the ops share"
+	);
+	let off = config
+		.cost(&input_from_fixture(
+			&json!({ "band": "medium", "backups": false }),
+		))
+		.unwrap();
+	assert!(
+		off.lines
+			.iter()
+			.all(|l| l.id != LineId::BackupStorage && l.id != LineId::BackupsOpsShare)
+	);
+}
+
+#[test]
 fn display_rounds_to_the_configured_step() {
 	let config = PricingConfig::from_ron(BUNDLED_PRICING).unwrap();
 	let got = config
 		.cost(&input_from_fixture(&json!({ "band": "small" })))
 		.unwrap();
-	// 315.91 a month. Each line rounds to $5 (80, 0, 85, 40, 5, 110) and the
+	// 309.05 a month. Each line rounds to $5 (80, 0, 85, 30, 5, 5, 110) and the
 	// headline is their sum, so it adds up on the page.
-	assert_eq!(got.display.lines, vec![80.0, 0.0, 85.0, 40.0, 5.0, 110.0]);
-	assert_eq!(got.display.monthly, 320.0);
-	assert_eq!(got.display.annual, 3840.0);
+	assert_eq!(
+		got.display.lines,
+		vec![80.0, 0.0, 85.0, 30.0, 5.0, 5.0, 110.0]
+	);
+	assert_eq!(got.display.monthly, 315.0);
+	assert_eq!(got.display.annual, 3780.0);
 	assert_eq!(got.display.currency, "USD");
 }
 
@@ -349,7 +418,7 @@ async fn calculator_prices_inputs() {
 			}))
 			.await
 			.json();
-		assert_cents("monthly", got["monthly_usd"].as_f64().unwrap(), 969.18);
+		assert_cents("monthly", got["monthly_usd"].as_f64().unwrap(), 984.31);
 
 		server
 			.post("/api/pricing/cost")
@@ -411,7 +480,7 @@ async fn plan_reads_its_answers() {
 		assert_cents(
 			"medium",
 			medium["cost"]["monthly_usd"].as_f64().unwrap(),
-			830.87,
+			846.01,
 		);
 
 		// Connected systems do not move the band for pricing, although the
@@ -467,7 +536,7 @@ async fn plan_reads_its_answers() {
 		assert_cents(
 			"override",
 			overridden["cost"]["monthly_usd"].as_f64().unwrap(),
-			191.84,
+			184.99,
 		);
 
 		// Client-hosted central; Tupaia left open is noted, and left out.
@@ -495,7 +564,7 @@ async fn plan_reads_its_answers() {
 		assert_cents(
 			"no backups",
 			no_backups["cost"]["monthly_usd"].as_f64().unwrap(),
-			204.12,
+			194.12,
 		);
 	})
 	.await;

@@ -15,8 +15,8 @@
 // the arithmetic to the cent. Changing a value here changes what they expect,
 // so regenerate them alongside.
 (
-    model: "Tamanu hosting cost model v2.3",
-    version: "v2.3 (5 Nov 2026)",
+    model: "Tamanu hosting cost model v2.4",
+    version: "v2.4 (10 Nov 2026)",
 
     // The internal pricing edition lives at /<access_path> (calculator), with
     // priced plans beneath it, and its API answers only requests naming it.
@@ -84,9 +84,9 @@
             basis: "Windows t3a.xlarge 0.2637/h against t4g.xlarge 0.1696/h; Windows t3a.medium 0.0659 against t4g.medium 0.0424. Compute only; disks cost the same.",
         ),
         platform_share_usd: (
-            value: 40.0,
+            value: 30.0,
             confidence: Estimated,
-            basis: "Canopy backups and replica management, AMIs, BES Primary and a tamanu-meta-prod share, over 19 deployments (about 36), rounded up.",
+            basis: "Canopy replica management, AMIs, BES Primary and a tamanu-meta-prod share. The backup buckets came out of the pool (about 128 of S3 in Oct), leaving about 556 over 19 deployments, rounded up to 30.",
         ),
         tupaia_prod_compute_usd: (
             value: 1168.0,
@@ -114,9 +114,14 @@
             basis: "Total DB size of those 9 replicas: 6 measured (296 GB, Oct) and 3 not yet measured, estimated by band (285 GB). Denominator for the reporting rate.",
         ),
         fleet_db_gb_total: (
-            value: 708.8,
+            value: 674.8,
             confidence: Estimated,
-            basis: "Total DB size across the 18 deployments whose backups BES runs: measured where known, otherwise estimated by band. Denominator for the backups rate.",
+            basis: "Total DB size across the 13 deployments that have Canopy backups (five do not, so they are left out): measured where known, otherwise estimated by band. Denominator for the backups rates. If those five get backups, this and the pools change.",
+        ),
+        s3_backup_pool_usd: (
+            value: 203.4,
+            confidence: Estimated,
+            basis: "The Canopy backup buckets (one per deployment) at S3 Standard list price: about 248 a month for all buckets, less about 45 for one deployment whose backups BES does not run (bucket sizes, 4 Nov). Includes one bucket holding about 6x its backup data, flagged for clean-up, so expect this pool to fall.",
         ),
         pgro_ops_share: (
             value: 0.1,

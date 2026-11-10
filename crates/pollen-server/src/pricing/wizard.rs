@@ -127,9 +127,10 @@ pub fn price_plan(
 	if w.backups.open.eval(&answers) {
 		open.push(OpenLine {
 			id: LineId::BackupsOpsShare,
-			label: "Backups and clone feeding".into(),
+			label: "Backups".into(),
 			included: input.backups,
-			display_monthly: config.display_amount(config.backups_share(db_gb)),
+			display_monthly: config.display_amount(config.backups_share(db_gb))
+				+ config.display_amount(config.s3_backup_share(db_gb)),
 		});
 	}
 	if w.tupaia.open.eval(&answers) {

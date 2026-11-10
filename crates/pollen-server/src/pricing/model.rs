@@ -55,6 +55,7 @@ pub enum LineId {
 	Clone,
 	PlatformShare,
 	BackupsOpsShare,
+	BackupStorage,
 	TupaiaReporting,
 	WindowsExtra,
 }
@@ -171,6 +172,17 @@ impl PricingConfig {
 		self.tupaia_flat() + self.pgro_reporting_usd_per_gb() * db_gb
 	}
 
+	/// Backup storage in S3 per GB per month, over the DB size of every
+	/// deployment with backups on.
+	pub fn s3_backup_usd_per_gb(&self) -> f64 {
+		self.params.s3_backup_pool_usd.value / self.params.fleet_db_gb_total.value
+	}
+
+	/// Where the backups are kept: the S3 buckets, by DB size.
+	pub fn s3_backup_share(&self, db_gb: f64) -> f64 {
+		self.s3_backup_usd_per_gb() * db_gb
+	}
+
 	/// Taking backups and feeding clones: the Tamanu-ops part of pgro by DB size.
 	pub fn backups_share(&self, db_gb: f64) -> f64 {
 		self.pgro_backups_usd_per_gb() * db_gb
@@ -276,6 +288,14 @@ impl PricingConfig {
 				detail: Some("Share of the data cluster, by database size".into()),
 				monthly_usd: self.backups_share(db_gb),
 				confidence: weakest(&[&p.pgro_pool_usd, &p.pgro_ops_share, &p.fleet_db_gb_total])
+					.max(self.db_size_by_band.confidence),
+			});
+			lines.push(CostLine {
+				id: LineId::BackupStorage,
+				label: "Backup storage".into(),
+				detail: Some("S3 buckets, by database size".into()),
+				monthly_usd: self.s3_backup_share(db_gb),
+				confidence: weakest(&[&p.s3_backup_pool_usd, &p.fleet_db_gb_total])
 					.max(self.db_size_by_band.confidence),
 			});
 		}

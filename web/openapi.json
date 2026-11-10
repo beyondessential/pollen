@@ -974,6 +974,7 @@
           "clone",
           "platform_share",
           "backups_ops_share",
+          "backup_storage",
           "tupaia_reporting",
           "windows_extra"
         ]

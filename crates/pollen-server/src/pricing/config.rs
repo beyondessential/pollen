@@ -105,6 +105,7 @@ pub struct Params {
 	pub pgro_replicas: Param,
 	pub pgro_replica_gb_total: Param,
 	pub fleet_db_gb_total: Param,
+	pub s3_backup_pool_usd: Param,
 	pub pgro_ops_share: Param,
 	pub dagster_pool_usd: Param,
 }

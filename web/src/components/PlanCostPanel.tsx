@@ -10,9 +10,15 @@ export type PlanSettings = {
 	/// Facility servers in BES cloud, or null to use the guess.
 	facilities: number | null;
 	clone: CloneMode;
+	/// A demo/training environment for the deployment, on unless declined.
+	demoTraining: boolean;
 };
 
-export const DEFAULT_SETTINGS: PlanSettings = { facilities: null, clone: "standard" };
+export const DEFAULT_SETTINGS: PlanSettings = {
+	facilities: null,
+	clone: "standard",
+	demoTraining: true,
+};
 
 /// Price a plan as its answers and the pricer's settings stand. `facilities`
 /// is sent only while the slider is showing, so a stale setting cannot move a
@@ -36,7 +42,12 @@ export function usePlanCost(
 			"plan",
 			{
 				id: view.id,
-				overrides: { cloud_facilities: facilities, clone: settings.clone, clone_uptime: null },
+				overrides: {
+					cloud_facilities: facilities,
+					clone: settings.clone,
+					clone_uptime: null,
+					demo_training: settings.demoTraining,
+				},
 			},
 			controller.signal,
 		)
@@ -46,7 +57,7 @@ export function usePlanCost(
 				if (!controller.signal.aborted) setPlan(null);
 			});
 		return () => controller.abort();
-	}, [pricingPath, view.id, view.evaluation, facilities, settings.clone]);
+	}, [pricingPath, view.id, view.evaluation, facilities, settings.clone, settings.demoTraining]);
 
 	return plan;
 }
@@ -90,6 +101,12 @@ export function PlanCostControls({
 				label="Upgrade smoke testing on a clone"
 				value={settings.clone !== "off"}
 				onChange={(on) => onSettings({ ...settings, clone: on ? "standard" : "off" })}
+			/>
+			<span className="cost-control-k cost-control-gap">Demo/training environment</span>
+			<YesNo
+				label="Demo/training environment"
+				value={settings.demoTraining}
+				onChange={(demoTraining) => onSettings({ ...settings, demoTraining })}
 			/>
 		</div>
 	);

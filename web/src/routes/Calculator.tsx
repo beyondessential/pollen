@@ -25,6 +25,7 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 	const [backups, setBackups] = useState(true);
 	const [smokeTesting, setSmokeTesting] = useState(true);
 	const [tupaia, setTupaia] = useState(true);
+	const [demoTraining, setDemoTraining] = useState(true);
 	const [estimating, setEstimating] = useState(false);
 
 	const [cost, setCost] = useState<CostBreakdown | null>(null);
@@ -55,6 +56,7 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 			clone_uptime: null,
 			backups,
 			tupaia,
+			demo_training: demoTraining,
 			windows_central: false,
 			windows_facilities: 0,
 			windows_clone: false,
@@ -71,7 +73,7 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 				setError(e instanceof Error ? e.message : String(e));
 			});
 		return () => controller.abort();
-	}, [pricingPath, band, centralInCloud, cloudFacilities, smokeTesting, backups, tupaia]);
+	}, [pricingPath, band, centralInCloud, cloudFacilities, smokeTesting, backups, tupaia, demoTraining]);
 
 	// The band comes from the server, which applies the wizard's own derivation.
 	// Only the latest reply counts, and choosing a band directly outranks any
@@ -192,6 +194,18 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 							value={smokeTesting}
 							onChange={setSmokeTesting}
 						/>
+					</Field>
+					<Field label="Demo/training environment">
+						<div className="calc-stack">
+							<YesNo
+								label="Demo/training environment"
+								value={demoTraining}
+								onChange={setDemoTraining}
+							/>
+							<p className="cost-hint">
+								A demo or training copy of the deployment on BES's demo cluster.
+							</p>
+						</div>
 					</Field>
 					<Field label="Tupaia reporting">
 						<div className="calc-stack">

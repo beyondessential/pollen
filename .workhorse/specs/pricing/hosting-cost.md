@@ -50,10 +50,12 @@ A deployment's monthly cost is the sum of these lines.
   A standard clone is stopped by default and runs for a fixed share of the month; an always-on clone runs all month.
 - **Platform share**: a fixed share of the BES infrastructure every deployment uses.
 - **Backups and clone feeding**: a share of the shared data cluster that takes backups and feeds clones, by the deployment's database size, when BES takes backups.
+- **Backup storage**: the share of the backup buckets, by the deployment's database size, when BES takes backups.
+- **Demo/training environment**: a demo or training copy of the deployment on the shared demo cluster, an even share of the cluster across its environments, the same whatever the size band, the central server, the clone or backups, on unless declined.
 - **Tupaia reporting**: over and above backups, a flat share of Tupaia's compute and the reporting pipeline plus the reporting part of the data cluster by database size, when the deployment has Tupaia reporting.
+- **Windows**: the extra compute cost of a Windows server, for each server in BES cloud that runs Windows, with a clone's share scaled by how long it runs.
 
 The database size is estimated from the size band and is never entered.
-- **Windows**: the extra compute cost of a Windows server, for each server in BES cloud that runs Windows, with a clone's share scaled by how long it runs.
   It applies to compute only; storage costs the same on either platform.
 
 Backups and the clone are priced independently, so turning backups off removes only the backups and clone feeding share.
@@ -94,6 +96,7 @@ Its controls are:
 - where the facility servers run: BES cloud, client hosted, or a mix, where a mix brings up a slider that splits the deployment's facility servers between client hosted and BES cloud;
 - whether BES takes backups, on by default;
 - whether upgrade smoke testing runs on a clone, on by default, priced as a standard clone at the configured share of the month;
+- whether the deployment has a demo/training environment, on by default;
 - whether the deployment has Tupaia reporting, on by default.
 
 The deployment's facility servers are counted from the facilities answer of the estimator, or, when the size band was chosen directly, from a typical number for that band.
@@ -108,6 +111,8 @@ A mix starts with a configured share of them in BES cloud, and the slider runs f
 - [ ] Choosing a size band directly clears the estimator's answers.
 - [ ] Turning backups off removes only the backups and clone feeding share.
 - [ ] Turning off upgrade smoke testing removes the clone.
+- [ ] Turning off the demo/training environment removes only its line, and the line is the same for every size band.
+- [ ] The breakdown lists backup storage straight after backups and clone feeding, and the demo/training environment straight after that, before Tupaia reporting.
 
 ## The priced wizard
 
@@ -117,6 +122,7 @@ The cost is read from the answers, with an assumed answer counting the same as a
 - the size band is the highest band the catchment, facilities and mobile answers reach, without the extra band the wizard adds for connected systems, which do not size a deployment for costing; until it is derived, the cost reads as needing the sizing answers rather than pricing at the lightest band;
 - the central server is in BES cloud when that is where the wizard puts it;
 - backups are on unless BES may not take them;
+- the demo/training environment is on unless the person pricing switches it off beside the cost;
 - Tupaia reporting is included unless it is declined;
 - a hosting region other than the primary one is priced at the primary region's rates, with a note that the difference is confirmed separately;
 - BES-hosted integrations are not priced, since they are referred to a separate conversation.

@@ -1071,6 +1071,9 @@ body {
 .cost-control-flow {
 	margin-top: 4px;
 }
+.cost-control-gap {
+	margin-top: 14px;
+}
 .cost-control-flow .cost-hint {
 	margin-top: 14px;
 }

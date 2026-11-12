@@ -15,8 +15,8 @@
 // the arithmetic to the cent. Changing a value here changes what they expect,
 // so regenerate them alongside.
 (
-    model: "Tamanu hosting cost model v2.4",
-    version: "v2.4 (10 Nov 2026)",
+    model: "Tamanu hosting cost model v2.5",
+    version: "v2.5 (13 Nov 2026)",
 
     // The internal pricing edition lives at /<access_path> (calculator), with
     // priced plans beneath it, and its API answers only requests naming it.
@@ -87,6 +87,16 @@
             value: 30.0,
             confidence: Estimated,
             basis: "Canopy replica management, AMIs, BES Primary and a tamanu-meta-prod share. The backup buckets came out of the pool (about 128 of S3 in Oct), leaving about 556 over 19 deployments, rounded up to 30.",
+        ),
+        demo_cluster_pool_usd: (
+            value: 1900.0,
+            confidence: Estimated,
+            basis: "The shared k8s demo cluster, which runs a demo/training namespace for each deployment: about 1,900 a month (Edwin, 13 Nov). It moves to BES Cloud by March 2027, when this changes.",
+        ),
+        demo_environments: (
+            value: 14.0,
+            confidence: Read,
+            basis: "Environments the cluster's cost is divided by, the two generic demos (playground and presentation, used for sales and left as BES overhead) included. PROVISIONAL: from the ops repo's demo retirement table, not yet checked against the cluster's namespaces.",
         ),
         tupaia_prod_compute_usd: (
             value: 1168.0,

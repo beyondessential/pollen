@@ -30,6 +30,7 @@ fn input_from_fixture(v: &Value) -> CostInput {
 		clone_uptime: None,
 		backups: v["backups"].as_bool().unwrap_or(true),
 		tupaia: v["tupaia"].as_bool().unwrap_or(true),
+		demo_training: v["demo_training"].as_bool().unwrap_or(true),
 		windows_central: v["windows_central"].as_bool().unwrap_or(false),
 		windows_facilities: v["windows_facilities"].as_u64().unwrap_or(0) as u32,
 		windows_clone: v["windows_clone"].as_bool().unwrap_or(false),
@@ -61,7 +62,7 @@ fn matches_every_reference_case_to_the_cent() {
 	let fixtures: Value = serde_json::from_str(FIXTURES).unwrap();
 	let examples = fixtures["examples"].as_array().unwrap();
 	let grid = fixtures["grid"].as_array().unwrap();
-	assert_eq!(examples.len() + grid.len(), 299);
+	assert_eq!(examples.len() + grid.len(), 589);
 
 	for (i, case) in examples.iter().chain(grid).enumerate() {
 		let name = case["name"]
@@ -295,29 +296,33 @@ fn shows_storage_with_a_thousands_separator() {
 #[test]
 fn matches_the_figures_the_model_update_publishes() {
 	let config = PricingConfig::from_ron(BUNDLED_PRICING).unwrap();
-	// Central in BES cloud, clone, backups: without and with Tupaia.
-	for (band, plain, with_tupaia) in [
-		("tiny", 195.0, 282.0),
-		("small", 200.0, 309.0),
-		("medium", 542.0, 846.0),
-		("large", 1017.0, 1447.0),
+	// Central in BES cloud, clone, backups: without demo/training and Tupaia,
+	// with demo/training, and with Tupaia too.
+	for (band, plain, with_demo, with_tupaia) in [
+		("tiny", 195.0, 331.0, 418.0),
+		("small", 200.0, 336.0, 445.0),
+		("medium", 542.0, 677.0, 982.0),
+		("large", 1017.0, 1153.0, 1583.0),
 	] {
-		let base = input_from_fixture(&json!({ "band": band, "tupaia": false }));
-		let tupaia = CostInput {
-			tupaia: true,
+		let base = input_from_fixture(&json!({
+			"band": band, "tupaia": false, "demo_training": false
+		}));
+		let demo = CostInput {
+			demo_training: true,
 			..base.clone()
 		};
-		assert_eq!(
-			config.cost(&base).unwrap().monthly_usd.round(),
-			plain,
-			"{band}"
-		);
-		assert_eq!(
-			config.cost(&tupaia).unwrap().monthly_usd.round(),
-			with_tupaia,
-			"{band}"
-		);
+		let full = CostInput {
+			tupaia: true,
+			..demo.clone()
+		};
+		let monthly = |i: &CostInput| config.cost(i).unwrap().monthly_usd.round();
+		assert_eq!(monthly(&base), plain, "{band}");
+		assert_eq!(monthly(&demo), with_demo, "{band}");
+		assert_eq!(monthly(&full), with_tupaia, "{band}");
 	}
+	// The demo/training line is the same for every band, and the model's own
+	// breakdown puts it after backup storage and before Tupaia reporting.
+	assert_cents("demo/training", config.demo_training_usd(), 135.71);
 	// Backup storage per band, from S3 usage by database size.
 	for (band, usd) in [
 		("Tiny", 0.60),
@@ -360,19 +365,58 @@ fn backup_storage_follows_the_backups_share_and_goes_with_it() {
 }
 
 #[test]
+fn demo_training_is_one_flat_line_that_stands_apart_from_the_rest() {
+	use pollen_server::pricing::LineId;
+	let config = PricingConfig::from_ron(BUNDLED_PRICING).unwrap();
+	let demo = |i: &Value| {
+		config
+			.cost(&input_from_fixture(i))
+			.unwrap()
+			.lines
+			.into_iter()
+			.find(|l| l.id == LineId::DemoTraining)
+			.map(|l| l.monthly_usd)
+	};
+	// The same for every band, and with the central, clone and backups all
+	// off.
+	for band in ["tiny", "small", "medium", "large"] {
+		assert_cents(band, demo(&json!({ "band": band })).unwrap(), 135.71);
+	}
+	assert_cents(
+		"stripped back",
+		demo(&json!({ "band": "large", "central": "onprem", "clone": "off", "backups": false }))
+			.unwrap(),
+		135.71,
+	);
+	assert!(demo(&json!({ "band": "small", "demo_training": false })).is_none());
+
+	// After backup storage, before Tupaia reporting.
+	let ids: Vec<LineId> = config
+		.cost(&input_from_fixture(&json!({ "band": "medium" })))
+		.unwrap()
+		.lines
+		.iter()
+		.map(|l| l.id)
+		.collect();
+	let at = |id| ids.iter().position(|i| *i == id).unwrap();
+	assert_eq!(at(LineId::DemoTraining), at(LineId::BackupStorage) + 1);
+	assert_eq!(at(LineId::TupaiaReporting), at(LineId::DemoTraining) + 1);
+}
+
+#[test]
 fn display_rounds_to_the_configured_step() {
 	let config = PricingConfig::from_ron(BUNDLED_PRICING).unwrap();
 	let got = config
 		.cost(&input_from_fixture(&json!({ "band": "small" })))
 		.unwrap();
-	// 309.05 a month. Each line rounds to $5 (80, 0, 85, 30, 5, 5, 110) and the
+	// 444.77 a month. Each line rounds to $5 (80, 0, 85, 30, 5, 5, 135, 110) and the
 	// headline is their sum, so it adds up on the page.
 	assert_eq!(
 		got.display.lines,
-		vec![80.0, 0.0, 85.0, 30.0, 5.0, 5.0, 110.0]
+		vec![80.0, 0.0, 85.0, 30.0, 5.0, 5.0, 135.0, 110.0]
 	);
-	assert_eq!(got.display.monthly, 315.0);
-	assert_eq!(got.display.annual, 3780.0);
+	assert_eq!(got.display.monthly, 450.0);
+	assert_eq!(got.display.annual, 5400.0);
 	assert_eq!(got.display.currency, "USD");
 }
 
@@ -418,7 +462,7 @@ async fn calculator_prices_inputs() {
 			}))
 			.await
 			.json();
-		assert_cents("monthly", got["monthly_usd"].as_f64().unwrap(), 984.31);
+		assert_cents("monthly", got["monthly_usd"].as_f64().unwrap(), 1120.03);
 
 		server
 			.post("/api/pricing/cost")
@@ -480,7 +524,7 @@ async fn plan_reads_its_answers() {
 		assert_cents(
 			"medium",
 			medium["cost"]["monthly_usd"].as_f64().unwrap(),
-			846.01,
+			981.72,
 		);
 
 		// Connected systems do not move the band for pricing, although the
@@ -536,7 +580,7 @@ async fn plan_reads_its_answers() {
 		assert_cents(
 			"override",
 			overridden["cost"]["monthly_usd"].as_f64().unwrap(),
-			184.99,
+			320.70,
 		);
 
 		// Client-hosted central; Tupaia left open is noted, and left out.
@@ -564,6 +608,21 @@ async fn plan_reads_its_answers() {
 		assert_cents(
 			"no backups",
 			no_backups["cost"]["monthly_usd"].as_f64().unwrap(),
+			329.84,
+		);
+
+		// Declining demo/training takes only its line off, and the setting is
+		// the pricer's own, not the plan's.
+		let declined = plan_cost(
+			&server,
+			json!({ "catchment": "c0", "facilities": "f0", "tupaia": "no", "backup_capability": "no" }),
+			json!({ "demo_training": false }),
+		)
+		.await;
+		assert_eq!(declined["input"]["demo_training"], false);
+		assert_cents(
+			"no demo",
+			declined["cost"]["monthly_usd"].as_f64().unwrap(),
 			194.12,
 		);
 	})

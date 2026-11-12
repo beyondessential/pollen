@@ -36,6 +36,9 @@ pub struct CostInput {
 	pub clone_uptime: Option<f64>,
 	pub backups: bool,
 	pub tupaia: bool,
+	/// A demo/training environment for the deployment, on unless declined.
+	#[serde(default = "default_true")]
+	pub demo_training: bool,
 	/// A Windows central server. Applies only while the central is in BES cloud.
 	#[serde(default)]
 	pub windows_central: bool,
@@ -44,6 +47,10 @@ pub struct CostInput {
 	pub windows_facilities: u32,
 	#[serde(default)]
 	pub windows_clone: bool,
+}
+
+fn default_true() -> bool {
+	true
 }
 
 /// A line of the breakdown. Ids are stable, so tests and the UI can key on them.
@@ -56,6 +63,7 @@ pub enum LineId {
 	PlatformShare,
 	BackupsOpsShare,
 	BackupStorage,
+	DemoTraining,
 	TupaiaReporting,
 	WindowsExtra,
 }
@@ -170,6 +178,12 @@ impl PricingConfig {
 	/// reporting part of pgro by DB size.
 	pub fn tupaia_addon(&self, db_gb: f64) -> f64 {
 		self.tupaia_flat() + self.pgro_reporting_usd_per_gb() * db_gb
+	}
+
+	/// A deployment's demo/training environment: an even share of the demo
+	/// cluster across its environments, the same for every band.
+	pub fn demo_training_usd(&self) -> f64 {
+		self.params.demo_cluster_pool_usd.value / self.params.demo_environments.value
 	}
 
 	/// Backup storage in S3 per GB per month, over the DB size of every
@@ -297,6 +311,15 @@ impl PricingConfig {
 				monthly_usd: self.s3_backup_share(db_gb),
 				confidence: weakest(&[&p.s3_backup_pool_usd, &p.fleet_db_gb_total])
 					.max(self.db_size_by_band.confidence),
+			});
+		}
+		if input.demo_training {
+			lines.push(CostLine {
+				id: LineId::DemoTraining,
+				label: "Demo/training environment".into(),
+				detail: Some("Share of the demo cluster".into()),
+				monthly_usd: self.demo_training_usd(),
+				confidence: weakest(&[&p.demo_cluster_pool_usd, &p.demo_environments]),
 			});
 		}
 		if input.tupaia {

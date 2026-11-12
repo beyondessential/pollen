@@ -18,6 +18,8 @@ pub struct PlanOverrides {
 	#[serde(default)]
 	pub clone: Option<CloneMode>,
 	#[serde(default)]
+	pub demo_training: Option<bool>,
+	#[serde(default)]
 	pub clone_uptime: Option<f64>,
 }
 
@@ -116,6 +118,7 @@ pub fn price_plan(
 		clone_uptime: overrides.clone_uptime,
 		backups: w.backups.on.eval(&answers),
 		tupaia: w.tupaia.on.eval(&answers),
+		demo_training: overrides.demo_training.unwrap_or(true),
 		windows_central: false,
 		windows_facilities: 0,
 		windows_clone: false,

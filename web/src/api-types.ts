@@ -297,6 +297,8 @@ export interface components {
              * @description Facility servers in BES cloud.
              */
             cloud_facilities: number;
+            /** @description A demo/training environment for the deployment, on unless declined. */
+            demo_training?: boolean;
             tupaia: boolean;
             /** @description A Windows central server. Applies only while the central is in BES cloud. */
             windows_central?: boolean;
@@ -432,7 +434,7 @@ export interface components {
          * @description A line of the breakdown. Ids are stable, so tests and the UI can key on them.
          * @enum {string}
          */
-        LineId: "central_box" | "cloud_facilities" | "clone" | "platform_share" | "backups_ops_share" | "tupaia_reporting" | "windows_extra";
+        LineId: "central_box" | "cloud_facilities" | "clone" | "platform_share" | "backups_ops_share" | "backup_storage" | "demo_training" | "tupaia_reporting" | "windows_extra";
         /** @description What a fork's migration changed (spec WIZ, stable-id migration). */
         MigrationView: {
             dropped: string[];
@@ -500,6 +502,7 @@ export interface components {
             clone_uptime?: number | null;
             /** Format: int32 */
             cloud_facilities?: number | null;
+            demo_training?: boolean | null;
         };
         /** @description The model's configuration, for the calculator's controls. */
         PricingModelView: {

@@ -106,6 +106,8 @@ pub struct Params {
 	pub pgro_replica_gb_total: Param,
 	pub fleet_db_gb_total: Param,
 	pub s3_backup_pool_usd: Param,
+	pub demo_cluster_pool_usd: Param,
+	pub demo_environments: Param,
 	pub pgro_ops_share: Param,
 	pub dagster_pool_usd: Param,
 }
@@ -240,6 +242,7 @@ impl PricingConfig {
 			("pgro_replicas", &self.params.pgro_replicas),
 			("pgro_replica_gb_total", &self.params.pgro_replica_gb_total),
 			("fleet_db_gb_total", &self.params.fleet_db_gb_total),
+			("demo_environments", &self.params.demo_environments),
 		] {
 			if p.value <= 0.0 {
 				return Err(AppError::custom(format!("{id} must be positive")));

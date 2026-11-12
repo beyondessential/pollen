@@ -21,28 +21,29 @@ test("the calculator prices its inputs and follows each control", async ({ page 
 	const group = (name: string) => page.getByRole("radiogroup", { name, exact: true });
 
 	// Tiny, BES cloud central, client-hosted facilities, backups, smoke testing
-	// on a clone and Tupaia reporting, all on by default: 291.57. Each line
-	// rounds to $5 (80, 85, 40, 85; backups rounds to nothing and is left out)
-	// and the headline is their sum.
-	await expect(figure).toHaveText("$280");
-	await expect(page.locator(".calc-result .cost-annual")).toHaveText("$3,360 a year");
+	// on a clone, a demo/training environment and Tupaia reporting, all on by
+	// default: 417.91. Each line rounds to $5 (80, 85, 30, 135, 85; backups
+	// rounds to nothing and is left out) and the headline is their sum.
+	await expect(figure).toHaveText("$415");
+	await expect(page.locator(".calc-result .cost-annual")).toHaveText("$4,980 a year");
 	await expect(lines).not.toContainText("Backups and clone feeding");
-	await expect(page.locator(".calc-result .cost-caveat")).toContainText("Model v2.4 (10 Nov 2026)");
+	await expect(page.locator(".calc-result .cost-caveat")).toContainText("Model v2.5 (13 Nov 2026)");
 	await expect(lines).not.toContainText("Cloud facility servers");
 	await expect(lines).toContainText("Tupaia reporting");
+	await expect(lines).toContainText("Demo/training environment");
 	await expect(lines.locator("li", { hasText: "Platform share" })).toContainText("Estimate");
 
 	await page.getByRole("radio", { name: "Medium" }).click();
 	await group("Tupaia reporting").getByRole("radio", { name: "No" }).click();
 	// 526.38: the backups share scales with the band's database size.
-	await expect(figure).toHaveText("$540");
+	await expect(figure).toHaveText("$675");
 	await expect(lines.locator("li", { hasText: "Backups and clone feeding" })).toContainText(
 		"Estimate",
 	);
 
 	// Backups off removes only the backups share; the clone stays.
 	await group("BES takes backups").getByRole("radio", { name: "No" }).click();
-	await expect(figure).toHaveText("$495");
+	await expect(figure).toHaveText("$630");
 	await expect(lines).toContainText("Smoke testing clone");
 	await expect(lines).not.toContainText("Backups and clone feeding");
 
@@ -53,6 +54,13 @@ test("the calculator prices its inputs and follows each control", async ({ page 
 	// A client-hosted central drops the central server.
 	await group("Central server").getByRole("radio", { name: "Client hosted" }).click();
 	await expect(lines).not.toContainText("Central server");
+
+	// The demo/training environment stands apart from all of that (platform
+	// share 30 and demo 135 are what is left), and can be declined.
+	await expect(figure).toHaveText("$165");
+	await group("Demo/training environment").getByRole("radio", { name: "No" }).click();
+	await expect(figure).toHaveText("$30");
+	await expect(lines).not.toContainText("Demo/training environment");
 
 	// Estimates are tagged where they appear; there is no list of assumptions.
 	await expect(page.getByRole("button", { name: "Assumptions" })).toHaveCount(0);
@@ -117,7 +125,7 @@ test("a priced plan keeps a running cost beside the questions", async ({ page })
 	await answer(page, "How many facilities will use Tamanu?", "One");
 	await answer(page, "Do you want dashboards and reporting?", "No, Tamanu only");
 	// Tiny, BES cloud central, client-hosted facilities, standard clone, backups.
-	await expect(rail.locator(".cost-v")).toHaveText("$195");
+	await expect(rail.locator(".cost-v")).toHaveText("$330");
 
 	// No slider until facility servers are a mix; the balance question is
 	// replaced by it, never shown alongside.
@@ -131,20 +139,27 @@ test("a priced plan keeps a running cost beside the questions", async ({ page })
 	// One facility, half of it in BES cloud: one server. 360.72 less the
 	// Tupaia share; shown as the lines add up (80, 70, 85, 40).
 	await expect(slider).toHaveValue("1");
-	await expect(rail.locator(".cost-v")).toHaveText("$265");
+	await expect(rail.locator(".cost-v")).toHaveText("$400");
 
 	// Settings belong to the pricer: they move the figure, not the plan.
 	await expect(page.locator(".slider-v")).toHaveText("1 of 1 in BES cloud");
 	await slider.fill("0");
-	await expect(rail.locator(".cost-v")).toHaveText("$195");
+	await expect(rail.locator(".cost-v")).toHaveText("$330");
 	await slider.fill("1");
-	await expect(rail.locator(".cost-v")).toHaveText("$265");
+	await expect(rail.locator(".cost-v")).toHaveText("$400");
 	await expect(page.getByRole("button", { name: "Use 1" })).toBeVisible();
 	await rail
 		.getByRole("radiogroup", { name: "Upgrade smoke testing on a clone" })
 		.getByRole("radio", { name: "No" })
 		.click();
+	await expect(rail.locator(".cost-v")).toHaveText("$315");
+
+	// The demo/training environment is the pricer's to switch off, not the plan's.
+	const demo = rail.getByRole("radiogroup", { name: "Demo/training environment" });
+	await demo.getByRole("radio", { name: "No" }).click();
 	await expect(rail.locator(".cost-v")).toHaveText("$180");
+	await demo.getByRole("radio", { name: "Yes" }).click();
+	await expect(rail.locator(".cost-v")).toHaveText("$315");
 
 	// A setting is let go when the facility count it was made for changes.
 	await slider.fill("0");
@@ -156,7 +171,7 @@ test("a priced plan keeps a running cost beside the questions", async ({ page })
 	// Leaving the mix takes the slider, and its setting, out of the figure.
 	await answer(page, "Where should the facility servers run?", "All client hosted");
 	await expect(slider).toHaveCount(0);
-	await expect(rail.locator(".cost-v")).toHaveText("$120");
+	await expect(rail.locator(".cost-v")).toHaveText("$255");
 });
 
 test("a wrong path is not found, and the public wizard shows no figure", async ({ page }) => {

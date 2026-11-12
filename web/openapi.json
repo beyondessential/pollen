@@ -658,6 +658,10 @@
             "description": "Facility servers in BES cloud.",
             "minimum": 0
           },
+          "demo_training": {
+            "type": "boolean",
+            "description": "A demo/training environment for the deployment, on unless declined."
+          },
           "tupaia": {
             "type": "boolean"
           },
@@ -975,6 +979,7 @@
           "platform_share",
           "backups_ops_share",
           "backup_storage",
+          "demo_training",
           "tupaia_reporting",
           "windows_extra"
         ]
@@ -1186,6 +1191,12 @@
             ],
             "format": "int32",
             "minimum": 0
+          },
+          "demo_training": {
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         }
       },

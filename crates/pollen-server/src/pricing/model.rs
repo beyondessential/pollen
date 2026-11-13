@@ -289,7 +289,7 @@ impl PricingConfig {
 		lines.push(CostLine {
 			id: LineId::PlatformShare,
 			label: "Platform share".into(),
-			detail: Some("BES infrastructure".into()),
+			detail: None,
 			monthly_usd: p.platform_share_usd.value,
 			confidence: p.platform_share_usd.confidence,
 		});
@@ -299,7 +299,7 @@ impl PricingConfig {
 			lines.push(CostLine {
 				id: LineId::BackupsOpsShare,
 				label: "Backups and clone feeding".into(),
-				detail: Some("Share of the data cluster, by database size".into()),
+				detail: None,
 				monthly_usd: self.backups_share(db_gb),
 				confidence: weakest(&[&p.pgro_pool_usd, &p.pgro_ops_share, &p.fleet_db_gb_total])
 					.max(self.db_size_by_band.confidence),
@@ -307,7 +307,7 @@ impl PricingConfig {
 			lines.push(CostLine {
 				id: LineId::BackupStorage,
 				label: "Backup storage".into(),
-				detail: Some("S3 buckets, by database size".into()),
+				detail: None,
 				monthly_usd: self.s3_backup_share(db_gb),
 				confidence: weakest(&[&p.s3_backup_pool_usd, &p.fleet_db_gb_total])
 					.max(self.db_size_by_band.confidence),
@@ -317,7 +317,7 @@ impl PricingConfig {
 			lines.push(CostLine {
 				id: LineId::DemoTraining,
 				label: "Demo/training environment".into(),
-				detail: Some("Share of the demo cluster".into()),
+				detail: None,
 				monthly_usd: self.demo_training_usd(),
 				confidence: weakest(&[&p.demo_cluster_pool_usd, &p.demo_environments]),
 			});
@@ -326,7 +326,7 @@ impl PricingConfig {
 			lines.push(CostLine {
 				id: LineId::TupaiaReporting,
 				label: "Tupaia reporting".into(),
-				detail: Some("Over and above backups".into()),
+				detail: None,
 				monthly_usd: self.tupaia_addon(db_gb),
 				confidence: weakest(&[
 					&p.tupaia_prod_compute_usd,

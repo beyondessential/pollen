@@ -196,22 +196,14 @@ export default function Calculator({ model }: { model: PricingModelView }) {
 						/>
 					</Field>
 					<Field label="Demo/training environment">
-						<div className="calc-stack">
-							<YesNo
-								label="Demo/training environment"
-								value={demoTraining}
-								onChange={setDemoTraining}
-							/>
-							<p className="cost-hint">
-								A demo or training copy of the deployment on BES's demo cluster.
-							</p>
-						</div>
+						<YesNo
+							label="Demo/training environment"
+							value={demoTraining}
+							onChange={setDemoTraining}
+						/>
 					</Field>
 					<Field label="Tupaia reporting">
-						<div className="calc-stack">
-							<YesNo label="Tupaia reporting" value={tupaia} onChange={setTupaia} />
-							<p className="cost-hint">Over and above backups.</p>
-						</div>
+						<YesNo label="Tupaia reporting" value={tupaia} onChange={setTupaia} />
 					</Field>
 				</div>
 			</main>

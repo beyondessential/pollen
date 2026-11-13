@@ -31,6 +31,10 @@ test("the calculator prices its inputs and follows each control", async ({ page 
 	await expect(lines).not.toContainText("Cloud facility servers");
 	await expect(lines).toContainText("Tupaia reporting");
 	await expect(lines).toContainText("Demo/training environment");
+	// The shared-cost lines carry no description beneath them, only the qualifier.
+	await expect(lines).not.toContainText("Over and above backups");
+	await expect(lines.locator("li", { hasText: "Tupaia reporting" })).toHaveText(/^Tupaia reporting\$\d+Estimate$/);
+	await expect(page.locator(".calc-main .cost-hint")).toHaveCount(0);
 	await expect(lines.locator("li", { hasText: "Platform share" })).toContainText("Estimate");
 
 	await page.getByRole("radio", { name: "Medium" }).click();

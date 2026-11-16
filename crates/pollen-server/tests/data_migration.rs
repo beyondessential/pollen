@@ -718,7 +718,7 @@ fn size_multiplies_by_patients_a_day_then_years_of_history() {
 	assert_eq!(
 		size(json!({ "tier": "patient-history", "patients_per_day": "medium", "history_years": "large" })),
 		Some(
-			"Size: x1.1 for 100 to 300 patients a day then x1.5 for over 5 years of history, so x1.65 on M1 and M3 onwards."
+			"Size: x1.1 for 200 to 1,000 patients a day then x1.5 for over 5 years of history, so x1.65 on M1 and M3 onwards."
 				.into()
 		)
 	);
@@ -757,7 +757,7 @@ fn size_multiplies_by_patients_a_day_then_years_of_history() {
 	assert!(!e.unknown.iter().any(|u| u == "years of history"));
 	assert!(worked(
 		&e,
-		"Size: x1.25 for over 300 patients a day, so x1.25 on M1 and M3 onwards."
+		"Size: x1.25 for over 1,000 patients a day, so x1.25 on M1 and M3 onwards."
 	));
 }
 

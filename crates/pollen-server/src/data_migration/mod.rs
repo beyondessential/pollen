@@ -25,6 +25,19 @@ pub(crate) fn round_half(x: f64) -> f64 {
 	round_whole(x * 2.0) / 2.0
 }
 
+/// A whole number with thousands separators, as the bands are offered.
+pub(crate) fn thousands(n: u32) -> String {
+	let digits = n.to_string();
+	let mut out = String::new();
+	for (i, d) in digits.chars().enumerate() {
+		if i > 0 && (digits.len() - i).is_multiple_of(3) {
+			out.push(',');
+		}
+		out.push(d);
+	}
+	out
+}
+
 /// A number as prose carries it: no trailing ".0".
 pub(crate) fn fmt_num(x: f64) -> String {
 	if x.fract() == 0.0 {

@@ -10,7 +10,7 @@ use super::client_prepared::CaseBand;
 use super::config::{
 	Adjust, Area, Basis, CaseBands, Combine, DocFactor, MigrationConfig, Span, Tier,
 };
-use super::{fmt_num, round_half, round_whole};
+use super::{fmt_num, round_half, round_whole, thousands};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, ToSchema)]
 #[serde(rename_all = "kebab-case")]
@@ -1357,12 +1357,13 @@ fn band_index(band: CaseBand) -> usize {
 	}
 }
 
-/// A band as an estimate names it, such as "100 to 300 patients a day".
+/// A band as an estimate names it, such as "200 to 1,000 patients a day".
 fn band_label(band: CaseBand, bands: CaseBands, what: &str) -> String {
+	let (from, over) = (thousands(bands.medium_from), thousands(bands.large_over));
 	match band {
-		CaseBand::Small => format!("under {} {what}", bands.medium_from),
-		CaseBand::Medium => format!("{} to {} {what}", bands.medium_from, bands.large_over),
-		CaseBand::Large => format!("over {} {what}", bands.large_over),
+		CaseBand::Small => format!("under {from} {what}"),
+		CaseBand::Medium => format!("{from} to {over} {what}"),
+		CaseBand::Large => format!("over {over} {what}"),
 	}
 }
 

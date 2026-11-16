@@ -196,7 +196,7 @@
     // scope). Each in three bands: under `medium_from`, `medium_from` to
     // `large_over`, and over `large_over`.
     size: (
-        patients: (medium_from: 100, large_over: 300),
+        patients: (medium_from: 200, large_over: 1000),
         years: (medium_from: 2, large_over: 5),
         patients_factor: (1.0, 1.1, 1.25),
         years_factor: (1.0, 1.2, 1.5),

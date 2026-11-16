@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use super::config::{MigrationConfig, Span};
-use super::{fmt_num, round_half};
+use super::{fmt_num, round_half, thousands};
 
 /// Roughly how many cases a program has in total, as one of the configured
 /// bands.
@@ -19,19 +19,6 @@ pub enum CaseBand {
 	Medium,
 	/// More than `case_bands.large_over`.
 	Large,
-}
-
-/// A whole number with thousands separators, as the bands are offered.
-fn thousands(n: u32) -> String {
-	let digits = n.to_string();
-	let mut out = String::new();
-	for (i, d) in digits.chars().enumerate() {
-		if i > 0 && (digits.len() - i).is_multiple_of(3) {
-			out.push(',');
-		}
-		out.push(d);
-	}
-	out
 }
 
 /// One program of a client-prepared engagement.

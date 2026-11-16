@@ -200,8 +200,9 @@ impl MigrationConfig {
 					+ registry_days.high
 					+ c.buffer_days,
 			};
-			total.low += days.low;
-			total.high += days.high;
+			// The total adds up the programs as shown, to the nearest half day.
+			total.low += round_half(days.low);
+			total.high += round_half(days.high);
 
 			if p.registry == Some(false) && forms == 0 {
 				flags.push(format!("{name}: no registry or forms listed."));

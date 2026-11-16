@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Route, Routes } from "react-router-dom";
 
 import { NotFound, Shell } from "../components/Shell";
 import { type Edition, EditionProvider, callMigration } from "../edition";
@@ -31,7 +32,10 @@ export default function MigrationEdition({ path }: { path: string }) {
 	return (
 		<EditionProvider value={edition}>
 			<Shell>
-				<MigrationEstimator model={model} />
+				<Routes>
+					<Route index element={<MigrationEstimator model={model} />} />
+					<Route path="*" element={<div className="splash">Not found.</div>} />
+				</Routes>
 			</Shell>
 		</EditionProvider>
 	);

@@ -191,7 +191,7 @@
     ),
 
     // Size multiplies M1 and every area from M3 onwards, timeline and
-    // person-days alike: first by the patients a day at the busiest site, then
+    // person-days alike: first by the total patients a day across all sites, then
     // by the years of visit history to migrate (only when visits are in
     // scope). Each in three bands: under `medium_from`, `medium_from` to
     // `large_over`, and over `large_over`.

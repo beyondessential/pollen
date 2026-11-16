@@ -57,7 +57,7 @@ pub struct MigrationModelView {
 	pub max_projects: u32,
 	/// The bands a program's rough case numbers are given in.
 	pub case_bands: CaseBands,
-	/// The bands of patients a day at the busiest site.
+	/// The bands of total patients a day across all sites.
 	pub patients_bands: CaseBands,
 	/// The bands of years of visit history to migrate.
 	pub years_bands: CaseBands,

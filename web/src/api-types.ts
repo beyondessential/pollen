@@ -714,7 +714,7 @@ export interface components {
              */
             max_projects: number;
             model: string;
-            /** @description The bands of patients a day at the busiest site. */
+            /** @description The bands of total patients a day across all sites. */
             patients_bands: components["schemas"]["CaseBands"];
             tiers: components["schemas"]["TierRow"][];
             /** @description The tier an estimate starts from when none is chosen. */

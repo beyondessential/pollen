@@ -251,7 +251,7 @@ pub struct Source {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Size {
-	/// The bands of patients a day at the busiest site.
+	/// The bands of total patients a day across all sites.
 	pub patients: CaseBands,
 	/// The bands of years of visit history to migrate.
 	pub years: CaseBands,

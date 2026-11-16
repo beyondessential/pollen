@@ -1310,7 +1310,7 @@
               },
               {
                 "$ref": "#/components/schemas/CaseBand",
-                "description": "Patients seen a day at the busiest site, as a band."
+                "description": "Patients seen a day in total across all sites, as a band."
               }
             ]
           },
@@ -1845,7 +1845,7 @@
           },
           "patients_bands": {
             "$ref": "#/components/schemas/CaseBands",
-            "description": "The bands of patients a day at the busiest site."
+            "description": "The bands of total patients a day across all sites."
           },
           "tiers": {
             "type": "array",

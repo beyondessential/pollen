@@ -372,9 +372,9 @@ function BesLedForm({
 						onChange={(v) => set({ tamanu_live: asBool(v) })}
 					/>
 				</Field>
-				<Field label="Patients a day at the busiest site">
+				<Field label="Total patients a day across all sites">
 					<Choice
-						label="Patients a day at the busiest site"
+						label="Total patients a day across all sites"
 						options={bands(model.patients_bands)}
 						value={answers.patients_per_day}
 						onChange={(patients_per_day) => set({ patients_per_day })}

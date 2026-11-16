@@ -102,7 +102,7 @@ pub struct EstimateInput {
 	pub doc_contact: Option<DocLevel>,
 	#[serde(default)]
 	pub doc_prior_exports: Option<DocLevel>,
-	/// Patients seen a day at the busiest site, as a band.
+	/// Patients seen a day in total across all sites, as a band.
 	#[serde(default)]
 	pub patients_per_day: Option<CaseBand>,
 	/// Years of visit history to migrate, as a band. Only read when visit
@@ -1270,7 +1270,7 @@ fn questions() -> Vec<Question> {
 			},
 		},
 		Question {
-			label: "Patients a day at the busiest site",
+			label: "Total patients a day across all sites",
 			open: |_, a| a.patients_per_day.is_none(),
 			fill: |_, a, end| {
 				a.patients_per_day = Some(pick(end, CaseBand::Small, CaseBand::Large));

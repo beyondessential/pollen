@@ -74,10 +74,14 @@ impl Area {
 		matches!(
 			self,
 			Area::M5
-				| Area::M6 | Area::M7
-				| Area::M8 | Area::M9
-				| Area::M10f | Area::M12b
-				| Area::M12f | Area::M14
+				| Area::M6
+				| Area::M7
+				| Area::M8
+				| Area::M9
+				| Area::M10f
+				| Area::M12b
+				| Area::M12f
+				| Area::M14
 		)
 	}
 

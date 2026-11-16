@@ -4,6 +4,7 @@ use std::time::Duration;
 use arc_swap::ArcSwap;
 
 use crate::config::Config;
+use crate::data_migration::{BUNDLED_DATA_MIGRATION, MigrationConfig};
 use crate::db::Db;
 use crate::error::{AppError, Result};
 use crate::pricing::{BUNDLED_PRICING, PricingConfig};
@@ -23,6 +24,8 @@ pub struct AppState {
 	pub resolver: Option<RulesetResolver<GitHubSource>>,
 	/// The hosting cost model's configuration, bundled at build time.
 	pub pricing: Arc<PricingConfig>,
+	/// The data migration effort model's configuration, bundled at build time.
+	pub data_migration: Arc<MigrationConfig>,
 }
 
 impl AppState {
@@ -40,6 +43,13 @@ impl AppState {
 			PricingConfig::from_ron(BUNDLED_PRICING)
 				.map_err(|e| AppError::custom(format!("bundled pricing is invalid: {e}")))?,
 		);
+
+		let data_migration = Arc::new(
+			MigrationConfig::from_ron(BUNDLED_DATA_MIGRATION).map_err(|e| {
+				AppError::custom(format!("bundled migration model is invalid: {e}"))
+			})?,
+		);
+		data_migration.check_distinct_from(&pricing.access_path)?;
 
 		let resolver = match &config.ruleset_repo {
 			Some(repo) => Some(RulesetResolver::new(GitHubSource::new(
@@ -70,6 +80,7 @@ impl AppState {
 			default_ruleset,
 			resolver,
 			pricing,
+			data_migration,
 		})
 	}
 }

@@ -97,6 +97,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/data-migration/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Estimate a BES-led migration. */
+        post: operations["data_migration_estimate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data-migration/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Estimate a client-prepared import. */
+        post: operations["data_migration_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data-migration/model": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The migration configuration. */
+        post: operations["data_migration_model"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/meta/version": {
         parameters: {
             query?: never;
@@ -189,6 +240,12 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description The headline figures under other answers. */
+        Alternative: {
+            months: components["schemas"]["Span"];
+            person_days: components["schemas"]["Span"];
+            scoping_person_days?: null | components["schemas"]["Span"];
+        };
         /**
          * @description The full state of an application: its lifecycle fields, the questions to
          *     render, the current answers, the evaluation (consequences, verdict, derived
@@ -223,6 +280,37 @@ export interface components {
          * @enum {string}
          */
         ApplicationStatus: "draft" | "finalised";
+        /**
+         * @description One area of a migration. Declared in the order the areas are worked, which
+         *     is the order an estimate lists them in.
+         * @enum {string}
+         */
+        Area: "M0" | "M1" | "M2" | "M3" | "M4" | "M4h" | "M5" | "M6" | "M7" | "M8" | "M9" | "M10f" | "M10r" | "M11" | "M11f" | "M12b" | "M12f" | "M13" | "M14";
+        /** @description One area in scope, with its figures as displayed. */
+        AreaLine: {
+            area: components["schemas"]["Area"];
+            basis: components["schemas"]["Basis"];
+            count?: null | components["schemas"]["Span"];
+            name: string;
+            person_days: components["schemas"]["Span"];
+            /** @description Elapsed weeks, to the nearest half. */
+            weeks: components["schemas"]["Span"];
+        };
+        AreaRow: {
+            area: components["schemas"]["Area"];
+            basis: components["schemas"]["Basis"];
+            /** @description Areas sharing a group are alternatives: at most one is picked. */
+            group?: string | null;
+            /** @description The area as an estimate names it. */
+            name: string;
+            /**
+             * @description How the area is offered as a choice. An area without one comes with a
+             *     tier or another answer.
+             */
+            pick?: string | null;
+            /** @description Elapsed weeks, for one of it. */
+            weeks: components["schemas"]["Span"];
+        };
         /** @description A default the engine applied because the question was left unanswered. */
         Assumed: {
             option: string;
@@ -234,6 +322,27 @@ export interface components {
          */
         Audience: "Client" | "Bes" | "Pricing" | "Record";
         /**
+         * @description What an area's starting range rests on.
+         * @enum {string}
+         */
+        Basis: "Calibrated" | "TeamExperience" | "Derived";
+        /**
+         * @description Roughly how many cases a program has in total, as one of the configured
+         *     bands.
+         * @enum {string}
+         */
+        CaseBand: "small" | "medium" | "large";
+        /**
+         * @description The bands a program's rough case numbers are given in: under
+         *     `medium_from`, from `medium_from` to `large_over`, and over `large_over`.
+         */
+        CaseBands: {
+            /** Format: int32 */
+            large_over: number;
+            /** Format: int32 */
+            medium_from: number;
+        };
+        /**
          * @description The clone used to test upgrades.
          * @enum {string}
          */
@@ -244,6 +353,11 @@ export interface components {
          * @enum {string}
          */
         Confidence: "Decided" | "Read" | "Estimated" | "Assumed";
+        /**
+         * @description How much is known about the migration, not how hard it is.
+         * @enum {string}
+         */
+        ConfidenceLevel: "Low" | "Medium" | "High";
         Consequence: {
             audience: components["schemas"]["Audience"];
             cost?: null | components["schemas"]["Cost"];
@@ -345,6 +459,91 @@ export interface components {
             /** Format: double */
             monthly: number;
         };
+        /**
+         * @description An answer to one of the documentation questions, and the rating of the four
+         *     together.
+         * @enum {string}
+         */
+        DocLevel: "good" | "partial" | "none";
+        DocumentationAlternatives: {
+            /** @description If documentation turns out good. */
+            good: components["schemas"]["Alternative"];
+            /** @description If there turns out to be no knowledgeable contact. */
+            no_contact: components["schemas"]["Alternative"];
+        };
+        /** @description A BES-led estimate, as displayed. */
+        Estimate: {
+            areas: components["schemas"]["AreaLine"][];
+            confidence: components["schemas"]["ConfidenceLevel"];
+            documentation: components["schemas"]["DocLevel"];
+            documentation_alternatives?: null | components["schemas"]["DocumentationAlternatives"];
+            /** @description Each assumption made and each change to the scope. */
+            flags: string[];
+            model_version: string;
+            /**
+             * @description The unanswered questions that move the range, those that move it most
+             *     first.
+             */
+            narrowing: components["schemas"]["Narrowing"][];
+            /** @description When the range is expected to narrow. */
+            narrows_after: string;
+            not_included: string[];
+            /** @description Data team person-days, with the review allowance. */
+            person_days: components["schemas"]["Span"];
+            scoping_person_days?: null | components["schemas"]["Span"];
+            staffing: components["schemas"]["StaffingRow"][];
+            /** @description Conditions the Data Lead weighs before the estimate goes further. */
+            stop_flags: string[];
+            tier?: null | components["schemas"]["Tier"];
+            /** @description The key answers still unknown. */
+            unknown: string[];
+            /** @description The figures are an upper bound (a spreadsheet-only source). */
+            upper_bound: boolean;
+            /** @description Each adjustment applied, and how the timeline is put together. */
+            workings: string[];
+        };
+        /**
+         * @description The answers a BES-led estimate is worked out from. Every one can be left
+         *     out, which reads as unknown.
+         */
+        EstimateInput: {
+            /** @description Areas added to the tier's. */
+            add?: components["schemas"]["Area"][];
+            doc_codes?: null | components["schemas"]["DocLevel"];
+            doc_contact?: null | components["schemas"]["DocLevel"];
+            doc_dictionary?: null | components["schemas"]["DocLevel"];
+            doc_prior_exports?: null | components["schemas"]["DocLevel"];
+            /**
+             * Format: int32
+             * @description Sites going live, each with its own cutover.
+             */
+            facility_count?: number | null;
+            /** Format: int32 */
+            form_count?: number | null;
+            history_years?: null | components["schemas"]["CaseBand"];
+            /**
+             * @description Whether more staff are to be migrated than `users.many_over`, past
+             *     staff included when records are attributed to them.
+             */
+            many_users?: boolean | null;
+            patients_per_day?: null | components["schemas"]["CaseBand"];
+            /** Format: int32 */
+            registry_count?: number | null;
+            /** @description Areas taken out of the tier's. */
+            remove?: components["schemas"]["Area"][];
+            review_speed?: null | components["schemas"]["ReviewSpeed"];
+            source_db?: null | components["schemas"]["SourceDb"];
+            /**
+             * Format: int32
+             * @description Separate copies of the source system, read in bands: one, a few, and
+             *     many.
+             */
+            source_instances?: number | null;
+            source_kind?: null | components["schemas"]["SourceKind"];
+            staffing?: null | components["schemas"]["Staffing"];
+            tamanu_live?: boolean | null;
+            tier?: null | components["schemas"]["Tier"];
+        };
         EstimatorOption: {
             id: string;
             label: string;
@@ -430,17 +629,116 @@ export interface components {
             /** Format: uuid */
             id: string;
         };
+        /** @description A client-prepared estimate, as displayed. */
+        ImportEstimate: {
+            /** @description Each assumption made. */
+            flags: string[];
+            model_version: string;
+            not_included: string[];
+            projects: components["schemas"]["ImportProjectLine"][];
+            templates_days?: null | components["schemas"]["Span"];
+            /** @description Data team days for the engagement, to the nearest half. */
+            total_days: components["schemas"]["Span"];
+            /** @description How each project's days are put together. */
+            workings: string[];
+        };
+        ImportInput: {
+            projects?: components["schemas"]["ImportProject"][];
+            /** @description Whether BES import templates already exist for these registries and forms. */
+            templates_exist?: boolean | null;
+        };
+        /** @description One program of a client-prepared engagement. */
+        ImportProject: {
+            cases?: null | components["schemas"]["CaseBand"];
+            /**
+             * Format: int32
+             * @description Forms the program's data is imported into.
+             */
+            forms?: number;
+            /** @description Whether the program has a registry, which brings in its patients. */
+            registry?: boolean | null;
+            /** Format: int32 */
+            sites?: number | null;
+        };
+        ImportProjectLine: {
+            /** @description Data team days, to the nearest half. */
+            days: components["schemas"]["Span"];
+            /** Format: int32 */
+            forms: number;
+            /**
+             * Format: int32
+             * @description The project's position in the engagement, from 1.
+             */
+            number: number;
+            /** @description Whether it has a registry; none when not answered. */
+            registry?: boolean | null;
+            /**
+             * Format: int32
+             * @description Sites going live; none when not answered.
+             */
+            sites?: number | null;
+            /** @description Elapsed weeks once the formatted data arrives, to the nearest half. */
+            weeks: components["schemas"]["Span"];
+        };
         /**
          * @description A line of the breakdown. Ids are stable, so tests and the UI can key on them.
          * @enum {string}
          */
         LineId: "central_box" | "cloud_facilities" | "clone" | "platform_share" | "backups_ops_share" | "backup_storage" | "demo_training" | "tupaia_reporting" | "windows_extra";
+        MigrationModelArgs: Record<string, never>;
+        /** @description The model's configuration, for the estimator's controls. */
+        MigrationModelView: {
+            areas: components["schemas"]["AreaRow"][];
+            /** @description The bands a program's rough case numbers are given in. */
+            case_bands: components["schemas"]["CaseBands"];
+            /** Format: int32 */
+            installs_many_from: number;
+            /**
+             * Format: int32
+             * @description Separate installs from which a few, and from which many, add time.
+             */
+            installs_some_from: number;
+            /**
+             * Format: int32
+             * @description Staff to be migrated beyond which users take longer.
+             */
+            many_users_over: number;
+            /**
+             * Format: int32
+             * @description The most a count answer is read as.
+             */
+            max_count: number;
+            /**
+             * Format: int32
+             * @description The most programs a client-prepared engagement is read as.
+             */
+            max_projects: number;
+            model: string;
+            /** @description The bands of patients a day at the busiest site. */
+            patients_bands: components["schemas"]["CaseBands"];
+            tiers: components["schemas"]["TierRow"][];
+            /** @description The tier an estimate starts from when none is chosen. */
+            unsure_tier: components["schemas"]["Tier"];
+            version: string;
+            /** @description The bands of years of visit history to migrate. */
+            years_bands: components["schemas"]["CaseBands"];
+        };
         /** @description What a fork's migration changed (spec WIZ, stable-id migration). */
         MigrationView: {
             dropped: string[];
             new_questions: string[];
         };
         ModelArgs: Record<string, never>;
+        /**
+         * @description An unanswered question, and the range with its cheapest and costliest
+         *     answer.
+         */
+        Narrowing: {
+            cheapest: components["schemas"]["Alternative"];
+            costliest: components["schemas"]["Alternative"];
+            /** @description The question as the form asks it. */
+            question: string;
+        };
         /** @description A cost input resting on an answer still open, priced one way for now. */
         OpenLine: {
             /**
@@ -566,6 +864,8 @@ export interface components {
             options: components["schemas"]["Opt"][];
             section?: string | null;
         };
+        /** @enum {string} */
+        ReviewSpeed: "fast" | "slow";
         /** @description A named group of questions, presented together. */
         Section: {
             /** @description Collapsed on arrival, for sections a non-technical user can skip. */
@@ -613,6 +913,17 @@ export interface components {
              */
             cloud_facilities?: number | null;
         };
+        /** @enum {string} */
+        SourceDb: "mysql-or-postgres" | "other";
+        /** @enum {string} */
+        SourceKind: "single-system" | "several-systems" | "spreadsheets" | "mix";
+        /** @description A low and a high end. */
+        Span: {
+            /** Format: double */
+            high: number;
+            /** Format: double */
+            low: number;
+        };
         /**
          * @description One row of a compute requirement as presented: the engine has already
          *     resolved the size band and dropped the rows whose condition does not hold.
@@ -621,11 +932,36 @@ export interface components {
             label: string;
             value: string;
         };
+        /** @enum {string} */
+        Staffing: "one" | "two" | "three";
+        /** @description The timeline for a number of data people. */
+        StaffingRow: {
+            /** @description Whether this is the staffing that was answered, or assumed. */
+            as_answered: boolean;
+            /** @description Months, to the nearest half. */
+            months: components["schemas"]["Span"];
+            /**
+             * Format: int32
+             * @description The data people; none when the timeline is the same for any staffing.
+             */
+            people?: number | null;
+        };
         /**
          * @description The technical-versus-contractual line (spec WIZ, Status).
          * @enum {string}
          */
         Status: "Requirement" | "Advisory" | "Referral";
+        /**
+         * @description The starting scope of a BES-led migration.
+         * @enum {string}
+         */
+        Tier: "reference-and-users" | "patient-register" | "patient-history" | "full-ehr";
+        TierRow: {
+            areas: components["schemas"]["Area"][];
+            hint: string;
+            label: string;
+            tier: components["schemas"]["Tier"];
+        };
         TriggeredConsequence: {
             consequence: components["schemas"]["Consequence"];
             id: string;
@@ -795,6 +1131,99 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
+                };
+            };
+        };
+    };
+    data_migration_estimate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EstimateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Estimate"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
+                };
+            };
+        };
+    };
+    data_migration_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportEstimate"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailsSchema"];
+                };
+            };
+        };
+    };
+    data_migration_model: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MigrationModelArgs"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MigrationModelView"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

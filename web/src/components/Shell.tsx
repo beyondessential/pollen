@@ -15,28 +15,33 @@ export function NotFound() {
 export function Shell({ children }: { children: ReactNode }) {
 	const edition = useEdition();
 	const internal = edition.pricingPath != null;
+	// The data migration estimator is a single page with no plans beneath it.
+	const migration = edition.migrationPath != null;
 	return (
 		<>
 			<header className="topbar">
-				<Link to={internal ? edition.base : "/"} className="brand">
+				<Link to={internal || migration ? edition.base : "/"} className="brand">
 					<img src={besLogo} className="brand-logo" alt="BES" />
 					<span className="brand-rule" />
 					<span className="brand-name">New Tamanu</span>
 					{internal && <span className="brand-tag">Internal pricing</span>}
+					{migration && <span className="brand-tag">Internal migration estimates</span>}
 				</Link>
 				<nav className="topbar-nav">
-					{internal && (
+					{(internal || migration) && (
 						<NavLink
 							to={edition.base}
 							end
 							className={({ isActive }) => `topbar-new${isActive ? " active" : ""}`}
 						>
-							Calculator
+							{migration ? "Estimator" : "Calculator"}
 						</NavLink>
 					)}
-					<Link to={internal ? `${edition.base}/new` : "/"} className="topbar-new">
-						Start a new plan
-					</Link>
+					{!migration && (
+						<Link to={internal ? `${edition.base}/new` : "/"} className="topbar-new">
+							Start a new plan
+						</Link>
+					)}
 				</nav>
 			</header>
 			{children}

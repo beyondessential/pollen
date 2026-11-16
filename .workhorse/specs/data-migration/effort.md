@@ -28,7 +28,7 @@ Durations are elapsed time at a sustainable pace for a data team that also carri
 An estimate is worked out from the answers given and is not stored: the estimator takes no client name, no site name and no free text.
 
 - [ ] No figure is shown as a single number where the model gives a range.
-- [ ] Every estimate says the range narrows once the initial assessment of the data (M0) is done, and that the estimate is revisited then.
+- [ ] Every estimate says its range is wide because data quality and shape vary widely between clients, and that a better estimate can be given after the initial analysis of the data (M0).
 - [ ] The estimate names the version of the model its figures come from.
 - [ ] Every answer can be left unknown, and each assumption made for an unknown answer is listed as a flag.
 - [ ] Changing any answer updates the estimate straight away.

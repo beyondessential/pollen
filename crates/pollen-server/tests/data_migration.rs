@@ -544,12 +544,12 @@ fn every_estimate_lists_what_it_leaves_out_and_names_its_model() {
 	assert_eq!(e.model_version, config.version);
 	assert!(
 		e.narrows_after
-			.contains("initial assessment of the data (M0)")
+			.contains("data quality and shape vary widely")
 	);
 	assert!(
 		ranged(json!({}))
 			.narrows_after
-			.contains("revisit the estimate")
+			.contains("after the initial analysis of the data (M0)")
 	);
 	let left_out = |e: &Estimate, text: &str| e.not_included.iter().any(|n| n.contains(text));
 	assert!(left_out(&e, "Post go-live support (4 to 13"));

@@ -1150,7 +1150,7 @@
           },
           "narrows_after": {
             "type": "string",
-            "description": "When the range is expected to narrow."
+            "description": "Why the range is wide, and when a better estimate can be given."
           },
           "not_included": {
             "type": "array",

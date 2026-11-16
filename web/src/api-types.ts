@@ -485,7 +485,7 @@ export interface components {
              *     first.
              */
             narrowing: components["schemas"]["Narrowing"][];
-            /** @description When the range is expected to narrow. */
+            /** @description Why the range is wide, and when a better estimate can be given. */
             narrows_after: string;
             not_included: string[];
             /** @description Data team person-days, with the review allowance. */

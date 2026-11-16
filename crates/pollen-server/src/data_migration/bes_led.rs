@@ -208,7 +208,7 @@ pub struct Estimate {
 	/// The key answers still unknown.
 	pub unknown: Vec<String>,
 	pub not_included: Vec<String>,
-	/// When the range is expected to narrow.
+	/// Why the range is wide, and when a better estimate can be given.
 	pub narrows_after: String,
 }
 
@@ -1212,7 +1212,7 @@ impl MigrationConfig {
 			flags,
 			unknown: given.unknown.clone(),
 			not_included,
-			narrows_after: "The range narrows once the initial assessment of the data (M0) is done: revisit the estimate then."
+			narrows_after: "The range is wide because data quality and shape vary widely from one client to the next. A better estimate can be given after the initial analysis of the data (M0)."
 				.into(),
 		}
 	}

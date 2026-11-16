@@ -16,14 +16,16 @@ import type {
 
 type Route = "bes" | "client";
 
-const NO_ANSWERS: MigrationEstimateInput = {
+/// Nothing answered, except the questions with a default, which start on it:
+/// no forms, one site, Tamanu not yet in use.
+const STARTING_ANSWERS: MigrationEstimateInput = {
 	tier: null,
 	add: [],
 	remove: [],
-	form_count: null,
-	registry_count: null,
-	facility_count: null,
-	tamanu_live: null,
+	form_count: 0,
+	registry_count: 0,
+	facility_count: 1,
+	tamanu_live: false,
 	source_kind: null,
 	source_instances: null,
 	source_db: null,
@@ -115,7 +117,7 @@ function sent(model: MigrationModelView, answers: MigrationEstimateInput): Migra
 export default function MigrationEstimator({ model }: { model: MigrationModelView }) {
 	const { migrationPath } = useEdition();
 	const [route, setRoute] = useState<Route>("bes");
-	const [answers, setAnswers] = useState<MigrationEstimateInput>(NO_ANSWERS);
+	const [answers, setAnswers] = useState<MigrationEstimateInput>(STARTING_ANSWERS);
 	const [engagement, setEngagement] = useState<MigrationImportInput>(NO_PROJECTS);
 	const [estimate, setEstimate] = useState<MigrationEstimate | null>(null);
 	const [imported, setImported] = useState<MigrationImportEstimate | null>(null);
@@ -333,7 +335,7 @@ function BesLedForm({
 											</div>
 										)}
 										{count && (
-											<div className="mig-check-detail calc-stack">
+											<div className="mig-check-detail">
 												<Count
 													label={`How many: ${label}`}
 													value={count.value}
@@ -341,7 +343,6 @@ function BesLedForm({
 													placeholder="0"
 													onChange={count.set}
 												/>
-												<p className="cost-hint">Left blank: none.</p>
 											</div>
 										)}
 									</div>
@@ -355,27 +356,21 @@ function BesLedForm({
 			<div className="card">
 				<h3 className="qtitle">The sites</h3>
 				<Field label="Sites going live">
-					<div className="calc-stack">
-						<Count
-							label="Sites going live"
-							value={answers.facility_count}
-							max={model.max_count}
-							placeholder="1"
-							onChange={(facility_count) => set({ facility_count })}
-						/>
-						<p className="cost-hint">Left blank: one.</p>
-					</div>
+					<Count
+						label="Sites going live"
+						value={answers.facility_count}
+						max={model.max_count}
+						placeholder="1"
+						onChange={(facility_count) => set({ facility_count })}
+					/>
 				</Field>
 				<Field label="Tamanu already in use there">
-					<div className="calc-stack">
-						<Choice
-							label="Tamanu already in use there"
-							options={YES_NO}
-							value={fromBool(answers.tamanu_live)}
-							onChange={(v) => set({ tamanu_live: asBool(v) })}
-						/>
-						<p className="cost-hint">Left blank: no.</p>
-					</div>
+					<Choice
+						label="Tamanu already in use there"
+						options={YES_NO}
+						value={fromBool(answers.tamanu_live)}
+						onChange={(v) => set({ tamanu_live: asBool(v) })}
+					/>
 				</Field>
 				<Field label="Patients a day at the busiest site">
 					<Choice

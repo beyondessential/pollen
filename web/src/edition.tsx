@@ -14,6 +14,9 @@ export type Edition = {
 	pricingPath: string | null;
 	/// The pricing configuration, loaded under that path.
 	model: PricingModelView | null;
+	/// The migration path, when this is the internal data migration estimator
+	/// (spec MIG, Access).
+	migrationPath?: string | null;
 };
 
 const EditionContext = createContext<Edition>({ base: "", pricingPath: null, model: null });
@@ -36,6 +39,16 @@ export function callPricing<F extends ApiFn<"pricing">>(
 	signal?: AbortSignal,
 ): Promise<ApiResponse<"pricing", F>> {
 	return callApi("pricing", fn, params, signal, { "x-pricing-path": pricingPath });
+}
+
+/// Call a data migration endpoint, naming the migration path it is gated on.
+export function callMigration<F extends ApiFn<"data-migration">>(
+	migrationPath: string,
+	fn: F,
+	params: ApiBody<"data-migration", F>,
+	signal?: AbortSignal,
+): Promise<ApiResponse<"data-migration", F>> {
+	return callApi("data-migration", fn, params, signal, { "x-migration-path": migrationPath });
 }
 
 /// A figure as displayed: whole units, in the configured currency.

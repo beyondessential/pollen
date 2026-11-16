@@ -1,0 +1,319 @@
+// Tamanu data migration effort model (spec MIG).
+//
+// Every number the internal migration estimator uses lives here, and nowhere
+// else. Figures are elapsed weeks at a sustainable pace (normal working hours)
+// for a data team that also carries other work and uses AI-assisted tooling,
+// and data person-days. It is an effort model, separate from the hosting cost
+// model in pricing.ron: it carries no rates and produces no dollar figure.
+//
+// The model mirrors the BES plan "Tamanu Data Migration: Project Plan and
+// Timeline Estimates". If the plan changes, change this file to match.
+//
+// Each area carries the basis for its range:
+//   Calibrated      taken from one previous BES-led migration from an
+//                   undocumented MySQL source (2025 to 2026), scaled from
+//                   sustained overtime to normal hours
+//   TeamExperience  set from team experience
+//   Derived         worked out from another area's range
+//
+// Each answer adds its own weeks and data person-days, or multiplies the
+// areas, as set by the data team.
+//
+// The reference cases in
+// crates/pollen-server/tests/fixtures/data_migration_cases.json record what
+// the estimator gives for each of their inputs. Changing a value here changes
+// what they give: record them again with
+//   UPDATE_REFERENCE_CASES=1 cargo test --test data_migration
+// and review the diff.
+(
+    model: "Tamanu data migration effort model",
+    version: "v1.0 (16 Nov 2026)",
+
+    // The estimator lives at /<access_path>, and its API answers only requests
+    // naming it. It keeps the estimator from being found by accident; it is not
+    // a secret of any weight, and changing it moves the estimator. It must
+    // differ from the hosting model's path.
+    access_path: "migration-model",
+
+    // The areas a migration is made of, in the order they are worked.
+    // `pick` is how the area is offered as a choice; an area without one comes
+    // with a tier or another answer. Areas sharing a `group` are alternatives:
+    // at most one of them is picked.
+    areas: [
+        (area: M0, name: "Initial analysis and set-up", weeks: (low: 1.0, high: 8.0), basis: TeamExperience),
+        (area: M1, name: "Reference data (runs during M0)", weeks: (low: 3.0, high: 5.5), basis: Calibrated),
+        // Set by the staff to be migrated (see `users`): the low end is up to
+        // 500 staff, the high end over 500.
+        (area: M2, name: "Users (runs during M0)", weeks: (low: 1.0, high: 2.0), basis: TeamExperience),
+        // Patients from basic registration at the low end to the full record
+        // at the high end: basic is 0.5 to 2 weeks, and the full record is 5
+        // data person-days more (1.6667 weeks at 3 a week).
+        (
+            area: M3,
+            name: "Patients, basic to full record, including rework",
+            pick: Some("Patient registrations, including births and deaths"),
+            weeks: (low: 0.5, high: 3.6667),
+            basis: TeamExperience,
+        ),
+        // In full: 5 to 12.5 weeks, plus 10 data person-days (3.3333 weeks at
+        // 3 a week) for triage and procedures.
+        (
+            area: M4,
+            name: "Encounters, including rework",
+            pick: Some("In full, with triage and procedures"),
+            group: Some("Visits and admissions"),
+            weeks: (low: 8.3333, high: 15.8333),
+            basis: TeamExperience,
+        ),
+        // Encounters, diagnoses, discharges, notes as text.
+        (
+            area: M4h,
+            name: "Encounters, patient history tier",
+            pick: Some("Readable history, with diagnoses and notes"),
+            group: Some("Visits and admissions"),
+            weeks: (low: 3.0, high: 5.5),
+            basis: Derived,
+        ),
+        (area: M5, name: "Medications", pick: Some("Medicines: prescriptions and dispensing"), weeks: (low: 1.0, high: 2.0), basis: TeamExperience),
+        (
+            area: M6,
+            name: "MAR",
+            pick: Some("Medicines given on the ward, dose by dose (usually not worth moving)"),
+            weeks: (low: 1.0, high: 3.0),
+            basis: TeamExperience,
+        ),
+        (area: M7, name: "Labs", pick: Some("Lab tests"), weeks: (low: 2.0, high: 5.0), basis: TeamExperience),
+        (area: M8, name: "Imaging", pick: Some("X-rays and other imaging"), weeks: (low: 1.0, high: 3.0), basis: TeamExperience),
+        (area: M9, name: "Vaccinations", pick: Some("Vaccinations"), weeks: (low: 1.5, high: 4.0), basis: TeamExperience),
+        // Clinical forms and disease or program forms are a week for each one,
+        // 3 data person-days. Their counts are asked once they are ticked, and
+        // a count left blank is none: often there are no forms to migrate.
+        (area: M10f, name: "Clinical forms", pick: Some("Clinical forms"), weeks: (low: 1.0, high: 1.0), basis: TeamExperience),
+        (
+            area: M10r,
+            name: "Disease or program forms",
+            pick: Some("Disease or program forms"),
+            weeks: (low: 1.0, high: 1.0),
+            basis: TeamExperience,
+        ),
+        (
+            area: M11,
+            name: "Appointments, with history",
+            pick: Some("Past and future"),
+            group: Some("Appointments"),
+            weeks: (low: 1.5, high: 4.0),
+            basis: TeamExperience,
+        ),
+        (
+            area: M11f,
+            name: "Appointments, future only",
+            pick: Some("Future bookings only"),
+            group: Some("Appointments"),
+            weeks: (low: 1.0, high: 2.0),
+            basis: TeamExperience,
+        ),
+        (
+            area: M12b,
+            name: "Billing, opening balances",
+            pick: Some("Unpaid balances only"),
+            group: Some("Billing"),
+            // 3 to 5 data person-days, at 3 a week.
+            weeks: (low: 1.0, high: 1.6667),
+            basis: TeamExperience,
+        ),
+        (
+            area: M12f,
+            name: "Billing, full history",
+            pick: Some("Full invoice history"),
+            group: Some("Billing"),
+            // 5 to 10 data person-days, at 3 a week.
+            weeks: (low: 1.6667, high: 3.3333),
+            basis: TeamExperience,
+        ),
+        (area: M13, name: "Documents", pick: Some("Scanned documents and attachments"), weeks: (low: 1.0, high: 3.0), basis: TeamExperience),
+        (
+            area: M14,
+            name: "Tasks",
+            pick: Some("Ward tasks and to-do lists (usually not worth moving)"),
+            weeks: (low: 1.0, high: 2.0),
+            basis: TeamExperience,
+        ),
+    ],
+
+    // Initial analysis and set-up for a full EHR migration, in place of M0's
+    // own range.
+    m0_full_ehr: (weeks: (low: 8.0, high: 15.0), basis: Calibrated),
+
+    // The starting scope. An estimate with no tier chosen starts from
+    // `unsure_tier` and says so.
+    tiers: [
+        (
+            tier: ReferenceAndUsers,
+            label: "Lists and staff accounts",
+            hint: "Their lists and staff accounts set up in Tamanu, with no patient data.",
+            areas: [M0, M1, M2],
+        ),
+        (
+            tier: PatientRegister,
+            label: "Patient register",
+            hint: "Every patient registered, with basic details, allergies, conditions and deaths.",
+            areas: [M0, M1, M2, M3],
+        ),
+        (
+            tier: PatientHistory,
+            label: "Patient history",
+            hint: "Patients plus a readable history of their visits, with diagnoses and notes.",
+            areas: [M0, M1, M2, M3, M4h],
+        ),
+        (
+            tier: FullEhr,
+            label: "Full record",
+            hint: "Most of the record in structured form, including medicines, lab tests, imaging and vaccinations.",
+            areas: [M0, M1, M2, M3, M4, M5, M7, M8, M9, M11, M12b],
+        ),
+    ],
+    unsure_tier: PatientHistory,
+
+    // Added by what the client uses now. A spreadsheet-only source adds
+    // nothing here, but is flagged: the figures are an upper bound for it.
+    source: (
+        other_db: (weeks: (low: 2.0, high: 2.0), days: (low: 6.0, high: 6.0)),
+        // Several systems, or a mix including spreadsheets.
+        several: (weeks: (low: 2.0, high: 4.0), days: (low: 8.0, high: 12.0)),
+        // Separate installs of the source system: one adds nothing, 2 to 3
+        // add `some`, 4 or more add `many`.
+        installs: (
+            some_from: 2,
+            many_from: 4,
+            some: (weeks: (low: 1.0, high: 1.0), days: (low: 3.0, high: 3.0)),
+            many: (weeks: (low: 2.0, high: 2.0), days: (low: 6.0, high: 6.0)),
+        ),
+    ),
+
+    // Size multiplies M1 and every area from M3 onwards, timeline and
+    // person-days alike: first by the total patients a day across all sites, then
+    // by the years of visit history to migrate (only when visits are in
+    // scope). Each in three bands: under `medium_from`, `medium_from` to
+    // `large_over`, and over `large_over`.
+    size: (
+        patients: (medium_from: 200, large_over: 1000),
+        years: (medium_from: 2, large_over: 5),
+        patients_factor: (1.0, 1.1, 1.25),
+        years_factor: (1.0, 1.2, 1.5),
+    ),
+
+    // Staff to be migrated, past staff included when records are attributed
+    // to them: M2 takes `weeks` (3 person-days) up to `many_over`, and
+    // `many_weeks` (6 person-days) over it.
+    users: (
+        weeks: 1.0,
+        many_weeks: 2.0,
+        many_over: 500,
+    ),
+
+    // Sites going live, one when not answered: the first site's cutover, and
+    // `extra` for each site beyond it.
+    sites: (
+        cutover_weeks: 1.0,
+        cutover_days: (low: 4.0, high: 5.0),
+        extra: (weeks: (low: 2.0, high: 2.0), days: (low: 6.0, high: 6.0)),
+    ),
+
+    // Tamanu already in use there, no when not answered: checking migrated
+    // records for conflicts with those entered since go-live.
+    tamanu_live: (weeks: (low: 1.0, high: 1.0), days: (low: 3.0, high: 3.0)),
+
+    // Added to the high end of the timeline when the client is slow to
+    // review. Elapsed waiting, so no person-days.
+    slow_review_weeks: 8.0,
+
+    timeline: (
+        // Data people when the staffing is not known. More people share the
+        // areas after encounters; nothing else runs faster.
+        default_people: 2,
+        weeks_per_month: 4.33,
+    ),
+
+    effort: (
+        days_per_week: 5.0,
+        // The share of the elapsed time the data team spends on an area.
+        m0_share: 0.4,
+        area_share: 0.6,
+        // Added to the data total for review.
+        review_allowance: 0.1,
+        // Added to the person-days for each data person beyond the first,
+        // compounding (two people x1.05, three x1.1025): keeping the work
+        // aligned.
+        alignment_per_extra_person: 0.05,
+        // Listed as not included, per cutover.
+        post_go_live_days: (low: 4.0, high: 13.0),
+    ),
+
+    confidence: (
+        // Low at this many unknown key answers or more.
+        low_from_unknowns: 4,
+        // High needs no more than this many.
+        high_max_unknowns: 1,
+    ),
+
+    // A client-prepared import: the client formats the data into BES templates
+    // and does its own mapping, and the Tamanu forms and registries the data
+    // goes into already exist. Sized in data team days for each program.
+    // Evidence: earlier client-prepared estimates (2 to 5 days per program) and
+    // completed client-prepared imports (about 3 working days for templates and
+    // 5 to 6 per import, elapsed), with a standing buffer added.
+    client_prepared: (
+        // Creating the import templates, once per engagement, if they do not
+        // exist; nothing when they do.
+        templates_days: 1.0,
+        // The program's registry, when it has one: once, whatever the number
+        // of sites.
+        registry_days: 1.0,
+        // Each site beyond the first, for variations in how it was implemented.
+        extra_site_days: (low: 0.5, high: 2.0),
+        // Per program, always: the client's tools are taken as untested.
+        contingency_days: (low: 1.0, high: 2.0),
+        // Per program, always.
+        buffer_days: 2.0,
+        // The bands a program's rough case numbers are given in: under
+        // `medium_from`, `medium_from` to `large_over`, and over `large_over`.
+        case_bands: (medium_from: 10000, large_over: 100000),
+        // Days each form takes, its own template and import, by the program's
+        // case band. Unknown case numbers take the top band.
+        case_days: (
+            small: (low: 1.0, high: 2.0),
+            medium: (low: 2.0, high: 3.0),
+            large: (low: 3.0, high: 5.0),
+        ),
+        // A program takes its data team days divided by this in elapsed weeks,
+        // once the formatted data arrives.
+        days_per_elapsed_week: 3.0,
+        max_projects: 20,
+        // What an unanswered number of sites is read as at the high end.
+        unanswered_sites: 5,
+    ),
+
+    // What each documentation answer multiplies every area by, set-up
+    // included, timeline and person-days alike; the answers compound. Yes is
+    // x1. Earlier exports with their queries are asked about only when the
+    // data dictionary is partly there or missing. On the full record, x1.05 is
+    // about half a month, so a contact who knows the data and earlier exports
+    // weigh the same.
+    documentation: (
+        contact: (partial: 1.05, none: 1.1),
+        codes: (partial: 1.025, none: 1.05),
+        dictionary: (partial: 1.1, none: 1.2),
+        no_prior_exports: 1.05,
+    ),
+
+    // How ranges are added up into the timeline and the person-days.
+    // Independent: each range is an estimate in its own right, spread around
+    // its midpoint, and the spreads combine as the root of the sum of their
+    // squares, since independent areas rarely all run long or all run short.
+    // Stacked: every low added up and every high added up.
+    combine: Independent,
+
+    // The most any count answer (sites, source instances, forms, registries)
+    // is read as.
+    max_count: 500,
+)

@@ -14,6 +14,7 @@ use diesel_async::{
 };
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness as _, embed_migrations};
 use pollen_server::config::Config;
+use pollen_server::data_migration::{BUNDLED_DATA_MIGRATION, MigrationConfig};
 use pollen_server::pricing::{BUNDLED_PRICING, PricingConfig};
 use pollen_server::ruleset::{BUNDLED_RULESET, ResolvedRuleset};
 use pollen_server::state::AppState;
@@ -23,6 +24,13 @@ use uuid::Uuid;
 pub static PRICING_PATH: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
 	PricingConfig::from_ron(BUNDLED_PRICING)
 		.expect("bundled pricing")
+		.access_path
+});
+
+/// The migration path the app is configured with, read from the same file.
+pub static MIGRATION_PATH: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
+	MigrationConfig::from_ron(BUNDLED_DATA_MIGRATION)
+		.expect("bundled migration model")
 		.access_path
 });
 
@@ -113,6 +121,9 @@ where
 		)),
 		resolver: None,
 		pricing: Arc::new(PricingConfig::from_ron(BUNDLED_PRICING).expect("bundled pricing")),
+		data_migration: Arc::new(
+			MigrationConfig::from_ron(BUNDLED_DATA_MIGRATION).expect("bundled migration model"),
+		),
 	};
 	let app = pollen_server::routes(state).expect("routes");
 	let server = TestServer::new(app);
@@ -120,6 +131,32 @@ where
 	let result = test(server, tdb.connect(false).await).await;
 	tdb.teardown().await;
 	result
+}
+
+/// The app mounted with no database behind it, for endpoints that store
+/// nothing and so never open a connection (the pool connects on first use).
+pub fn server_without_db() -> TestServer {
+	let url = "postgres://localhost/unused";
+	let state = AppState {
+		config: Arc::new(Config {
+			public_base_url: None,
+			database_url: url.to_string(),
+			ruleset_repo: None,
+			ruleset_repo_token: None,
+			ruleset_branch: "main".to_string(),
+			ruleset_poll_secs: 0,
+		}),
+		db: pollen_server::db::init(url),
+		default_ruleset: Arc::new(ArcSwap::from_pointee(
+			ResolvedRuleset::from_ron(BUNDLED_RULESET).expect("bundled ruleset"),
+		)),
+		resolver: None,
+		pricing: Arc::new(PricingConfig::from_ron(BUNDLED_PRICING).expect("bundled pricing")),
+		data_migration: Arc::new(
+			MigrationConfig::from_ron(BUNDLED_DATA_MIGRATION).expect("bundled migration model"),
+		),
+	};
+	TestServer::new(pollen_server::routes(state).expect("routes"))
 }
 
 /// Run a test against a fresh database, handed a connection pool (for code that

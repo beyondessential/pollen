@@ -45,7 +45,7 @@ impl FromRequestParts<AppState> for PricingAccess {
 
 /// Compare without returning early on the first differing byte, so timing
 /// does not reveal how much of a guess was right.
-fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
+pub(crate) fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
 	a.len() == b.len() && a.iter().zip(b).fold(0u8, |acc, (x, y)| acc | (x ^ y)) == 0
 }
 

@@ -14,6 +14,7 @@ use utoipa::OpenApi;
     ),
     tags(
         (name = "applications", description = "Onboarding artifacts: create, read, edit, finalise, fork."),
+        (name = "data-migration", description = "Internal data migration effort model. Answers only requests naming the configured migration path."),
         (name = "meta", description = "Service metadata."),
         (name = "pricing", description = "Internal hosting cost model. Answers only requests naming the configured pricing path."),
     ),

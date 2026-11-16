@@ -24,6 +24,19 @@ plan will fork that plan to a new version with the config being previewed.
 
 Changing the _engine_ or _visual style_ requires code changes and a full deploy.
 
+## Internal models
+
+Two internal tools sit beside the public wizard, each at its own path and each
+driven by one RON file at the repository root:
+
+- `pricing.ron`: the hosting cost model, a calculator and a priced edition of
+  the wizard (spec `COST`).
+- `data-migration.ron`: the data migration effort model, an estimator that sizes
+  moving a client's existing data into Tamanu as a timeline and data person-days
+  (spec `MIG`). It is separate from the hosting cost and carries no dollar figure.
+
+Both are bundled at build time, so changing either needs a deploy.
+
 ## Local dev
 
 Run `just watch-api` and `just watch-web` in two terminals and open <http://localhost:8090>.

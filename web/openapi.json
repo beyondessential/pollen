@@ -198,6 +198,129 @@
         }
       }
     },
+    "/api/data-migration/estimate": {
+      "post": {
+        "tags": [
+          "data-migration"
+        ],
+        "summary": "Estimate a BES-led migration.",
+        "operationId": "data_migration_estimate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EstimateInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Estimate"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-migration/import": {
+      "post": {
+        "tags": [
+          "data-migration"
+        ],
+        "summary": "Estimate a client-prepared import.",
+        "operationId": "data_migration_import",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportEstimate"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/data-migration/model": {
+      "post": {
+        "tags": [
+          "data-migration"
+        ],
+        "summary": "The migration configuration.",
+        "operationId": "data_migration_model",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MigrationModelArgs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MigrationModelView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/meta/version": {
       "post": {
         "tags": [
@@ -386,6 +509,32 @@
   },
   "components": {
     "schemas": {
+      "Alternative": {
+        "type": "object",
+        "description": "The headline figures under other answers.",
+        "required": [
+          "months",
+          "person_days"
+        ],
+        "properties": {
+          "months": {
+            "$ref": "#/components/schemas/Span"
+          },
+          "person_days": {
+            "$ref": "#/components/schemas/Span"
+          },
+          "scoping_person_days": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Span"
+              }
+            ]
+          }
+        }
+      },
       "AppView": {
         "type": "object",
         "description": "The full state of an application: its lifecycle fields, the questions to\nrender, the current answers, the evaluation (consequences, verdict, derived\nvalues, visible questions, guidance), and, on a fork, what changed.",
@@ -470,6 +619,111 @@
           "finalised"
         ]
       },
+      "Area": {
+        "type": "string",
+        "description": "One area of a migration. Declared in the order the areas are worked, which\nis the order an estimate lists them in.",
+        "enum": [
+          "M0",
+          "M1",
+          "M2",
+          "M3",
+          "M4",
+          "M4h",
+          "M5",
+          "M6",
+          "M7",
+          "M8",
+          "M9",
+          "M10f",
+          "M10r",
+          "M11",
+          "M11f",
+          "M12b",
+          "M12f",
+          "M13",
+          "M14"
+        ]
+      },
+      "AreaLine": {
+        "type": "object",
+        "description": "One area in scope, with its figures as displayed.",
+        "required": [
+          "area",
+          "name",
+          "weeks",
+          "person_days",
+          "basis"
+        ],
+        "properties": {
+          "area": {
+            "$ref": "#/components/schemas/Area"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/Basis"
+          },
+          "count": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Span",
+                "description": "How many of it, for forms and registries: a range when the count was\nnot answered."
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "person_days": {
+            "$ref": "#/components/schemas/Span"
+          },
+          "weeks": {
+            "$ref": "#/components/schemas/Span",
+            "description": "Elapsed weeks, to the nearest half."
+          }
+        }
+      },
+      "AreaRow": {
+        "type": "object",
+        "required": [
+          "area",
+          "name",
+          "weeks",
+          "basis"
+        ],
+        "properties": {
+          "area": {
+            "$ref": "#/components/schemas/Area"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/Basis"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Areas sharing a group are alternatives: at most one is picked."
+          },
+          "name": {
+            "type": "string",
+            "description": "The area as an estimate names it."
+          },
+          "pick": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "How the area is offered as a choice. An area without one comes with a\ntier or another answer."
+          },
+          "weeks": {
+            "$ref": "#/components/schemas/Span",
+            "description": "Elapsed weeks, for one of it."
+          }
+        },
+        "additionalProperties": false
+      },
       "Assumed": {
         "type": "object",
         "description": "A default the engine applied because the question was left unanswered.",
@@ -496,6 +750,45 @@
           "Record"
         ]
       },
+      "Basis": {
+        "type": "string",
+        "description": "What an area's starting range rests on.",
+        "enum": [
+          "Calibrated",
+          "TeamExperience",
+          "Derived"
+        ]
+      },
+      "CaseBand": {
+        "type": "string",
+        "description": "Roughly how many cases a program has in total, as one of the configured\nbands.",
+        "enum": [
+          "small",
+          "medium",
+          "large"
+        ]
+      },
+      "CaseBands": {
+        "type": "object",
+        "description": "The bands a program's rough case numbers are given in: under\n`medium_from`, from `medium_from` to `large_over`, and over `large_over`.",
+        "required": [
+          "medium_from",
+          "large_over"
+        ],
+        "properties": {
+          "large_over": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "medium_from": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
       "CloneMode": {
         "type": "string",
         "description": "The clone used to test upgrades.",
@@ -513,6 +806,15 @@
           "Read",
           "Estimated",
           "Assumed"
+        ]
+      },
+      "ConfidenceLevel": {
+        "type": "string",
+        "description": "How much is known about the migration, not how hard it is.",
+        "enum": [
+          "Low",
+          "Medium",
+          "High"
         ]
       },
       "Consequence": {
@@ -761,6 +1063,339 @@
           }
         }
       },
+      "DocLevel": {
+        "type": "string",
+        "description": "An answer to one of the documentation questions, and the rating of the four\ntogether.",
+        "enum": [
+          "good",
+          "partial",
+          "none"
+        ]
+      },
+      "DocumentationAlternatives": {
+        "type": "object",
+        "required": [
+          "good",
+          "no_contact"
+        ],
+        "properties": {
+          "good": {
+            "$ref": "#/components/schemas/Alternative",
+            "description": "If documentation turns out good."
+          },
+          "no_contact": {
+            "$ref": "#/components/schemas/Alternative",
+            "description": "If there turns out to be no knowledgeable contact."
+          }
+        }
+      },
+      "Estimate": {
+        "type": "object",
+        "description": "A BES-led estimate, as displayed.",
+        "required": [
+          "model_version",
+          "confidence",
+          "documentation",
+          "upper_bound",
+          "areas",
+          "staffing",
+          "person_days",
+          "narrowing",
+          "workings",
+          "stop_flags",
+          "flags",
+          "unknown",
+          "not_included",
+          "narrows_after"
+        ],
+        "properties": {
+          "areas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AreaLine"
+            }
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/ConfidenceLevel"
+          },
+          "documentation": {
+            "$ref": "#/components/schemas/DocLevel"
+          },
+          "documentation_alternatives": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DocumentationAlternatives"
+              }
+            ]
+          },
+          "flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Each assumption made and each change to the scope."
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "narrowing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Narrowing"
+            },
+            "description": "The unanswered questions that move the range, those that move it most\nfirst."
+          },
+          "narrows_after": {
+            "type": "string",
+            "description": "Why the range is wide, and when a better estimate can be given."
+          },
+          "not_included": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "person_days": {
+            "$ref": "#/components/schemas/Span",
+            "description": "Data team person-days, with the review allowance."
+          },
+          "scoping_person_days": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Span",
+                "description": "M0 and M1 person-days, reported on their own for the smaller tiers."
+              }
+            ]
+          },
+          "staffing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffingRow"
+            }
+          },
+          "stop_flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Conditions the Data Lead weighs before the estimate goes further."
+          },
+          "tier": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Tier",
+                "description": "The tier chosen. When none is, the range runs from the smallest scope\nto the largest."
+              }
+            ]
+          },
+          "unknown": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The key answers still unknown."
+          },
+          "upper_bound": {
+            "type": "boolean",
+            "description": "The figures are an upper bound (a spreadsheet-only source)."
+          },
+          "workings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Each adjustment applied, and how the timeline is put together."
+          }
+        }
+      },
+      "EstimateInput": {
+        "type": "object",
+        "description": "The answers a BES-led estimate is worked out from. Every one can be left\nout, which reads as unknown.",
+        "properties": {
+          "add": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Area"
+            },
+            "description": "Areas added to the tier's."
+          },
+          "doc_codes": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DocLevel"
+              }
+            ]
+          },
+          "doc_contact": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DocLevel"
+              }
+            ]
+          },
+          "doc_dictionary": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DocLevel"
+              }
+            ]
+          },
+          "doc_prior_exports": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DocLevel"
+              }
+            ]
+          },
+          "facility_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Sites going live, each with its own cutover.",
+            "minimum": 0
+          },
+          "form_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          },
+          "history_years": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CaseBand",
+                "description": "Years of visit history to migrate, as a band. Only read when visit\nhistory is in scope."
+              }
+            ]
+          },
+          "many_users": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Whether more staff are to be migrated than `users.many_over`, past\nstaff included when records are attributed to them."
+          },
+          "patients_per_day": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CaseBand",
+                "description": "Patients seen a day in total across all sites, as a band."
+              }
+            ]
+          },
+          "registry_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          },
+          "remove": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Area"
+            },
+            "description": "Areas taken out of the tier's."
+          },
+          "review_speed": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReviewSpeed"
+              }
+            ]
+          },
+          "source_db": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SourceDb"
+              }
+            ]
+          },
+          "source_instances": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Separate copies of the source system, read in bands: one, a few, and\nmany.",
+            "minimum": 0
+          },
+          "source_kind": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SourceKind"
+              }
+            ]
+          },
+          "staffing": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Staffing"
+              }
+            ]
+          },
+          "tamanu_live": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "tier": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Tier"
+              }
+            ]
+          }
+        }
+      },
       "EstimatorOption": {
         "type": "object",
         "required": [
@@ -969,6 +1604,166 @@
           }
         }
       },
+      "ImportEstimate": {
+        "type": "object",
+        "description": "A client-prepared estimate, as displayed.",
+        "required": [
+          "model_version",
+          "projects",
+          "total_days",
+          "workings",
+          "flags",
+          "not_included"
+        ],
+        "properties": {
+          "flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Each assumption made."
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "not_included": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportProjectLine"
+            }
+          },
+          "templates_days": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Span",
+                "description": "Days to build the import templates, when they are not known to exist:\nfrom none when that is not answered."
+              }
+            ]
+          },
+          "total_days": {
+            "$ref": "#/components/schemas/Span",
+            "description": "Data team days for the engagement, to the nearest half."
+          },
+          "workings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "How each project's days are put together."
+          }
+        }
+      },
+      "ImportInput": {
+        "type": "object",
+        "properties": {
+          "projects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportProject"
+            }
+          },
+          "templates_exist": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Whether BES import templates already exist for these registries and forms."
+          }
+        }
+      },
+      "ImportProject": {
+        "type": "object",
+        "description": "One program of a client-prepared engagement.",
+        "properties": {
+          "cases": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CaseBand",
+                "description": "Roughly how many cases the program has in total."
+              }
+            ]
+          },
+          "forms": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Forms the program's data is imported into.",
+            "minimum": 0
+          },
+          "registry": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Whether the program has a registry, which brings in its patients."
+          },
+          "sites": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "ImportProjectLine": {
+        "type": "object",
+        "required": [
+          "number",
+          "forms",
+          "days",
+          "weeks"
+        ],
+        "properties": {
+          "days": {
+            "$ref": "#/components/schemas/Span",
+            "description": "Data team days, to the nearest half."
+          },
+          "forms": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The project's position in the engagement, from 1.",
+            "minimum": 0
+          },
+          "registry": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Whether it has a registry; none when not answered."
+          },
+          "sites": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Sites going live; none when not answered.",
+            "minimum": 0
+          },
+          "weeks": {
+            "$ref": "#/components/schemas/Span",
+            "description": "Elapsed weeks once the formatted data arrives, to the nearest half."
+          }
+        }
+      },
       "LineId": {
         "type": "string",
         "description": "A line of the breakdown. Ids are stable, so tests and the UI can key on them.",
@@ -983,6 +1778,93 @@
           "tupaia_reporting",
           "windows_extra"
         ]
+      },
+      "MigrationModelArgs": {
+        "type": "object"
+      },
+      "MigrationModelView": {
+        "type": "object",
+        "description": "The model's configuration, for the estimator's controls.",
+        "required": [
+          "model",
+          "version",
+          "tiers",
+          "unsure_tier",
+          "areas",
+          "max_count",
+          "max_projects",
+          "case_bands",
+          "patients_bands",
+          "years_bands",
+          "many_users_over",
+          "installs_some_from",
+          "installs_many_from"
+        ],
+        "properties": {
+          "areas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AreaRow"
+            }
+          },
+          "case_bands": {
+            "$ref": "#/components/schemas/CaseBands",
+            "description": "The bands a program's rough case numbers are given in."
+          },
+          "installs_many_from": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "installs_some_from": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Separate installs from which a few, and from which many, add time.",
+            "minimum": 0
+          },
+          "many_users_over": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Staff to be migrated beyond which users take longer.",
+            "minimum": 0
+          },
+          "max_count": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The most a count answer is read as.",
+            "minimum": 0
+          },
+          "max_projects": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The most programs a client-prepared engagement is read as.",
+            "minimum": 0
+          },
+          "model": {
+            "type": "string"
+          },
+          "patients_bands": {
+            "$ref": "#/components/schemas/CaseBands",
+            "description": "The bands of total patients a day across all sites."
+          },
+          "tiers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TierRow"
+            }
+          },
+          "unsure_tier": {
+            "$ref": "#/components/schemas/Tier",
+            "description": "The tier an estimate starts from when none is chosen."
+          },
+          "version": {
+            "type": "string"
+          },
+          "years_bands": {
+            "$ref": "#/components/schemas/CaseBands",
+            "description": "The bands of years of visit history to migrate."
+          }
+        }
       },
       "MigrationView": {
         "type": "object",
@@ -1008,6 +1890,27 @@
       },
       "ModelArgs": {
         "type": "object"
+      },
+      "Narrowing": {
+        "type": "object",
+        "description": "An unanswered question, and the range with its cheapest and costliest\nanswer.",
+        "required": [
+          "question",
+          "cheapest",
+          "costliest"
+        ],
+        "properties": {
+          "cheapest": {
+            "$ref": "#/components/schemas/Alternative"
+          },
+          "costliest": {
+            "$ref": "#/components/schemas/Alternative"
+          },
+          "question": {
+            "type": "string",
+            "description": "The question as the form asks it."
+          }
+        }
       },
       "OpenLine": {
         "type": "object",
@@ -1340,6 +2243,13 @@
           }
         }
       },
+      "ReviewSpeed": {
+        "type": "string",
+        "enum": [
+          "fast",
+          "slow"
+        ]
+      },
       "Section": {
         "type": "object",
         "description": "A named group of questions, presented together.",
@@ -1442,6 +2352,41 @@
           }
         }
       },
+      "SourceDb": {
+        "type": "string",
+        "enum": [
+          "mysql-or-postgres",
+          "other"
+        ]
+      },
+      "SourceKind": {
+        "type": "string",
+        "enum": [
+          "single-system",
+          "several-systems",
+          "spreadsheets",
+          "mix"
+        ]
+      },
+      "Span": {
+        "type": "object",
+        "description": "A low and a high end.",
+        "required": [
+          "low",
+          "high"
+        ],
+        "properties": {
+          "high": {
+            "type": "number",
+            "format": "double"
+          },
+          "low": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
       "Spec": {
         "type": "object",
         "description": "One row of a compute requirement as presented: the engine has already\nresolved the size band and dropped the rows whose condition does not hold.",
@@ -1458,6 +2403,41 @@
           }
         }
       },
+      "Staffing": {
+        "type": "string",
+        "enum": [
+          "one",
+          "two",
+          "three"
+        ]
+      },
+      "StaffingRow": {
+        "type": "object",
+        "description": "The timeline for a number of data people.",
+        "required": [
+          "as_answered",
+          "months"
+        ],
+        "properties": {
+          "as_answered": {
+            "type": "boolean",
+            "description": "Whether this is the staffing that was answered, or assumed."
+          },
+          "months": {
+            "$ref": "#/components/schemas/Span",
+            "description": "Months, to the nearest half."
+          },
+          "people": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "The data people; none when the timeline is the same for any staffing.",
+            "minimum": 0
+          }
+        }
+      },
       "Status": {
         "type": "string",
         "description": "The technical-versus-contractual line (spec WIZ, Status).",
@@ -1466,6 +2446,43 @@
           "Advisory",
           "Referral"
         ]
+      },
+      "Tier": {
+        "type": "string",
+        "description": "The starting scope of a BES-led migration.",
+        "enum": [
+          "reference-and-users",
+          "patient-register",
+          "patient-history",
+          "full-ehr"
+        ]
+      },
+      "TierRow": {
+        "type": "object",
+        "required": [
+          "tier",
+          "label",
+          "hint",
+          "areas"
+        ],
+        "properties": {
+          "areas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Area"
+            }
+          },
+          "hint": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "tier": {
+            "$ref": "#/components/schemas/Tier"
+          }
+        },
+        "additionalProperties": false
       },
       "TriggeredConsequence": {
         "type": "object",
@@ -1567,6 +2584,10 @@
     {
       "name": "applications",
       "description": "Onboarding artifacts: create, read, edit, finalise, fork."
+    },
+    {
+      "name": "data-migration",
+      "description": "Internal data migration effort model. Answers only requests naming the configured migration path."
     },
     {
       "name": "meta",

@@ -97,6 +97,17 @@ export type CloneMode = Solidify<Schemas["CloneMode"]>;
 export type PlanCost = Solidify<Schemas["PlanCost"]>;
 export type PlanOverrides = Solidify<Schemas["PlanOverrides"]>;
 
+// ── Internal data migration wire types ──────────────────────────────────────
+export type MigrationModelView = Solidify<Schemas["MigrationModelView"]>;
+export type MigrationArea = Solidify<Schemas["Area"]>;
+export type MigrationSpan = Solidify<Schemas["Span"]>;
+export type MigrationCaseBands = Solidify<Schemas["CaseBands"]>;
+export type MigrationEstimateInput = Solidify<Schemas["EstimateInput"]>;
+export type MigrationEstimate = Solidify<Schemas["Estimate"]>;
+export type MigrationImportInput = Solidify<Schemas["ImportInput"]>;
+export type MigrationImportProject = Solidify<Schemas["ImportProject"]>;
+export type MigrationImportEstimate = Solidify<Schemas["ImportEstimate"]>;
+
 /// An answer value: one option id (single/band) or several (multi).
 export type AnswerValue = string | string[];
 

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Route, Routes, useParams } from "react-router-dom";
 
-import { NotFound, Shell } from "../components/Shell";
+import { Shell } from "../components/Shell";
 import { type Edition, EditionProvider, callPricing } from "../edition";
 import type { PricingModelView } from "../types";
 import ApplicationPage from "./ApplicationPage";
 import Calculator from "./Calculator";
+import MigrationEdition from "./MigrationEdition";
 import NewApplication from "./NewApplication";
 
 /// The internal pricing edition (spec COST). The path segment is checked by
@@ -38,7 +39,9 @@ export default function PricingEdition() {
 		return () => meta.remove();
 	}, []);
 
-	if (failed) return <NotFound />;
+	// Not the pricing path: it may be the data migration estimator's, which
+	// checks it the same way and shows not found itself.
+	if (failed) return <MigrationEdition path={pricingPath} />;
 	if (!model) return <div className="splash">Loading…</div>;
 
 	const edition: Edition = { base: `/${pricingPath}`, pricingPath, model };

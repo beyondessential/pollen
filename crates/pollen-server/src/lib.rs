@@ -1,4 +1,5 @@
 pub mod config;
+pub mod data_migration;
 pub mod db;
 pub mod error;
 pub mod fns;

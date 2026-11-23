@@ -244,7 +244,7 @@ export interface components {
         Alternative: {
             months: components["schemas"]["Span"];
             person_days: components["schemas"]["Span"];
-            scoping_person_days?: null | components["schemas"]["Span"];
+            scoping_person_days?: components["schemas"]["Span"] | null;
         };
         /**
          * @description The full state of an application: its lifecycle fields, the questions to
@@ -261,7 +261,7 @@ export interface components {
             finalised_at?: string | null;
             /** Format: uuid */
             id: string;
-            migration?: null | components["schemas"]["MigrationView"];
+            migration?: components["schemas"]["MigrationView"] | null;
             /** Format: uuid */
             parent_id?: string | null;
             questions: components["schemas"]["QuestionView"][];
@@ -290,7 +290,7 @@ export interface components {
         AreaLine: {
             area: components["schemas"]["Area"];
             basis: components["schemas"]["Basis"];
-            count?: null | components["schemas"]["Span"];
+            count?: components["schemas"]["Span"] | null;
             name: string;
             person_days: components["schemas"]["Span"];
             /** @description Elapsed weeks, to the nearest half. */
@@ -360,7 +360,7 @@ export interface components {
         ConfidenceLevel: "Low" | "Medium" | "High";
         Consequence: {
             audience: components["schemas"]["Audience"];
-            cost?: null | components["schemas"]["Cost"];
+            cost?: components["schemas"]["Cost"] | null;
             detail: string;
             severity?: components["schemas"]["Severity"];
             status: components["schemas"]["Status"];
@@ -476,7 +476,7 @@ export interface components {
             areas: components["schemas"]["AreaLine"][];
             confidence: components["schemas"]["ConfidenceLevel"];
             documentation: components["schemas"]["DocLevel"];
-            documentation_alternatives?: null | components["schemas"]["DocumentationAlternatives"];
+            documentation_alternatives?: components["schemas"]["DocumentationAlternatives"] | null;
             /** @description Each assumption made and each change to the scope. */
             flags: string[];
             model_version: string;
@@ -490,11 +490,11 @@ export interface components {
             not_included: string[];
             /** @description Data team person-days, with the review allowance. */
             person_days: components["schemas"]["Span"];
-            scoping_person_days?: null | components["schemas"]["Span"];
+            scoping_person_days?: components["schemas"]["Span"] | null;
             staffing: components["schemas"]["StaffingRow"][];
             /** @description Conditions the Data Lead weighs before the estimate goes further. */
             stop_flags: string[];
-            tier?: null | components["schemas"]["Tier"];
+            tier?: components["schemas"]["Tier"] | null;
             /** @description The key answers still unknown. */
             unknown: string[];
             /** @description The figures are an upper bound (a spreadsheet-only source). */
@@ -509,10 +509,10 @@ export interface components {
         EstimateInput: {
             /** @description Areas added to the tier's. */
             add?: components["schemas"]["Area"][];
-            doc_codes?: null | components["schemas"]["DocLevel"];
-            doc_contact?: null | components["schemas"]["DocLevel"];
-            doc_dictionary?: null | components["schemas"]["DocLevel"];
-            doc_prior_exports?: null | components["schemas"]["DocLevel"];
+            doc_codes?: components["schemas"]["DocLevel"] | null;
+            doc_contact?: components["schemas"]["DocLevel"] | null;
+            doc_dictionary?: components["schemas"]["DocLevel"] | null;
+            doc_prior_exports?: components["schemas"]["DocLevel"] | null;
             /**
              * Format: int32
              * @description Sites going live, each with its own cutover.
@@ -520,29 +520,29 @@ export interface components {
             facility_count?: number | null;
             /** Format: int32 */
             form_count?: number | null;
-            history_years?: null | components["schemas"]["CaseBand"];
+            history_years?: components["schemas"]["CaseBand"] | null;
             /**
              * @description Whether more staff are to be migrated than `users.many_over`, past
              *     staff included when records are attributed to them.
              */
             many_users?: boolean | null;
-            patients_per_day?: null | components["schemas"]["CaseBand"];
+            patients_per_day?: components["schemas"]["CaseBand"] | null;
             /** Format: int32 */
             registry_count?: number | null;
             /** @description Areas taken out of the tier's. */
             remove?: components["schemas"]["Area"][];
-            review_speed?: null | components["schemas"]["ReviewSpeed"];
-            source_db?: null | components["schemas"]["SourceDb"];
+            review_speed?: components["schemas"]["ReviewSpeed"] | null;
+            source_db?: components["schemas"]["SourceDb"] | null;
             /**
              * Format: int32
              * @description Separate copies of the source system, read in bands: one, a few, and
              *     many.
              */
             source_instances?: number | null;
-            source_kind?: null | components["schemas"]["SourceKind"];
-            staffing?: null | components["schemas"]["Staffing"];
+            source_kind?: components["schemas"]["SourceKind"] | null;
+            staffing?: components["schemas"]["Staffing"] | null;
             tamanu_live?: boolean | null;
-            tier?: null | components["schemas"]["Tier"];
+            tier?: components["schemas"]["Tier"] | null;
         };
         EstimatorOption: {
             id: string;
@@ -636,7 +636,7 @@ export interface components {
             model_version: string;
             not_included: string[];
             projects: components["schemas"]["ImportProjectLine"][];
-            templates_days?: null | components["schemas"]["Span"];
+            templates_days?: components["schemas"]["Span"] | null;
             /** @description Data team days for the engagement, to the nearest half. */
             total_days: components["schemas"]["Span"];
             /** @description How each project's days are put together. */
@@ -649,7 +649,7 @@ export interface components {
         };
         /** @description One program of a client-prepared engagement. */
         ImportProject: {
-            cases?: null | components["schemas"]["CaseBand"];
+            cases?: components["schemas"]["CaseBand"] | null;
             /**
              * Format: int32
              * @description Forms the program's data is imported into.
@@ -783,9 +783,9 @@ export interface components {
             overrides?: components["schemas"]["PlanOverrides"];
         };
         PlanCost: {
-            cost?: null | components["schemas"]["CostBreakdown"];
+            cost?: components["schemas"]["CostBreakdown"] | null;
             guess: components["schemas"]["FacilityGuess"];
-            input?: null | components["schemas"]["CostInput"];
+            input?: components["schemas"]["CostInput"] | null;
             /** @description Why there is no figure, when there is none. */
             missing?: string | null;
             notes: string[];
@@ -795,7 +795,7 @@ export interface components {
         };
         /** @description What the person pricing sets beside the plan. Never stored with it. */
         PlanOverrides: {
-            clone?: null | components["schemas"]["CloneMode"];
+            clone?: components["schemas"]["CloneMode"] | null;
             /** Format: double */
             clone_uptime?: number | null;
             /** Format: int32 */

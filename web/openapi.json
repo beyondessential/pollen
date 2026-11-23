@@ -32,7 +32,6 @@
         },
         "responses": {
           "200": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -63,7 +62,6 @@
         },
         "responses": {
           "200": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -73,7 +71,6 @@
             }
           },
           "409": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -104,7 +101,6 @@
         },
         "responses": {
           "200": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -135,7 +131,6 @@
         },
         "responses": {
           "200": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -145,7 +140,6 @@
             }
           },
           "404": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -176,7 +170,6 @@
         },
         "responses": {
           "200": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -186,7 +179,6 @@
             }
           },
           "409": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -217,7 +209,6 @@
         },
         "responses": {
           "200": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -227,7 +218,6 @@
             }
           },
           "404": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -258,7 +248,6 @@
         },
         "responses": {
           "200": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -268,7 +257,6 @@
             }
           },
           "404": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -299,7 +287,6 @@
         },
         "responses": {
           "200": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -309,7 +296,6 @@
             }
           },
           "404": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -330,7 +316,6 @@
         "operationId": "meta_version",
         "responses": {
           "200": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -361,7 +346,6 @@
         },
         "responses": {
           "200": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -371,7 +355,6 @@
             }
           },
           "404": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -402,7 +385,6 @@
         },
         "responses": {
           "200": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -412,7 +394,6 @@
             }
           },
           "404": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -443,7 +424,6 @@
         },
         "responses": {
           "200": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -453,7 +433,6 @@
             }
           },
           "404": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -484,7 +463,6 @@
         },
         "responses": {
           "200": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -494,7 +472,6 @@
             }
           },
           "404": {
-            "description": "",
             "content": {
               "application/json": {
                 "schema": {
@@ -526,10 +503,10 @@
           "scoping_person_days": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/Span"
               },
               {
-                "$ref": "#/components/schemas/Span"
+                "type": "null"
               }
             ]
           }
@@ -575,10 +552,10 @@
           "migration": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/MigrationView"
               },
               {
-                "$ref": "#/components/schemas/MigrationView"
+                "type": "null"
               }
             ]
           },
@@ -664,11 +641,11 @@
           "count": {
             "oneOf": [
               {
-                "type": "null"
-              },
-              {
                 "$ref": "#/components/schemas/Span",
                 "description": "How many of it, for forms and registries: a range when the count was\nnot answered."
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -832,10 +809,10 @@
           "cost": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/Cost"
               },
               {
-                "$ref": "#/components/schemas/Cost"
+                "type": "null"
               }
             ]
           },
@@ -1124,10 +1101,10 @@
           "documentation_alternatives": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/DocumentationAlternatives"
               },
               {
-                "$ref": "#/components/schemas/DocumentationAlternatives"
+                "type": "null"
               }
             ]
           },
@@ -1165,11 +1142,11 @@
           "scoping_person_days": {
             "oneOf": [
               {
-                "type": "null"
-              },
-              {
                 "$ref": "#/components/schemas/Span",
                 "description": "M0 and M1 person-days, reported on their own for the smaller tiers."
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -1189,11 +1166,11 @@
           "tier": {
             "oneOf": [
               {
-                "type": "null"
-              },
-              {
                 "$ref": "#/components/schemas/Tier",
                 "description": "The tier chosen. When none is, the range runs from the smallest scope\nto the largest."
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -1231,40 +1208,40 @@
           "doc_codes": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/DocLevel"
               },
               {
-                "$ref": "#/components/schemas/DocLevel"
+                "type": "null"
               }
             ]
           },
           "doc_contact": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/DocLevel"
               },
               {
-                "$ref": "#/components/schemas/DocLevel"
+                "type": "null"
               }
             ]
           },
           "doc_dictionary": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/DocLevel"
               },
               {
-                "$ref": "#/components/schemas/DocLevel"
+                "type": "null"
               }
             ]
           },
           "doc_prior_exports": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/DocLevel"
               },
               {
-                "$ref": "#/components/schemas/DocLevel"
+                "type": "null"
               }
             ]
           },
@@ -1288,11 +1265,11 @@
           "history_years": {
             "oneOf": [
               {
-                "type": "null"
-              },
-              {
                 "$ref": "#/components/schemas/CaseBand",
                 "description": "Years of visit history to migrate, as a band. Only read when visit\nhistory is in scope."
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -1306,11 +1283,11 @@
           "patients_per_day": {
             "oneOf": [
               {
-                "type": "null"
-              },
-              {
                 "$ref": "#/components/schemas/CaseBand",
                 "description": "Patients seen a day in total across all sites, as a band."
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -1332,20 +1309,20 @@
           "review_speed": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/ReviewSpeed"
               },
               {
-                "$ref": "#/components/schemas/ReviewSpeed"
+                "type": "null"
               }
             ]
           },
           "source_db": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/SourceDb"
               },
               {
-                "$ref": "#/components/schemas/SourceDb"
+                "type": "null"
               }
             ]
           },
@@ -1361,20 +1338,20 @@
           "source_kind": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/SourceKind"
               },
               {
-                "$ref": "#/components/schemas/SourceKind"
+                "type": "null"
               }
             ]
           },
           "staffing": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/Staffing"
               },
               {
-                "$ref": "#/components/schemas/Staffing"
+                "type": "null"
               }
             ]
           },
@@ -1387,10 +1364,10 @@
           "tier": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/Tier"
               },
               {
-                "$ref": "#/components/schemas/Tier"
+                "type": "null"
               }
             ]
           }
@@ -1641,11 +1618,11 @@
           "templates_days": {
             "oneOf": [
               {
-                "type": "null"
-              },
-              {
                 "$ref": "#/components/schemas/Span",
                 "description": "Days to build the import templates, when they are not known to exist:\nfrom none when that is not answered."
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -1687,11 +1664,11 @@
           "cases": {
             "oneOf": [
               {
-                "type": "null"
-              },
-              {
                 "$ref": "#/components/schemas/CaseBand",
                 "description": "Roughly how many cases the program has in total."
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -2017,10 +1994,10 @@
           "cost": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/CostBreakdown"
               },
               {
-                "$ref": "#/components/schemas/CostBreakdown"
+                "type": "null"
               }
             ]
           },
@@ -2030,11 +2007,11 @@
           "input": {
             "oneOf": [
               {
-                "type": "null"
-              },
-              {
                 "$ref": "#/components/schemas/CostInput",
                 "description": "The inputs priced, overrides applied."
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -2073,10 +2050,10 @@
           "clone": {
             "oneOf": [
               {
-                "type": "null"
+                "$ref": "#/components/schemas/CloneMode"
               },
               {
-                "$ref": "#/components/schemas/CloneMode"
+                "type": "null"
               }
             ]
           },
